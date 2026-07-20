@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Godsbound — Beta Prototype</title>
+<style>
+  :root{
+    --egypt-gold:#e8b84b; --egypt-blue:#2e6fd0; --china-red:#c0392b; --china-gold:#f1c40f;
+    --ui-dark:#171a22; --ui-panel:#232733; --ui-border:#3a4052;
+    --favor:#b06ef0; --food:#7ec46a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  html,body{height:100%;background:#0b0d12;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;color:#e8e4d8;}
+  body{display:flex;align-items:center;justify-content:center;}
+  #app{display:flex;flex-direction:column;background:var(--ui-dark);position:relative;overflow:hidden;}
+
+  /* ---------- TOP BAR ---------- */
+  #topbar{flex:0 0 auto;padding:6px 8px 3px;background:linear-gradient(180deg,#0d0a08 0%,#0e1118 100%);border-bottom:1px solid #6b5426;}
+  #toprow{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .pname{font-size:11px;line-height:1.25;}
+  .pname b{font-size:12px;display:block;}
+  #timerbox{background:#0c0e13;border:1px solid #454a58;border-radius:8px;padding:3px 12px 4px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.6);flex:0 0 auto;}
+  #timerbox .tlabel{font-size:7.5px;letter-spacing:2px;color:#9aa0ae;font-weight:700;}
+  #timer{font-size:17px;font-weight:800;letter-spacing:1px;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05;}
+  #timer.low{color:#ff5b4d;text-shadow:0 0 8px rgba(255,91,77,.7);}
+  #enemyres{font-size:10px;text-align:right;color:#caa;}
+  #enemygodswrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto;}
+  #ainame{font-size:9px;color:#e0a06a;white-space:nowrap;}
+  #aititle{font-size:9px;white-space:nowrap;}
+  #enemygods{display:flex;gap:3px;flex:0 0 auto;}
+  .egod{width:26px;border-radius:6px;background:linear-gradient(180deg,#241a12,#120d09);border:1px solid #6b5426;text-align:center;padding:2px 1px;font-size:7px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .egod .gport{font-size:14px;line-height:1.1;filter:grayscale(85%);opacity:.55;background:radial-gradient(circle at 50% 42%,#3a2416 0%,transparent 70%);}
+  .egod.unlocked .gport{filter:none;opacity:1;}
+  .egod.unlocked{border-color:var(--china-gold);box-shadow:0 0 6px rgba(241,196,15,.45);}
+  .egod .gcost{color:var(--favor);font-weight:700;}
+  .egod.unlocked .gcost{display:none;}
+  .egod .gname{display:none;}
+
+  /* ---------- BATTLEFIELD ---------- */
+  #boardwrap{flex:1 1 auto;position:relative;min-height:0;background:#0a0c10;}
+  #board{position:absolute;inset:0;width:100%;height:100%;touch-action:none;}
+  #banner{position:absolute;top:38%;left:0;right:0;text-align:center;pointer-events:none;opacity:0;transition:opacity .3s;font-size:20px;font-weight:800;text-shadow:0 2px 6px #000;}
+  #endscreen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,8,14,.88);z-index:50;text-align:center;}
+  #endscreen h1{font-size:34px;margin-bottom:8px;}
+  #endscreen p{font-size:14px;color:#bbb;margin-bottom:18px;white-space:pre-line;}
+  #endscreen button{font-size:16px;padding:10px 26px;border-radius:8px;border:1px solid var(--egypt-gold);background:#2a2413;color:var(--egypt-gold);font-weight:700;cursor:pointer;}
+  #menuscreen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:55;text-align:center;pointer-events:none;}
+  #menupanel{pointer-events:auto;width:100%;padding:14px 0 18px;background:rgba(8,8,14,.92);border-bottom:1px solid #6b5426;}
+  #menupanel.fullpage{height:100%;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;background:rgba(8,8,14,.97);border-bottom:none;}
+  #menuscreen h1{font-size:28px;margin-bottom:8px;color:var(--egypt-gold);letter-spacing:2px;}
+  #menuscreen p{font-size:14px;color:#bbb;margin-bottom:18px;}
+  #menuscreen button{font-size:16px;padding:10px 26px;border-radius:8px;border:1px solid var(--egypt-gold);background:#2a2413;color:var(--egypt-gold);font-weight:700;cursor:pointer;}
+  #terrainpalette,#factionpicker{display:flex;gap:6px;justify-content:center;margin:0 0 14px;flex-wrap:wrap;}
+  #stepterrainbtns,#stepunitsbtns{display:flex;gap:8px;justify-content:center;}
+  #btnback,#btnbackfaction{border-color:#6b5426;background:#241a12;color:#d8c8a8;}
+  .paintbtn,.factionbtn{font-size:15px;padding:5px 9px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+  .paintbtn .pcount{font-size:10px;color:#9aa0ae;font-weight:700;}
+  .paintbtn.selected,.factionbtn.selected{border-color:var(--egypt-gold);color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.5);background:#3a2a14;}
+  #loadoutpicker,#heropicker,#godpicker{margin:0 0 14px;}
+  .loadouthead{font-size:10px;letter-spacing:1px;color:#9aa0ae;font-weight:700;margin-bottom:6px;}
+  #loadoutcount,#herocount,#godpickcount{color:var(--egypt-gold);}
+  #loadoutcards,#herocards,#godpickcards,#godmythcards{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;max-width:340px;margin:0 auto;}
+  .loadoutcard,.herocard,.godpickcard,.mythcard{width:42px;padding:4px 2px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:center;cursor:pointer;}
+  .loadoutcard .uport,.herocard .uport,.godpickcard .uport,.mythcard .uport{font-size:17px;line-height:1.2;}
+  .loadoutcard .uname,.herocard .uname,.godpickcard .uname,.mythcard .uname{font-size:6.3px;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .loadoutcard.selected,.herocard.selected,.godpickcard.selected{border-color:var(--egypt-gold);color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.5);background:#3a2a14;}
+  .mythcard{cursor:default;}
+  #btnbattle.disabled,#btnnext.disabled{opacity:.42;cursor:not-allowed;}
+
+  /* ---------- BOTTOM BAR ---------- */
+  #bottombar{flex:0 0 auto;background:linear-gradient(0deg,#0b0d12 0%,#12151d 100%);border-top:1px solid #6b5426;padding:5px 7px 8px;}
+  #bottomrow{display:flex;flex-direction:column;gap:6px;padding:3px 0 2px;}
+  #cardswrap{min-width:0;}
+  #godswrap{min-width:0;}
+  .colhead{font-size:8px;letter-spacing:1.5px;font-weight:800;padding:0 0 3px 2px;}
+  #playergods{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;min-width:0;}
+  .pgod{display:flex;align-items:center;gap:3px;border-radius:7px;background:#1d2130;border:1px solid #33405e;padding:1px 3px;font-size:8.5px;cursor:pointer;position:relative;transition:transform .08s;overflow:hidden;}
+  .pgod:active{transform:scale(.94);}
+  .pgod .gport{font-size:15px;line-height:1;filter:grayscale(85%);opacity:.55;flex:0 0 auto;}
+  .pgod .gtxt{min-width:0;text-align:left;}
+  .pgod .gname{font-size:8.5px;color:#cdd6ee;white-space:nowrap;overflow:hidden;}
+  .pgod .gcost{color:var(--favor);font-weight:700;font-size:8.5px;}
+  .pgod.affordable{border-color:var(--favor);box-shadow:0 0 7px rgba(176,110,240,.5);}
+  .pgod.unlocked{border-color:var(--egypt-gold);background:#262138;}
+  .pgod.unlocked .gport{filter:none;opacity:1;}
+  .pgod.unlocked .gcost{display:none;}
+  .pgod .gpower{display:none;font-size:7.5px;color:#ffd97a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pgod.unlocked .gpower{display:block;}
+  .pgod.armed{outline:2px solid #ffd97a;box-shadow:0 0 12px rgba(255,217,122,.8);}
+  .pgod.cooldown{opacity:.55;}
+
+  #cards{display:flex;gap:3px;min-width:0;padding-bottom:8px;}
+  .card{flex:1 1 0;min-width:0;min-height:44px;border-radius:9px;background:linear-gradient(180deg,#26304a 0%,#111522 78%,#0c0f18 100%);border:1px solid #6b5426;text-align:center;padding:3px 1px 6px;font-size:7.5px;cursor:grab;position:relative;transition:transform .08s, box-shadow .08s;box-shadow:0 2px 6px rgba(0,0,0,.55);}
+  .card .uport{font-size:17px;line-height:1.15;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7));}
+  .card .uname{font-size:5.6px;letter-spacing:.4px;text-transform:uppercase;color:#e8dfc8;white-space:nowrap;overflow:hidden;pointer-events:none;}
+  .card .ucost{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:radial-gradient(circle at 50% 30%,#8d4fe0,#5a2b9d 75%);border:1px solid #c9a5ff;border-radius:8px;padding:1px 5px;font-weight:800;font-size:7px;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .card .ucost .f,.card .ucost .v{color:#fff;}
+  .card.hero{border-color:var(--egypt-gold);background:linear-gradient(180deg,#3a3120 0%,#241f12 100%);}
+  .card.myth{border-color:var(--favor);background:linear-gradient(180deg,#33284a 0%,#221c33 100%);}
+  .card.disabled{opacity:.42;cursor:not-allowed;}
+  .card.dragging{opacity:.35;}
+  .card .badge{position:absolute;top:-5px;right:-4px;background:#000a;border-radius:8px;font-size:6.5px;padding:1px 3px;color:#ffd97a;}
+
+  #resrow{display:flex;flex-direction:column;gap:3px;padding:7px 4px 0;}
+  .resbar{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:800;}
+  .rlabel{width:58px;letter-spacing:1.2px;flex:0 0 auto;}
+  .bartrack{flex:1;height:10px;border-radius:3px;background:#07080b;border:1px solid #2a2f3d;overflow:hidden;position:relative;}
+  .bartrack::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),rgba(0,0,0,.65) calc(10% - 1px),rgba(0,0,0,.65) 10%);pointer-events:none;}
+  .barfill{height:100%;transition:width .2s;}
+  #foodfill{background:linear-gradient(90deg,#4d8a3d,#8ed470);}
+  #favorfill{background:linear-gradient(90deg,#7d3fd0,#c99cff);}
+  #foodval{color:var(--food);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+  #favorval{color:var(--favor);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+  #hint{font-size:9.5px;line-height:1.3;color:#8a93ab;text-align:center;padding-top:3px;height:26px;overflow:hidden;}
+
+  /* drag ghost */
+  #ghost{position:absolute;pointer-events:none;z-index:40;font-size:26px;transform:translate(-50%,-60%);display:none;text-shadow:0 2px 6px #000;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="toprow">
+      <div id="timerbox"><span class="tlabel">TIME LEFT</span><div id="timer">3:00</div></div>
+      <div id="enemygodswrap">
+        <div id="ainame">⛩ Chinese</div>
+        <div id="enemygods"></div>
+      </div>
+      <div class="pname" style="text-align:right;"><b style="color:#ff6b5b" id="aititle">SHANG-DI AI</b><div id="enemyres"></div></div>
+    </div>
+  </div>
+
+  <div id="boardwrap">
+    <canvas id="board"></canvas>
+    <div id="banner"></div>
+    <div id="endscreen">
+      <h1 id="endtitle"></h1>
+      <p id="enddetail"></p>
+      <button onclick="startMatch(true)">Rematch</button>
+      <button onclick="startMatch(false); S.phase='setup'; document.getElementById('menuscreen').style.display='flex';">Menu</button>
+    </div>
+    <div id="menuscreen">
+      <div id="menupanel">
+        <div id="stepfaction">
+          <h1>GODSBOUND</h1>
+          <p id="subtitle">Egyptians vs Chinese AI</p>
+          <div id="factionpicker">
+            <button class="factionbtn" id="factionbtn-egypt" data-faction="egypt">☥ Egyptians</button>
+            <button class="factionbtn" id="factionbtn-china" data-faction="china">⛩ Chinese</button>
+            <button class="factionbtn" id="factionbtn-aztec" data-faction="aztec">🐆 Aztecs</button>
+          </div>
+          <button id="btnnextfaction" onclick="goToUnitsStep()">Next: Warriors →</button>
+        </div>
+        <div id="stepunits" style="display:none;">
+          <div id="loadoutpicker">
+            <div class="loadouthead">YOUR WARRIORS — pick <span id="loadoutcount">4/4</span></div>
+            <div id="loadoutcards"></div>
+          </div>
+          <div id="heropicker">
+            <div class="loadouthead">YOUR HEROES — pick <span id="herocount">2/2</span></div>
+            <div id="herocards"></div>
+          </div>
+          <div id="godpicker">
+            <div class="loadouthead">YOUR GODS — pick <span id="godpickcount">4/4</span></div>
+            <div id="godpickcards"></div>
+            <div class="loadouthead">MYTH UNITS</div>
+            <div id="godmythcards"></div>
+          </div>
+          <div id="stepunitsbtns">
+            <button id="btnbackfaction" onclick="goToFactionStep()">← Back</button>
+            <button id="btnnext" onclick="goToTerrainStep()">Next: Terrain →</button>
+          </div>
+        </div>
+        <div id="stepterrain" style="display:none;">
+          <div class="loadouthead">PAINT TERRAIN &amp; DRAG YOUR BUILDINGS ON THE MAP</div>
+          <div id="terrainpalette">
+            <button class="paintbtn" id="paintbtn-F" data-paint="F">🌲<span class="pcount" id="paintbtn-F-count"></span></button>
+            <button class="paintbtn" id="paintbtn-M" data-paint="M">⛰<span class="pcount" id="paintbtn-M-count"></span></button>
+            <button class="paintbtn" id="paintbtn-W" data-paint="W">🌊<span class="pcount" id="paintbtn-W-count"></span></button>
+            <button class="paintbtn" id="paintbtn-D" data-paint="D">✖</button>
+          </div>
+          <div id="stepterrainbtns">
+            <button id="btnback" onclick="goToUnitsStep()">← Back</button>
+            <button id="btnbattle" onclick="onBattleTap()">Battle</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottombar">
+    <div id="bottomrow">
+      <div id="cardswrap"><div id="cards"></div></div>
+      <div id="godswrap"><div id="playergods"></div></div>
+    </div>
+    <div id="resrow">
+      <div class="resbar"><span class="rlabel" style="color:var(--favor)">🔱 FAVOR</span><div class="bartrack"><div class="barfill" id="favorfill"></div></div><span id="favorval">0</span></div>
+      <div class="resbar"><span class="rlabel" style="color:var(--food)">🌾 FOOD</span><div class="bartrack"><div class="barfill" id="foodfill"></div></div><span id="foodval">0</span></div>
+    </div>
+    <div id="hint">Drag a card through one of your buildings, then draw a path.</div>
+  </div>
+  <div id="ghost"></div>
+</div>
+
+<script>
+"use strict";
+/* ================================================================
+   GODSBOUND — single-file beta prototype
+   Player: Egyptians (bottom) vs AI: Chinese (top)
+   ================================================================ */
+
+/* ---------------- HEX GRID (flat-top, odd-q offset) ---------------- */
+const COLS = 9, ROWS = 12;
+const SQ3 = Math.sqrt(3);
+let HEX = 24, OX = 0, OY = 0;              // hex size + board offsets (set on resize)
+
+function hexCenter(c, r){
+  return { x: OX + HEX*1.5*c + HEX,
+           y: OY + HEX*SQ3*(r + 0.5*(c&1)) + HEX*SQ3/2 };
+}
+function inBounds(c,r){ return c>=0 && c<COLS && r>=0 && r<TMAP.length; }
+function neighbors(c,r){
+  const even = [[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[0,1]];
+  const odd  = [[1,1],[1,0],[0,-1],[-1,0],[-1,1],[0,1]];
+  return ((c&1)?odd:even).map(d=>[c+d[0], r+d[1]]).filter(h=>inBounds(h[0],h[1]));
+}
+function offsetToCube(c,r){ const x = c, z = r-(c-(c&1))/2; return [x, -x-z, z]; }
+function hexDist(a,b){
+  const A=offsetToCube(a[0],a[1]), B=offsetToCube(b[0],b[1]);
+  return Math.max(Math.abs(A[0]-B[0]),Math.abs(A[1]-B[1]),Math.abs(A[2]-B[2]));
+}
+function pixelToHex(px,py){
+  const s=fromScreen(px,py); px=s.x; py=s.y; // every caller passes raw pointer/canvas coordinates
+  let best=null, bd=1e9;
+  const rGuess = Math.round((py-OY-HEX*SQ3/2)/(HEX*SQ3));
+  for(let r=Math.max(0,rGuess-1); r<=Math.min(TMAP.length-1,rGuess+1); r++)
+    for(let c=0;c<COLS;c++){
+      const ct=hexCenter(c,r), d=(ct.x-px)**2+(ct.y-py)**2;
+      if(d<bd){bd=d;best=[c,r];}
+    }
+  return (bd < (HEX*1.15)**2) ? best : null;
+}
+/* ---------------- CAMERA TILT (screen-space projection only) ----------------
+   Everything above (hexCenter/neighbors/hexDist/pixelToHex's search) stays a flat,
+   isotropic top-down grid -- movement timing (moveToward reads hexCenter() directly),
+   congestion, pathing, and hex-distance logic are all completely untouched by this.
+   TILT_SQUASH only changes where things land on SCREEN: toScreen() is applied at the
+   point of drawing (draw(), renderBG(), drawUnitSprite, drawBuilding's caller) and
+   fromScreen() is applied once, above, inside pixelToHex() -- every existing caller of
+   pixelToHex already passes raw pointer/canvas coordinates, so no call site needed to
+   change. Simulation code (moveToward, makeUnit, tryHoldToggle, applyGodPower's hex
+   targeting) calls hexCenter()/bldCenter() directly and must never route through
+   toScreen/fromScreen -- see HANDOFF for the full call-site audit. */
+const TILT_SQUASH = 0.8; // 4/5 vertical compression, uniform across the whole board
+function boardPivotY(){ return OY + HEX*SQ3*(TMAP.length+0.5)/2; } // vertical center of the current (unsquashed) board
+function toScreen(x,y){ const p=boardPivotY(); return {x, y:p+(y-p)*TILT_SQUASH}; }
+function fromScreen(x,y){ const p=boardPivotY(); return {x, y:p+(y-p)/TILT_SQUASH}; }
+
+/* ---------------- TERRAIN ----------------
+   P plain(china side) D desert F forest M mountain W water R road H high ground */
+const TMAP_INITIAL = [
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "DDDDDDDDD",
+ "DDDDDDDDD",
+ "DDDDDDDDD",
+ "DDDDDDDDD",
+ "DDDDDDDDD",
+ "DDDDDDDDD"
+];
+let TMAP = TMAP_INITIAL.map(row=>[...row]);
+const terrain = (c,r)=> TMAP[r][c];
+const TINFO = {
+  P:{name:"Plains",   speed:1.0, fill:"#6f8a41", fill2:"#647d3a"},
+  D:{name:"Desert",   speed:1.0, fill:"#c7a15c", fill2:"#b99450"},
+  F:{name:"Forest",   speed:0.75,fill:"#46672f", fill2:"#3e5d2b", cover:0.8},
+  M:{name:"Mountain", speed:0,   fill:"#7b766d", fill2:"#6e6961", block:true},
+  W:{name:"Water",    speed:0.5, fill:"#2f7391", fill2:"#2a6884"},
+  R:{name:"Road",     speed:1.5, fill:"#a08a5c", fill2:"#957f53"},
+  H:{name:"High Ground",speed:0.85,fill:"#93905c",fill2:"#868353", highground:true}
+};
+const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
+
+/* ---------------- UNIT DATA ---------------- */
+const EG_UNITS = {
+  spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
+  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
+  chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2},
+  priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  doomedprince:{name:"The Doomed Prince",emoji:"🐍", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
+  bata:{name:"Bata",         emoji:"🐂",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  falcon: {name:"Falcon Grd.",emoji:"🦅",  cost:{v:55}, cat:"myth", armor:"light",  dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475, size:2, train:2, flying:true, god:"horus"},
+  lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
+  mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
+  sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"isis"},
+  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1},
+  camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2},
+  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2},
+  phoenix:{name:"Phoenix",     emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra"},
+  jackal: {name:"Jackal Warrior",emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis"}
+};
+const CN_UNITS = {
+  ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
+  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
+  horse:  {name:"Horse Archer",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2},
+  monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
+  liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  celestial:{name:"Celestial Grd.",emoji:"⚡", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885, size:2, train:2, god:"jade"},
+  dragon: {name:"Dragon Warr.",emoji:"🐉",  cost:{v:65}, cat:"myth", armor:"light",  dtype:"melee",   hp:280, dmg:28, as:1.1, range:1, speed:0.860625, size:2, train:2, god:"guan"},
+  stone:  {name:"Stone Grd.",  emoji:"🗿",  cost:{v:75}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:400, dmg:28, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"nuwa"},
+  demon:  {name:"Demon Hunter",emoji:"👹",  cost:{v:60}, cat:"myth", armor:"light",  dtype:"melee",   hp:220, dmg:24, as:1.2, range:1, speed:0.918, size:1, train:2, god:"zhong"}
+};
+const AZ_UNITS = {
+  macuahuitl: {name:"Macuahuitl Warrior",emoji:"🗡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  atlatl:     {name:"Atlatl Thrower",    emoji:"🎯",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
+  jaguar:     {name:"Jaguar Warrior",    emoji:"🐆",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
+  otomi:      {name:"Otomi Skirmisher", emoji:"🏃",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2},
+  cihuacoatl: {name:"Cihuacoatl Priest", emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
+  xelhua:     {name:"Xelhua",            emoji:"🗿",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  xiuhcoatl:      {name:"Xiuhcoatl",        emoji:"🔥", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475,   size:2, train:2, flying:true, god:"huitzilopochtli"},
+  jaguarspirit:   {name:"Jaguar Spirit",    emoji:"✨", cost:{v:65}, cat:"myth", armor:"heavy", dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"tezcatlipoca"},
+  featheredserpent:{name:"Feathered Serpent",emoji:"🐉",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"quetzalcoatl"},
+  raintitan:      {name:"Rain Titan",       emoji:"🌊", cost:{v:90}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459,    size:2, train:2, siege:true, god:"tlaloc"}
+};
+
+/* ---------------- GODS ---------------- */
+const EG_GODS = [
+  {key:"horus", name:"Horus",  emoji:"🦅", cost:80,  power:"Falcon Strike", pcost:40, cd:20, myth:"falcon", desc:"130 dmg to enemy units within 1 hex of target", passiveKey:"rangedDmg10", passive:"+10% ranged damage"},
+  {key:"bastet",name:"Bastet", emoji:"🐈", cost:120, power:"Cat's Grace",   pcost:40, cd:20, myth:"lion",   desc:"Allies within 2 hexes: +50% speed, +30% dmg for 8s", passiveKey:"moveSpeed10", passive:"+10% move speed"},
+  {key:"osiris",name:"Osiris", emoji:"☥",  cost:150, power:"Resurrection",  pcost:60, cd:25, myth:"mummy",  desc:"Revives up to 3 recently fallen warriors near your nearest building"},
+  {key:"isis",  name:"Isis",   emoji:"🌙", cost:200, power:"Divine Ward",   pcost:50, cd:25, myth:"sphinx", desc:"Raises a ward (2 hexes) that blocks up to 2 enemy power casts, lasts 25s"},
+  {key:"ra",    name:"Ra",     emoji:"☀️", cost:150, power:"Solar Flare",   pcost:50, cd:25, myth:"phoenix",desc:"90 dmg within 1 hex of target, 45 dmg within 2 hexes"},
+  {key:"anubis",name:"Anubis", emoji:"🐺", cost:120, power:"Judgment",      pcost:50, cd:25, myth:"jackal", desc:"Instantly kills enemy humans below 30% HP within 2 hexes"}
+];
+const CN_GODS = [
+  {key:"jade", name:"Jade Emp.", emoji:"☯️", cost:80,  power:"Heavenly Mandate", pcost:40, cd:20, myth:"celestial", passiveKey:"rangedDmg10", passive:"+10% ranged damage", desc:"Allies within 2 hexes: +25% speed, +40% dmg for 8s"},
+  {key:"guan", name:"Guan Yu",   emoji:"⚔️", cost:120, power:"Martial Honor",    pcost:40, cd:20, myth:"dragon",    passiveKey:"moveSpeed10", passive:"+10% move speed", desc:"Allies within 2 hexes: +60% dmg for 8s"},
+  {key:"nuwa", name:"Nüwa",      emoji:"🐍", cost:150, power:"Earth Repair",     pcost:50, cd:25, myth:"stone", desc:"Heals your most damaged building by 400 HP"},
+  {key:"zhong",name:"Zhong Kui", emoji:"👹", cost:200, power:"Banish",           pcost:50, cd:25, myth:"demon", desc:"Stuns the enemy's strongest myth unit for 6s"}
+];
+const AZ_GODS = [
+  {key:"huitzilopochtli",name:"Huitzilopochtli",emoji:"☀️", cost:80,  power:"Solar Wrath",     pcost:40, cd:20, myth:"xiuhcoatl",       passiveKey:"rangedDmg10", passive:"+10% ranged damage", desc:"130 dmg to enemy units within 1 hex of target"},
+  {key:"quetzalcoatl",   name:"Quetzalcoatl",   emoji:"🐍", cost:120, power:"Wind's Blessing", pcost:40, cd:20, myth:"featheredserpent",passiveKey:"moveSpeed10", passive:"+10% move speed",    desc:"Allies within 2 hexes: +25% speed, +40% dmg for 8s"},
+  {key:"tlaloc",         name:"Tlaloc",         emoji:"🌧️",cost:150, power:"Rain's Renewal",  pcost:50, cd:25, myth:"raintitan",       desc:"Heals your most damaged building by 400 HP"},
+  {key:"tezcatlipoca",   name:"Tezcatlipoca",   emoji:"🌑", cost:200, power:"Smoking Mirror",  pcost:50, cd:25, myth:"jaguarspirit",    desc:"Stuns the enemy's strongest myth unit for 6s"}
+];
+
+/* ---------------- FACTIONS (which unit/god tables apply to which side) ---------------- */
+const FACTIONS = {
+  egypt: { units:EG_UNITS, allGods:EG_GODS, name:"Egyptians", label:"☥ Egyptian",
+           aiTitle:"PHARAOH AI", defaultLoadout:["spear","archer","axe","chariot"], defaultHeroes:["sinuhe","doomedprince"],
+           defaultGodPick:["horus","bastet","osiris","isis"] },
+  china: { units:CN_UNITS, allGods:CN_GODS, name:"Chinese", label:"⛩ Chinese",
+           aiTitle:"SHANG-DI AI", defaultLoadout:["ji","xbow","dao","horse"], defaultHeroes:["nezha","houyi"],
+           defaultGodPick:["jade","guan","nuwa","zhong"] },
+  aztec: { units:AZ_UNITS, allGods:AZ_GODS, name:"Aztecs", label:"🐆 Aztec",
+           defaultLoadout:["macuahuitl","atlatl","jaguar","otomi"], defaultHeroes:["tepoztecatl","topiltzin"],
+           defaultGodPick:["huitzilopochtli","quetzalcoatl","tlaloc","tezcatlipoca"] }
+           /* no aiTitle: Aztec is player-only, S.aiFaction never becomes "aztec" (see 7.8's sign-off) */
+};
+function factionForSide(side){ return side ? S.aiFaction : S.playerFaction; }
+/* TMAP_INITIAL's rows 0-5 use "P" and rows 6-11 use "D" as their blank/filler tile.
+   P and D are mechanically identical (same TINFO.speed, no other stats) — purely
+   cosmetic. origTerrain() swaps that filler to whichever base the CURRENT faction on
+   that half actually uses (desert for Egypt, plains for China), so a side's terrain
+   always matches the faction playing it, not just its fixed row range. Any non-P/D
+   character (mountain/water/forest/road/high ground) passes through unchanged —
+   TMAP_INITIAL itself ships with zero such characters as of 2026-07-16 (direct chat
+   request, "no existing special tiles" — every match now starts on a fully flat
+   desert/plains board), but the pass-through still matters for anything a player
+   paints in via paintTerrain() during setup. */
+function origTerrain(c,r){
+  const base = factionForSide(r<6?1:0)==="egypt" ? "D" : "P";
+  const ch = TMAP_INITIAL[r][c];
+  return (ch==="P"||ch==="D") ? base : ch;
+}
+function deriveTMAP(){
+  return TMAP_INITIAL.map((rowStr,r)=>rowStr.split("").map((ch,c)=>origTerrain(c,r)));
+}
+
+/* ---------------- BUILDINGS (2 hexes each) ---------------- */
+function mkBld(side,type,name,emoji,hexes,hp){
+  return {side,type,name,emoji,hexes,hp,maxhp:hp,dead:false,atkTimer:0};
+}
+const buildings = [
+  mkBld(1,"city",    "City",    "🏯", [[4,1],[5,1]],  900),
+  mkBld(1,"temple",  "Temple",  "⛩️", [[1,1],[2,1]],  800),
+  mkBld(1,"fortress","Fortress","🗼", [[6,3],[7,3]], 1100),
+  mkBld(0,"fortress","Fortress","🏰", [[6,8],[7,8]],1100),
+  mkBld(0,"city",    "City",    "🏛️", [[4,10],[5,10]], 900),
+  mkBld(0,"temple",  "Temple",  "🛕", [[1,10],[2,10]], 800)
+];
+const bldHexMap = {};
+function rebuildBldHexMap(){
+  for(const k in bldHexMap) delete bldHexMap[k];
+  buildings.forEach(b=>b.hexes.forEach(h=>bldHexMap[h[0]+","+h[1]]=b));
+}
+rebuildBldHexMap();
+function bldAt(c,r){
+  if(S.setupStep==="terrain"){
+    const b=playerHalf.buildings.find(bd=>bd.hexes.some(h=>h[0]===c&&h[1]===r));
+    return b||null;
+  }
+  const b=bldHexMap[c+","+r]; return (b && !b.dead) ? b : null;
+}
+
+/* ---------------- PLAYER HALF (own board, composed with the fixed AI half at battle start) ----------------
+   2026-07-17, direct chat request: the terrain-setup step should feel like editing your OWN
+   half as its own standalone board, not a zoomed crop of a bigger fixed arena — "think about
+   the arena as the sum of two halves that come together." Also explicit groundwork for an
+   eventual multiplayer mode where each player brings their own half (not built here — only
+   the local single-player data separation). AI's half is not editable and stays exactly as it
+   always has: a fixed template inside TMAP_INITIAL/buildings, composed in unchanged. */
+const HALF_ROWS = ROWS/2; // 6
+let playerHalf = {
+  terrain: TMAP_INITIAL.slice(HALF_ROWS).map(row=>row.split("")), // placeholder; corrected by the first startMatch() once FACTIONS/S exist, same pattern TMAP's own init already uses
+  buildings: [
+    mkBld(0,"fortress","Fortress","🏰",[[6,2],[7,2]],1100),
+    mkBld(0,"city","City","🏛️",[[4,4],[5,4]],900),
+    mkBld(0,"temple","Temple","🛕",[[1,4],[2,4]],800),
+  ] // local coords = today's absolute positions minus HALF_ROWS
+};
+function freshPlayerHalfTerrain(){
+  return deriveTMAP().slice(HALF_ROWS).map(row=>[...row]);
+}
+function composeAbsoluteTMAP(){
+  const full = deriveTMAP();
+  for(let r=0;r<HALF_ROWS;r++) full[HALF_ROWS+r] = [...playerHalf.terrain[r]];
+  return full;
+}
+function composeAbsoluteBuildings(){
+  for(const pb of playerHalf.buildings){
+    const live = buildings.find(b=>b.side===0&&b.type===pb.type);
+    live.hexes = pb.hexes.map(([c,r])=>[c,r+HALF_ROWS]);
+  }
+  rebuildBldHexMap();
+}
+const bldCenter = b => {
+  const a=hexCenter(b.hexes[0][0],b.hexes[0][1]), z=hexCenter(b.hexes[1][0],b.hexes[1][1]);
+  return {x:(a.x+z.x)/2, y:(a.y+z.y)/2};
+};
+function getBld(side,type){ return buildings.find(b=>b.side===side&&b.type===type); }
+
+function canPlaceBuilding(b, hexes){
+  if(!hexes || hexes.length!==2) return false;
+  const [h0,h1] = hexes;
+  if(!inBounds(h0[0],h0[1]) || !inBounds(h1[0],h1[1])) return false;
+  if(hexDist(h0,h1)!==1) return false;
+  for(const h of hexes){
+    const t=terrain(h[0],h[1]);
+    if(t==="M"||t==="W") return false;
+    const occ=bldAt(h[0],h[1]);
+    if(occ && occ!==b) return false;
+  }
+  return true;
+}
+
+const routeOK = (c,r,flying)=> inBounds(c,r) && passable(c,r,flying) && !bldAt(c,r);
+
+/* ---------------- GAME STATE ---------------- */
+const elapsed = ()=>180-S.t;
+const S = {
+  t:180, over:false, started:performance.now(),
+  food:60, favor:40, aiFood:60, aiFavor:40,
+  FOOD_CAP:120, FAVOR_CAP:250,
+  units:[], effects:[], wards:[], deadHumans:[], training:[],
+  bldDmg:[0,0],
+  playerGods:{}, aiGods:{},
+  armedPower:null,
+  drag:null, uid:0,
+  phase:"setup", bldDrag:null, setupStep:"faction",
+  painted:{F:0,M:0,W:0}, paintMap:{}, paintSelected:null,
+  loadout:["spear","archer","axe","chariot"],
+  heroPick:["sinuhe","doomedprince"],
+  godPick:["horus","bastet","osiris","isis"],
+  aiGodPick:["jade","guan","nuwa","zhong"],
+  playerFaction:"egypt", aiFaction:"china"
+};
+let HUMAN_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="human");
+let HERO_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="hero");
+let activeGods = FACTIONS[S.playerFaction].allGods.filter(g=>S.godPick.includes(g.key));
+let activeAiGods = FACTIONS[S.aiFaction].allGods.filter(g=>S.aiGodPick.includes(g.key));
+// S.playerGods/S.aiGods are fully (re)built in startMatch() from activeGods/activeAiGods each match,
+// since the key SET changes whenever a faction changes, not just unlocked/cdUntil values.
+
+/* ---------------- ECONOMY ---------------- */
+function tickEconomy(dt){
+  const pCity=!getBld(0,"city").dead,  pTemple=!getBld(0,"temple").dead;
+  const aCity=!getBld(1,"city").dead,  aTemple=!getBld(1,"temple").dead;
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*(pCity?5:2));
+  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*(pTemple?3.4:2.2) + (S.playerGods.ra?.unlocked?dt*0.4:0));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*(aCity?5:2));
+  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*(aTemple?3:2));
+}
+
+/* ---------------- OCCUPANCY (3 slots per hex) ---------------- */
+function hexLoad(c,r,except){
+  let l=0;
+  for(const u of S.units)
+    if(!u.dead && u!==except && u.hex[0]===c && u.hex[1]===r) l+=u.size;
+  return l;
+}
+
+/* ---------------- AI PATHFINDING ---------------- */
+function findPath(start, goals, flying){
+  const goalSet = new Set(goals.map(g=>g[0]+","+g[1]));
+  const dist={}, prev={}, key=(c,r)=>c+","+r;
+  const pq=[[0,start]];
+  dist[key(start[0],start[1])]=0;
+  while(pq.length){
+    let bi=0; for(let i=1;i<pq.length;i++) if(pq[i][0]<pq[bi][0]) bi=i;
+    const [d,h]=pq.splice(bi,1)[0], k=key(h[0],h[1]);
+    if(d>dist[k]) continue;
+    if(goalSet.has(k)){
+      const path=[]; let cur=k;
+      while(cur){ const [c,r]=cur.split(",").map(Number); path.unshift([c,r]); cur=prev[cur]; }
+      return path;
+    }
+    for(const n of neighbors(h[0],h[1])){
+      if(!routeOK(n[0],n[1],flying)) continue;
+      const sp = flying?1:TINFO[terrain(n[0],n[1])].speed;
+      const nd = d + 1/Math.max(sp,0.3) + Math.random()*0.05;
+      const nk = key(n[0],n[1]);
+      if(nd < (dist[nk]??1e9)){ dist[nk]=nd; prev[nk]=k; pq.push([nd,n]); }
+    }
+  }
+  return null;
+}
+function bldAdjacent(b, flying){
+  const out=[], seen=new Set();
+  for(const h of b.hexes) for(const n of neighbors(h[0],h[1])){
+    const k=n[0]+","+n[1];
+    if(!seen.has(k) && routeOK(n[0],n[1],flying)){ seen.add(k); out.push(n); }
+  }
+  return out;
+}
+
+/* ---------------- TERRAIN PAINTING (setup phase) ---------------- */
+const TERRAIN_BUDGET={F:4,M:3,W:3};
+function playerBldsReachGate(){
+  return playerHalf.buildings
+    .every(b=>bldAdjacent(b,false).some(h=>findPath(h,[[4,0]],false)!==null));
+}
+function paintTerrain(c,r,type){
+  if(S.phase!=="setup") return false;
+  if(r<0||r>=TMAP.length) return false;
+  if(bldAt(c,r)) return false;
+  const key=c+","+r, prevType=S.paintMap[key];
+
+  if(type==="D"){
+    if(prevType===undefined) return false; // nothing painted here to erase
+    TMAP[r][c]=origTerrain(c,r+HALF_ROWS); // paintTerrain always operates on local (0..HALF_ROWS-1) rows; origTerrain expects absolute rows into TMAP_INITIAL
+    S.painted[prevType]--;
+    delete S.paintMap[key];
+    renderBG();
+    return true;
+  }
+
+  if(!(type in TERRAIN_BUDGET)) return false;
+  if(prevType===type) return true; // already painted this type here
+
+  if(prevType!==undefined) S.painted[prevType]--; // tentative refund of the old paint
+  if(S.painted[type]>=TERRAIN_BUDGET[type]){
+    if(prevType!==undefined) S.painted[prevType]++; // undo refund; budget rejected the paint
+    return false;
+  }
+
+  const oldChar=TMAP[r][c];
+  TMAP[r][c]=type;
+  if(type==="M" && !playerBldsReachGate()){
+    TMAP[r][c]=oldChar; // revert: this mountain would wall off a player building
+    if(prevType!==undefined) S.painted[prevType]++; // undo refund
+    return false;
+  }
+
+  S.painted[type]++;
+  S.paintMap[key]=type;
+  renderBG();
+  return true;
+}
+
+/* ---------------- UI CONSTRUCTION ---------------- */
+const $=id=>document.getElementById(id);
+function buildEnemyGodsUI(){
+  $("enemygods").innerHTML = activeAiGods.map(g=>
+    `<div class="egod" id="egod-${g.key}"><div class="gport">${g.emoji}</div><div class="gname">${g.name}</div><div class="gcost">🔱${g.cost}</div></div>`).join("");
+}
+function buildPlayerGodsUI(){
+  $("playergods").innerHTML = activeGods.map(g=>
+    `<div class="pgod" id="pgod-${g.key}" data-god="${g.key}">
+      <div class="gport">${g.emoji}</div>
+      <div class="gtxt"><div class="gname">${g.name}</div>
+      <div class="gcost">🔱${g.cost}</div><div class="gpower">${g.power} 🔱${g.pcost}${g.passive?` · ${g.passive}`:""}</div></div>
+    </div>`).join("");
+}
+const HAND_SIZE=6;
+const DECK = [...S.loadout, ...S.heroPick]; // rotating hand: first HAND_SIZE shown
+let DECK_INITIAL = [...DECK]; // recomputed from S.loadout in startMatch(), since the loadout can change between setups
+function renderCards(){
+  $("cards").innerHTML = DECK.slice(0,HAND_SIZE).map(key=>{
+    const u=FACTIONS[S.playerFaction].units[key];
+    return `<div class="card${u.hero?" hero":""}${u.cat==="myth"?" myth":""}" id="card-${key}" data-unit="${key}">
+      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div><div class="ucost">${costLabel(u.cost)}</div></div>`;
+  }).join("");
+}
+function useCard(key){ // used card goes to the back of the line
+  const i=DECK.indexOf(key);
+  if(i<0||i>=HAND_SIZE) return;
+  const next = DECK.length>HAND_SIZE ? DECK.splice(HAND_SIZE,1)[0] : null;
+  DECK.splice(i,1);
+  if(next) DECK.splice(i,0,next);
+  DECK.push(key);
+  renderCards();
+}
+function costLabel(cost){
+  let s="";
+  if(cost.f) s+=`<span class="f">🌾${cost.f}</span>`;
+  if(cost.v) s+=(s?" ":"")+`<span class="v">🔱${cost.v}</span>`;
+  return s;
+}
+function canAfford(cost, side){
+  const f = side? S.aiFood:S.food, v = side? S.aiFavor:S.favor;
+  return f>=(cost.f||0) && v>=(cost.v||0);
+}
+function pay(cost, side){
+  if(side){ S.aiFood-=(cost.f||0); S.aiFavor-=(cost.v||0); }
+  else    { S.food -=(cost.f||0); S.favor -=(cost.v||0); }
+}
+function refreshUI(){
+  const inBattle = S.phase==="battle";
+  $("topbar").style.display = inBattle ? "" : "none";
+  $("bottombar").style.display = inBattle ? "" : "none";
+  $("foodval").textContent=Math.floor(S.food)+" / "+S.FOOD_CAP;
+  $("favorval").textContent=Math.floor(S.favor)+" / "+S.FAVOR_CAP;
+  $("foodfill").style.width=(100*S.food/S.FOOD_CAP)+"%";
+  $("favorfill").style.width=(100*S.favor/S.FAVOR_CAP)+"%";
+  $("enemyres").textContent=`🌾${Math.floor(S.aiFood)} 🔱${Math.floor(S.aiFavor)}`;
+  document.querySelectorAll(".card").forEach(el=>{
+    const u=FACTIONS[S.playerFaction].units[el.dataset.unit];
+    el.classList.toggle("disabled", !canAfford(u.cost,0));
+  });
+  for(const g of activeGods){
+    const el=$("pgod-"+g.key), st=S.playerGods[g.key];
+    el.classList.toggle("unlocked",st.unlocked);
+    el.classList.toggle("affordable",!st.unlocked && S.favor>=g.cost);
+    el.classList.toggle("armed",S.armedPower===g.key);
+    el.classList.toggle("cooldown",st.unlocked && (elapsed()<st.cdUntil || S.favor<g.pcost));
+  }
+  for(const g of activeAiGods)
+    $("egod-"+g.key).classList.toggle("unlocked",S.aiGods[g.key].unlocked);
+  const m=Math.floor(Math.max(0,S.t)/60), s=Math.floor(Math.max(0,S.t)%60);
+  $("timer").textContent=`${m}:${s<10?"0":""}${s}`;
+  $("timer").classList.toggle("low",S.t<=30);
+}
+function renderPalette(){
+  for(const t of ["F","M","W"]){
+    $("paintbtn-"+t).classList.toggle("selected", S.paintSelected===t);
+    $("paintbtn-"+t+"-count").textContent=(TERRAIN_BUDGET[t]-S.painted[t])+"/"+TERRAIN_BUDGET[t];
+  }
+  $("paintbtn-D").classList.toggle("selected", S.paintSelected==="D");
+}
+function updateBattleDisabled(){
+  const incomplete = S.loadout.length!==4 || S.heroPick.length!==2 || S.godPick.length!==4;
+  $("btnbattle").classList.toggle("disabled", incomplete);
+  $("btnnext").classList.toggle("disabled", incomplete);
+}
+function unitTip(u){
+  const cost=Object.entries(u.cost).map(([k,v])=>`${v} ${k==="f"?"Food":"Favor"}`).join(" + ");
+  const dtype=u.dtype.charAt(0).toUpperCase()+u.dtype.slice(1);
+  const armor=u.armor.charAt(0).toUpperCase()+u.armor.slice(1);
+  return `Cost: ${cost}\nHP: ${u.hp}\nDamage: ${u.dmg} (${dtype})\nArmor: ${armor}`;
+}
+function godTip(g){
+  return `Unlock: ${g.cost} Favor\nPower: ${g.power} — ${g.desc}\nPower cost: ${g.pcost} Favor\nCooldown: ${g.cd}s`
+    + (g.passive?`\nPassive: ${g.passive}`:"");
+}
+function renderLoadout(){
+  $("loadoutcards").innerHTML = HUMAN_KEYS.map(key=>{
+    const u=FACTIONS[S.playerFaction].units[key], sel=S.loadout.includes(key);
+    return `<div class="loadoutcard${sel?" selected":""}" data-unit="${key}" title="${unitTip(u)}">
+      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div></div>`;
+  }).join("");
+  $("loadoutcount").textContent = S.loadout.length+"/4";
+  updateBattleDisabled();
+}
+function renderHeroPicker(){
+  $("herocards").innerHTML = HERO_KEYS.map(key=>{
+    const u=FACTIONS[S.playerFaction].units[key], sel=S.heroPick.includes(key);
+    return `<div class="herocard${sel?" selected":""}" data-hero="${key}" title="${unitTip(u)}">
+      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div></div>`;
+  }).join("");
+  $("herocount").textContent = S.heroPick.length+"/2";
+  updateBattleDisabled();
+}
+function renderGodPicker(){
+  $("godpickcards").innerHTML = FACTIONS[S.playerFaction].allGods.map(g=>{
+    const sel=S.godPick.includes(g.key);
+    return `<div class="godpickcard${sel?" selected":""}" data-god="${g.key}" title="${godTip(g)}">
+      <div class="uport">${g.emoji}</div><div class="uname">${g.name}</div></div>`;
+  }).join("");
+  $("godpickcount").textContent = S.godPick.length+"/4";
+  const unitsTbl=FACTIONS[S.playerFaction].units;
+  $("godmythcards").innerHTML = FACTIONS[S.playerFaction].allGods.map(g=>{
+    const m=unitsTbl[g.myth];
+    return `<div class="mythcard" title="${g.name}'s myth unit\n${unitTip(m)}">
+      <div class="uport">${m.emoji}</div><div class="uname">${m.name}</div></div>`;
+  }).join("");
+  updateBattleDisabled();
+}
+function onBattleTap(){
+  if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before you can battle."); return; }
+  $("menuscreen").style.display="none";
+  startMatch(true);
+  S.phase="battle";
+}
+
+/* ---------------- UNITS: CREATION & TRAINING ---------------- */
+function unitsFor(side){ return FACTIONS[factionForSide(side)].units; }
+function makeUnit(side,key,hex,path){
+  const def = unitsFor(side)[key];
+  const ct=hexCenter(hex[0],hex[1]);
+  return {
+    id:++S.uid, side, key, def,
+    hp:def.hp, maxhp:def.hp, size:def.size, flying:!!def.flying,
+    pos:{x:ct.x,y:ct.y}, hex:[hex[0],hex[1]], lastHex:null, arrived:true,
+    path:path||null, pathIdx:0, free:!path,
+    target:null, hold:false, dead:false,
+    atkT:Math.random()*0.4, waitT:0, healT:0,
+    buffUntil:0, buffSpd:1, buffDmg:1, slowUntil:0, stunUntil:0
+  };
+}
+function queueTrain(side,key,path,src,duty){
+  const def = unitsFor(side)[key];
+  S.training.push({side,key,path,src,duty,readyAt:elapsed()+def.train});
+}
+function tickTraining(){
+  for(let i=S.training.length-1;i>=0;i--){
+    const t=S.training[i];
+    if(elapsed()>=t.readyAt){
+      const h=t.path[0];
+      const sz=unitsFor(t.side)[t.key].size;
+      let at=h;
+      if(hexLoad(h[0],h[1])+sz>3){ // exit hex blocked: emerge on top of a standing building
+        const src=(t.src&&!t.src.dead)? t.src
+          : buildings.filter(b=>b.side===t.side&&!b.dead)
+              .sort((a,b)=>hexDist(a.hexes[0],h)-hexDist(b.hexes[0],h))[0];
+        if(src) at=src.hexes.slice().sort((a,b)=>hexDist(a,h)-hexDist(b,h))[0];
+        else { t.readyAt+=0.4; continue; }
+      }
+      const u=makeUnit(t.side,t.key,at,t.path);
+      u.duty=t.duty;
+      S.units.push(u);
+      fx(hexCenter(at[0],at[1]),"spawn", t.side?"#c0392b":"#e8b84b");
+      S.training.splice(i,1);
+    }
+  }
+}
+
+/* ---------------- EFFECTS ---------------- */
+function fx(pt,kind,color,text,rad){
+  S.effects.push({x:pt.x,y:pt.y,kind,color,text,rad:rad||0,t:0,life:kind==="text"?1.2:(kind==="ring"?0.7:0.5)});
+}
+function banner(msg,color){
+  const b=$("banner"); b.textContent=msg; b.style.color=color||"#ffd97a"; b.style.opacity=1;
+  clearTimeout(banner._t); banner._t=setTimeout(()=>b.style.opacity=0,1600);
+}
+function hint(msg){ $("hint").textContent=msg; clearTimeout(hint._t);
+  hint._t=setTimeout(()=>$("hint").textContent="Drag a card through one of your buildings, then draw a path.",2600); }
+
+/* ---------------- INPUT: CARD DRAG DEPLOYMENT ---------------- */
+const board=$("board"), ghost=$("ghost");
+function boardXY(e){
+  const r=board.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top, inside:e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom};
+}
+document.addEventListener("pointerdown",e=>{
+  if(S.over) return;
+  const card=e.target.closest(".card");
+  if(card && !card.classList.contains("disabled")){
+    const key=card.dataset.unit, def=FACTIONS[S.playerFaction].units[key];
+    S.drag={key,def,path:[],spawnBld:null,legal:true};
+    card.classList.add("dragging");
+    ghost.textContent=def.emoji; ghost.style.display="block";
+    ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px";
+    hint(`Drag ${def.name} through your City, Fortress or Temple, then draw a route.`);
+    e.preventDefault(); return;
+  }
+  const god=e.target.closest(".pgod");
+  if(god){ onGodTap(god.dataset.god); return; }
+  const factionBtn=e.target.closest(".factionbtn");
+  if(factionBtn){ setPlayerFaction(factionBtn.dataset.faction); return; }
+  const paint=e.target.closest(".paintbtn");
+  if(paint){
+    const t=paint.dataset.paint;
+    S.paintSelected = (S.paintSelected===t) ? null : t;
+    renderPalette();
+    return;
+  }
+  const loadoutCard=e.target.closest(".loadoutcard");
+  if(loadoutCard){
+    const key=loadoutCard.dataset.unit;
+    const idx=S.loadout.indexOf(key);
+    if(idx>=0) S.loadout.splice(idx,1);
+    else if(S.loadout.length<4) S.loadout.push(key);
+    renderLoadout();
+    return;
+  }
+  const heroCard=e.target.closest(".herocard");
+  if(heroCard){
+    const key=heroCard.dataset.hero;
+    const idx=S.heroPick.indexOf(key);
+    if(idx>=0) S.heroPick.splice(idx,1);
+    else if(S.heroPick.length<2) S.heroPick.push(key);
+    renderHeroPicker();
+    return;
+  }
+  const godCard=e.target.closest(".godpickcard");
+  if(godCard){
+    const key=godCard.dataset.god;
+    const idx=S.godPick.indexOf(key);
+    if(idx>=0) S.godPick.splice(idx,1);
+    else if(S.godPick.length<4) S.godPick.push(key);
+    renderGodPicker();
+    return;
+  }
+  const p=boardXY(e);
+  if(p.inside){
+    const h=pixelToHex(p.x,p.y);
+    if(S.phase==="setup" && h && S.paintSelected){
+      if(paintTerrain(h[0],h[1],S.paintSelected)) renderPalette();
+      else fx(hexCenter(h[0],h[1]),"ring","#ff463c");
+      e.preventDefault(); return;
+    }
+    if(S.phase==="setup" && h){
+      const b=bldAt(h[0],h[1]);
+      if(b && b.side===0){
+        S.bldDrag={bld:b, origHexes:b.hexes.map(x=>[...x]), preview:b.hexes.map(x=>[...x])};
+        e.preventDefault(); return;
+      }
+    }
+    if(S.armedPower && h){ castPlayerPower(S.armedPower,h); return; }
+    if(h) tryHoldToggle(h);
+  }
+});
+document.addEventListener("pointermove",e=>{
+  if(S.bldDrag){
+    const p=boardXY(e); if(!p.inside) return;
+    const h=pixelToHex(p.x,p.y); if(!h) return;
+    S.bldDrag.preview=[[h[0],h[1]],[h[0]+1,h[1]]];
+    return;
+  }
+  if(!S.drag) return;
+  ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px";
+  const p=boardXY(e); if(!p.inside) return;
+  const h=pixelToHex(p.x,p.y); if(!h) return;
+  const d=S.drag;
+  if(!d.spawnBld){
+    const b=bldAt(h[0],h[1]);
+    if(b && b.side===0){ d.spawnBld=b; hint("Now draw the route. Release to deploy."); }
+    return;
+  }
+  const onBld=bldAt(h[0],h[1]);
+  if(onBld===d.spawnBld){ d.path.length=0; return; }       // back over spawn building: restart route
+  const idx=d.path.findIndex(q=>q[0]===h[0]&&q[1]===h[1]);
+  if(idx>=0){ d.path.length=idx+1; return; }               // drew over the route: rewind to that point
+  if(onBld) return;                                        // other buildings: ignore
+  if(!routeOK(h[0],h[1],d.def.flying)) return;             // mountains etc: ignore, keep drawing
+  const last=d.path[d.path.length-1];
+  if(!last){
+    if(d.spawnBld.hexes.some(bh=>hexDist(bh,h)===1)){ d.path.push(h); return; }
+    const br=neighbors(h[0],h[1]).find(n=>routeOK(n[0],n[1],d.def.flying)
+      && d.spawnBld.hexes.some(bh=>hexDist(bh,n)===1));    // lenient start: auto-bridge to the building
+    if(br) d.path.push(br,h);
+    return;
+  }
+  const dist=hexDist(last,h);
+  if(dist===1){ d.path.push(h); return; }
+  if(dist===2){
+    const bridge=neighbors(last[0],last[1]).find(n=>hexDist(n,h)===1
+      && routeOK(n[0],n[1],d.def.flying) && !bldAt(n[0],n[1])
+      && !d.path.some(q=>q[0]===n[0]&&q[1]===n[1]));
+    if(bridge) d.path.push(bridge,h);
+    return;
+  }
+});
+document.addEventListener("pointerup",e=>{
+  if(S.bldDrag){
+    const bd=S.bldDrag; S.bldDrag=null;
+    if(canPlaceBuilding(bd.bld, bd.preview)){
+      bd.bld.hexes=bd.preview;
+    }
+    return;
+  }
+  if(!S.drag) return;
+  const d=S.drag; S.drag=null;
+  ghost.style.display="none";
+  document.querySelectorAll(".card.dragging").forEach(c=>c.classList.remove("dragging"));
+  if(!d.spawnBld){ hint("Route cancelled — start by dragging through one of your buildings."); return; }
+  if(d.path.length<1){ hint("Draw at least one hex of route."); return; }
+  if(!canAfford(d.def.cost,0)){ hint("Not enough resources."); return; }
+  pay(d.def.cost,0);
+  queueTrain(0,d.key,d.path,d.spawnBld,"attack");
+  useCard(d.key);
+  fx(bldCenter(d.spawnBld),"ring","#e8b84b");
+  hint(`${d.def.name} training…`);
+});
+
+/* ---------------- GOD TAP: UNLOCK OR ARM POWER ---------------- */
+function onGodTap(key){
+  if(S.over) return;
+  const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
+  if(!st.unlocked){
+    if(S.favor>=g.cost){
+      S.favor-=g.cost; st.unlocked=true;
+      DECK.push(g.myth); renderCards();
+      banner(`${g.name} unlocked!`,"#e8b84b");
+      hint(`${g.power} available. ${FACTIONS[S.playerFaction].units[g.myth].name} joined your card rotation.`);
+      fx(bldCenter(getBld(0,"temple")),"ring","#b06ef0");
+    } else hint(`Need 🔱${g.cost} Favor to unlock ${g.name}.`);
+    return;
+  }
+  if(elapsed()<st.cdUntil){ hint(`${g.power} recharging…`); return; }
+  if(S.favor<g.pcost){ hint(`Need 🔱${g.pcost} Favor for ${g.power}.`); return; }
+  S.armedPower = (S.armedPower===key)? null : key;
+  hint(S.armedPower? `${g.power}: tap a target on the battlefield.` : "Power cancelled.");
+}
+
+/* ---------------- STOP / DEFEND ---------------- */
+function tryHoldToggle(h){
+  if(h[1]<6) return;
+  let best=null,bd=1e9;
+  for(const u of S.units){
+    if(u.dead||u.side!==0) continue;
+    if(u.hex[0]===h[0]&&u.hex[1]===h[1]){ const ct=hexCenter(h[0],h[1]);
+      const d=(u.pos.x-ct.x)**2+(u.pos.y-ct.y)**2; if(d<bd){bd=d;best=u;} }
+  }
+  if(best){ best.hold=!best.hold;
+    hint(best.hold? `${best.def.name} holding position.` : `${best.def.name} resuming route.`);
+    fx(best.pos,"ring",best.hold?"#7ec46a":"#e8b84b");
+  }
+}
+
+/* ================================================================
+   COMBAT & MOVEMENT
+   ================================================================ */
+const CAT_BEATS={human:"hero",hero:"myth",myth:"human"};
+const DMG_STRONG={melee:"shielded",ranged:"light",crushing:"heavy"};
+const DMG_WEAK={melee:"heavy",ranged:"shielded",crushing:"light"};
+const isBldg = t => !!t.hexes;
+
+function unitDist(u,t){
+  if(isBldg(t)) return Math.min(...t.hexes.map(h=>hexDist(u.hex,h)));
+  return hexDist(u.hex,t.hex);
+}
+function hasPassive(side,key){
+  return side
+    ? activeAiGods.some(g=>g.passiveKey===key && S.aiGods[g.key].unlocked)
+    : activeGods.some(g=>g.passiveKey===key && S.playerGods[g.key].unlocked);
+}
+function effSpeed(u){
+  if(elapsed()<u.stunUntil) return 0;
+  let sp=u.def.speed;
+  if(elapsed()<u.buffUntil) sp*=u.buffSpd;
+  if(elapsed()<u.slowUntil) sp*=0.65;
+  if(hasPassive(u.side,"moveSpeed10")) sp*=1.1;
+  return sp;
+}
+function calcDmg(att,tgt){
+  let d=att.def.dmg;
+  if(elapsed()<att.buffUntil) d*=att.buffDmg;
+  if(elapsed()<att.stunUntil) d*=0.5;
+  if(att.def.dtype==="ranged" && hasPassive(att.side,"rangedDmg10")) d*=1.1;
+  if(isBldg(tgt)){
+    d*= att.def.dtype==="crushing"?1.2 : att.def.dtype==="melee"?0.35 : 0.2;
+    if(att.def.siege) d*=1.6;
+    return d;
+  }
+  if(CAT_BEATS[att.def.cat]===tgt.def.cat) d*=1.5;
+  if(att.def.antimyth && tgt.def.cat==="myth") d*=att.def.antimyth;
+  if(DMG_STRONG[att.def.dtype]===tgt.def.armor) d*=1.35;
+  else if(DMG_WEAK[att.def.dtype]===tgt.def.armor) d*=0.7;
+  if(att.def.dtype==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
+  return d;
+}
+function dealDamage(att,tgt){
+  const d=calcDmg(att,tgt);
+  if(isBldg(tgt)){
+    tgt.hp-=d; S.bldDmg[att.side]+=Math.min(d,Math.max(0,tgt.hp+d));
+    if(tgt.hp<=0 && !tgt.dead){
+      tgt.dead=true;
+      fx(bldCenter(tgt),"boom","#ff8040");
+      banner(`${tgt.side?"Enemy":"Your"} ${tgt.name} destroyed!`, tgt.side?"#7ec46a":"#ff5b4d");
+      checkInstantWin();
+    }
+  } else {
+    tgt.hp-=d;
+    if(att.def.slows) tgt.slowUntil=elapsed()+2;
+    if(tgt.hp<=0 && !tgt.dead){
+      tgt.dead=true;
+      fx(tgt.pos,"boom",tgt.side?"#c0392b":"#e8b84b");
+      if(tgt.def.cat==="human")
+        S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
+      if(tgt.def.cat==="human" && att.side===0 && S.playerGods.anubis?.unlocked)
+        S.food=Math.min(S.FOOD_CAP,S.food+2);
+    }
+  }
+  if(att.def.dtype==="ranged"){
+    const tp=isBldg(tgt)?bldCenter(tgt):tgt.pos;
+    S.effects.push({kind:"tracer",x:att.pos.x,y:att.pos.y,x2:tp.x,y2:tp.y,t:0,life:0.18,color:att.side?"#ff9a7a":"#ffe08a"});
+  }
+}
+
+/* ---------- target acquisition ---------- */
+function attackedByAllies(u,enemy){
+  return S.units.some(a=>!a.dead&&a.side===u.side&&a!==u&&a.target===enemy);
+}
+function losBlocked(a,b){
+  if(hexDist(a,b)<=1) return false; // adjacent hexes always have line of sight; nothing can sit "between" them
+  const mids=neighbors(a[0],a[1]).filter(n=>hexDist(n,b)===1);
+  return mids.length>0 && mids.every(n=>TINFO[terrain(n[0],n[1])].block);
+}
+function scanEncounter(u){
+  const rng=Math.max(u.def.range,1);
+  let best=null,bs=-1e9;
+  for(const e of S.units){
+    if(e.dead||e.side===u.side) continue;
+    const d=hexDist(u.hex,e.hex);
+    if(d>rng) continue;
+    if(u.def.dtype==="ranged" && losBlocked(u.hex,e.hex)) continue; // can't fire over a mountain
+    let sc=-d*10;
+    const next=u.path&&u.pathIdx<u.path.length? u.path[u.pathIdx]:null;
+    if(next && hexDist(e.hex,next)<=1) sc+=100;
+    if(attackedByAllies(u,e)) sc+=30;
+    if(CAT_BEATS[u.def.cat]===e.def.cat) sc+=20;
+    if(sc>bs){bs=sc;best=e;}
+  }
+  return best;
+}
+function routeToTarget(u,t){
+  const goals = isBldg(t)? bldAdjacent(t,u.flying)
+    : [t.hex,...neighbors(t.hex[0],t.hex[1]).filter(n=>routeOK(n[0],n[1],u.flying))];
+  const p=findPath(u.hex,goals,u.flying);
+  if(p&&p.length>1){ u.path=p.slice(1); u.pathIdx=0; }
+  else u.path=null;
+}
+
+/* ---------- movement ---------- */
+function moveToward(u,pt,dt){
+  const sp=effSpeed(u)*HEX*SQ3;
+  if(sp<=0) return false;
+  const dx=pt.x-u.pos.x, dy=pt.y-u.pos.y, d=Math.hypot(dx,dy);
+  const terr=u.flying?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1;
+  const step=sp*terr*dt;
+  if(d<=Math.max(step,3)){ u.pos.x=pt.x; u.pos.y=pt.y; return true; }
+  u.pos.x+=dx/d*step; u.pos.y+=dy/d*step; return false;
+}
+function followPath(u,dt){
+  if(!u.path||u.pathIdx>=u.path.length){ u.path=null; u.free=true; return; }
+  const nh=u.path[u.pathIdx];
+  const entering = u.hex[0]!==nh[0]||u.hex[1]!==nh[1];
+  if(entering && hexLoad(nh[0],nh[1],u)+u.size>3){
+    u.waitT+=dt;
+    if(u.waitT>0.5){
+      const alt=neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],u.flying)
+        && hexLoad(n[0],n[1],u)+u.size<=3 && hexDist(n,nh)<=1
+        && !(u.lastHex && n[0]===u.lastHex[0] && n[1]===u.lastHex[1])); // don't sidestep straight back to where we just were
+      if(alt){ u.path.splice(u.pathIdx,0,alt); u.waitT=0; }
+      else u.waitT=0.25;
+    }
+    return;
+  }
+  u.waitT=0;
+  if(entering){ u.lastHex=[u.hex[0],u.hex[1]]; u.hex=[nh[0],nh[1]]; u.arrived=false; }
+  if(moveToward(u,hexCenter(nh[0],nh[1]),dt)){ u.pathIdx++; u.arrived=true; }
+}
+
+/* ---------- per-unit update ---------- */
+function updateUnit(u,dt){
+  if(u.dead) return;
+  u.atkT-=dt;
+  const stunned=elapsed()<u.stunUntil;
+
+  if(u.target){
+    const t=u.target;
+    if((isBldg(t)&&t.dead)||(!isBldg(t)&&t.dead)) u.target=null;
+    else if(!isBldg(t)){
+      const rr=Math.max(u.def.range,1), dd=unitDist(u,t);
+      const blk=u.path&&u.pathIdx<u.path.length&&hexDist(t.hex,u.path[u.pathIdx])<=1;
+      if(dd>rr+1 || (dd>rr && !blk && !u.free)) u.target=null; // don't chase kiters off-route
+      else if(u.def.dtype==="ranged" && losBlocked(u.hex,t.hex)) u.target=null; // target ducked behind a mountain
+    }
+  }
+  if(u.target && isBldg(u.target) && !stunned){
+    const foe=scanEncounter(u);            // defenders in range interrupt a siege
+    if(foe) u.target=foe;
+  }
+  if(!u.target && !stunned){
+    u.target = scanEncounter(u);
+    if(!u.target && u.free && !u.hold){    // route finished: press on toward the closest enemy building
+      let best=null,bd=1e9;
+      for(const b of buildings){
+        if(b.dead||b.side===u.side) continue;
+        const dd=unitDist(u,b); if(dd<bd){bd=dd;best=b;}
+      }
+      if(best){ u.target=best; if(bd>Math.max(u.def.range,1)) routeToTarget(u,best); }
+    }
+  }
+  if(u.target){
+    const t=u.target, d=unitDist(u,t), rng=Math.max(u.def.range,1);
+    if(d<=rng){
+      /* u.hex advances the instant a unit commits to entering the next hex (see
+         followPath) so hex-capacity checks can reserve it immediately — but that
+         means u.hex can be "ahead" of where the unit is still visually sliding to
+         for several frames. Without this, a unit could land a hit while its sprite
+         was still visibly ~1-2 hexes away from the target (2026-07-16 bug report:
+         "melee units doing damage while not in adjacent hexes" — confirmed via a
+         frame-by-frame trace, not assumed). Finish the slide into the current hex
+         before actually landing a blow; the range check above is still what gates
+         whether it's allowed to, this only gates the visible moment of impact. */
+      if(!u.arrived){
+        if(moveToward(u,hexCenter(u.hex[0],u.hex[1]),dt)) u.arrived=true;
+        return;
+      }
+      if(u.atkT<=0 && !stunned){ u.atkT=1/u.def.as; dealDamage(u,t); }
+      return;
+    }
+    const blk=!isBldg(t)&&u.path&&u.pathIdx<u.path.length&&hexDist(t.hex,u.path[u.pathIdx])<=1;
+    if(u.def.range<=1 && d<=rng+1 && !isBldg(t) && (blk||u.free)){
+      const step=neighbors(u.hex[0],u.hex[1])
+        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u)+u.size<=3)
+        .sort((a,b)=>hexDist(a,t.hex)-hexDist(b,t.hex))[0];
+      if(step && hexDist(step,t.hex)<d){
+        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; }
+        return;
+      }
+    }
+    if(u.free && isBldg(t)){ followPath(u,dt); return; }
+    u.target=null; // out of range and not blocking: keep marching
+  }
+  if(u.def.heal && !u.target){
+    u.healT-=dt;
+    if(u.healT<=0){
+      const ally=S.units.filter(a=>!a.dead&&a.side===u.side&&a!==u&&a.hp<a.maxhp&&hexDist(u.hex,a.hex)<=1)
+        .sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0];
+      if(ally){ ally.hp=Math.min(ally.maxhp,ally.hp+u.def.heal); u.healT=1;
+        S.effects.push({kind:"heal",x:ally.pos.x,y:ally.pos.y,t:0,life:0.5,color:"#7ec46a"}); }
+    }
+  }
+  if(u.hold||stunned) return;
+  if(u.free && !u.target) return;
+  followPath(u,dt);
+}
+
+/* ---------- fortress defense ---------- */
+function tickFortresses(dt){
+  for(const b of buildings){
+    if(b.type!=="fortress"||b.dead) continue;
+    b.atkTimer-=dt;
+    if(b.atkTimer>0) continue;
+    const tgt=S.units.filter(u=>!u.dead&&u.side!==b.side&&unitDist(u,b)<=1)
+      .sort((a,b2)=>a.hp-b2.hp)[0];
+    if(tgt){
+      b.atkTimer=1;
+      tgt.hp-=18;
+      const bc=bldCenter(b);
+      S.effects.push({kind:"tracer",x:bc.x,y:bc.y,x2:tgt.pos.x,y2:tgt.pos.y,t:0,life:0.18,color:b.side?"#ff9a7a":"#ffe08a"});
+      if(tgt.hp<=0&&!tgt.dead){ tgt.dead=true; fx(tgt.pos,"boom",tgt.side?"#c0392b":"#e8b84b");
+        if(tgt.def.cat==="human") S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side}); }
+    }
+  }
+}
+
+/* ================================================================
+   GOD POWERS
+   ================================================================ */
+function wardBlocks(casterSide,hex){
+  for(const w of S.wards){
+    if(w.side!==casterSide && elapsed()<w.until && w.charges>0 && hexDist([w.c,w.r],hex)<=w.rad){
+      w.charges--;
+      fx(hexCenter(w.c,w.r),"ring","#b06ef0");
+      banner("Divine Ward absorbed the enemy power!","#b06ef0");
+      return true;
+    }
+  }
+  return false;
+}
+function buffUnits(side,hex,rad,spd,dmg,dur){
+  for(const u of S.units){
+    if(u.dead||u.side!==side||hexDist(u.hex,hex)>rad) continue;
+    u.buffUntil=elapsed()+dur; u.buffSpd=spd; u.buffDmg=dmg;
+    fx(u.pos,"heal","#ffd97a");
+  }
+}
+function castBanner(casterSide,g,playerColor){
+  banner(casterSide?`Enemy casts ${g.power}!`:`${g.power}!`, casterSide?"#ff9a7a":playerColor);
+}
+/* Shared effect executor for all 10 gods' powers, generalized from hardcoded side 0/1
+   to casterSide/enemySide so either side can cast either pantheon's powers.
+   Returns false when the power had no valid target (caller decides whether that
+   still costs the resource — see castPlayerPower vs aiCastPower). */
+function applyGodPower(casterSide,g,hex){
+  const key=g.key, enemySide=casterSide?0:1;
+  const pt=hexCenter(hex[0],hex[1]);
+  switch(key){
+    case "horus": case "ra": case "huitzilopochtli": {
+      const color = (key==="horus"||key==="huitzilopochtli") ? "#ffd97a" : "#ffb020";
+      fx(pt,"boom",color); fx(pt,"ring",color);
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide) continue;
+        const d=hexDist(u.hex,hex);
+        const dmg = (key==="horus"||key==="huitzilopochtli") ? (d>1?null:130) : (d>2?null:(d<=1?90:45));
+        if(dmg==null) continue;
+        u.hp-=dmg; fx(u.pos,"text",color,"-"+dmg);
+        if(u.hp<=0){ u.dead=true; fx(u.pos,"boom","#c0392b"); }
+      }
+      castBanner(casterSide,g,color);
+      return true;
+    }
+    case "bastet": case "jade": case "guan": case "quetzalcoatl": {
+      const params = key==="bastet"?[1.5,1.3] : key==="jade"?[1.25,1.4] : key==="quetzalcoatl"?[1.25,1.4] : [1,1.6];
+      buffUnits(casterSide,hex,2,params[0],params[1],8);
+      fx(pt,"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
+      return true;
+    }
+    case "osiris": {
+      let bld=null,bd=1e9;
+      for(const b of buildings){ if(b.side!==casterSide||b.dead) continue;
+        const d=Math.min(...b.hexes.map(h=>hexDist(h,hex))); if(d<bd){bd=d;bld=b;} }
+      if(!bld) return false;
+      const spots=bldAdjacent(bld,false).filter(h=>hexLoad(h[0],h[1])<3);
+      const pool=S.deadHumans.filter(d=>d.side===casterSide&&elapsed()-d.at<60).slice(-3);
+      let n=0;
+      for(const d of pool){
+        const h=spots[n]||spots[0]; if(!h) break;
+        const u=makeUnit(casterSide,d.key,h,null); u.free=true;
+        S.units.push(u); fx(u.pos,"ring","#7ec46a"); n++;
+      }
+      S.deadHumans=S.deadHumans.filter(d=>!pool.includes(d));
+      banner(n?(casterSide?`Enemy casts ${g.power}! ${n} warriors return.`:`${g.power}! ${n} warriors return.`)
+              :(casterSide?"The enemy found no fallen to revive…":"No fallen to revive…"),"#7ec46a");
+      return true;
+    }
+    case "isis": {
+      S.wards.push({side:casterSide,c:hex[0],r:hex[1],rad:2,until:elapsed()+25,charges:2});
+      fx(pt,"ring","#b06ef0");
+      banner(casterSide?`Enemy casts ${g.power}!`:`${g.power} raised!`, casterSide?"#ff9a7a":"#b06ef0");
+      return true;
+    }
+    case "anubis": {
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide||u.def.cat!=="human"||hexDist(u.hex,hex)>2) continue;
+        if(u.hp<u.maxhp*0.3){ u.dead=true; fx(u.pos,"boom","#c0392b"); }
+      }
+      castBanner(casterSide,g,"#6a4c93");
+      return true;
+    }
+    case "nuwa": case "tlaloc": {
+      const hurt=buildings.filter(b=>b.side===casterSide&&!b.dead&&b.hp<b.maxhp)
+        .sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+      if(!hurt) return false;
+      hurt.hp=Math.min(hurt.maxhp,hurt.hp+400);
+      fx(bldCenter(hurt),"heal","#7ec46a"); castBanner(casterSide,g,"#7ec46a");
+      return true;
+    }
+    case "zhong": case "tezcatlipoca": {
+      const myth=S.units.filter(u=>!u.dead&&u.side===enemySide&&u.def.cat==="myth")
+        .sort((a,b)=>b.hp-a.hp)[0];
+      if(!myth) return false;
+      myth.stunUntil=elapsed()+6; fx(myth.pos,"ring","#ff5b4d");
+      castBanner(casterSide,g,"#ff5b4d");
+      return true;
+    }
+  }
+  return false;
+}
+function castPlayerPower(key,hex){
+  const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
+  S.armedPower=null;
+  if(!st.unlocked||elapsed()<st.cdUntil||S.favor<g.pcost) return;
+  S.favor-=g.pcost; st.cdUntil=elapsed()+g.cd;
+  applyGodPower(0,g,hex);
+  refreshUI();
+}
+/* AI-side heuristic target selection, kept separate from applyGodPower's effect
+   logic: this is "where should the AI cast", reusing existing simple idioms
+   (pick-the-middle-of-a-group for buffs/AoE, most-damaged-own-building for
+   support powers) extended to cover all 10 possible god keys, not just China's 4 —
+   needed since the AI can end up playing either pantheon. */
+function pickAiPowerHex(key){
+  const aiUnits=S.units.filter(u=>!u.dead&&u.side===1);
+  const enemyUnits=S.units.filter(u=>!u.dead&&u.side===0);
+  if(key==="jade"||key==="guan"||key==="bastet"){
+    const fighters=aiUnits.filter(u=>u.target&&!isBldg(u.target));
+    const grp=(fighters.length?fighters:aiUnits);
+    if(grp.length<2) return null;
+    return grp[Math.floor(grp.length/2)].hex;
+  }
+  if(key==="horus"||key==="ra"){
+    if(enemyUnits.length<2) return null;
+    return enemyUnits[Math.floor(enemyUnits.length/2)].hex;
+  }
+  if(key==="anubis"){
+    const weak=enemyUnits.filter(u=>u.def.cat==="human"&&u.hp<u.maxhp*0.3);
+    return weak.length? weak[0].hex : null;
+  }
+  if(key==="nuwa"||key==="isis"){
+    const hurt=buildings.filter(b=>b.side===1&&!b.dead&&b.hp<b.maxhp)
+      .sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+    return hurt? hurt.hexes[0] : null;
+  }
+  if(key==="osiris"){
+    const avail=S.deadHumans.some(d=>d.side===1&&elapsed()-d.at<60);
+    if(!avail) return null;
+    const home=buildings.find(b=>b.side===1&&!b.dead);
+    return home? home.hexes[0] : null;
+  }
+  if(key==="zhong"){
+    const myth=enemyUnits.filter(u=>u.def.cat==="myth").sort((a,b)=>b.hp-a.hp)[0];
+    return myth? myth.hex : null;
+  }
+  return null;
+}
+function aiCastPower(key){
+  const g=activeAiGods.find(x=>x.key===key), st=S.aiGods[key];
+  if(!st.unlocked||elapsed()<st.cdUntil||S.aiFavor<g.pcost) return false;
+  const hex=pickAiPowerHex(key);
+  if(!hex) return false;
+  S.aiFavor-=g.pcost; st.cdUntil=elapsed()+g.cd;
+  if(!wardBlocks(1,hex)) applyGodPower(1,g,hex);
+  return true;
+}
+
+/* ================================================================
+   ENEMY AI
+   ================================================================ */
+let aiTrainT=3, aiPowerT=8, aiHeroAt=55, aiTargetRot=0, aiHeroKeys=["nezha"]; // placeholder only -- startMatch() always repopulates this from the live AI faction before it's ever read
+/* Egyptian entries are a mechanical relabel of the Chinese pacing numbers (same
+   trainMin/trainRand/mythChance/heroAt/powerMin/powerRand/rushCity), with pool
+   and godSched keys swapped by rough role analogy (ji->spear, xbow->archer,
+   dao->axe, horse->chariot, monk->priest; jade->horus, guan->bastet, nuwa->isis,
+   zhong->anubis) so the AI can field either pantheon. Actual balance for "AI
+   plays Egypt" is left for a future 5.4-style pass, same as China's numbers
+   already went through — not assumed tuned just because it's wired up. */
+const AI_PROFILES={
+  balanced:{
+    china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,guan:70,nuwa:110,zhong:145}, pool:["ji","ji","xbow","xbow","dao","horse","monk"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
+    egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,anubis:145}, pool:["spear","spear","archer","archer","axe","chariot","priest"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
+  },
+  aggressive:{
+    china:{trainMin:1.8, trainRand:1.4, godSched:{guan:30,jade:75,zhong:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","horse","xbow"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
+    egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,anubis:120,isis:150}, pool:["spear","spear","spear","axe","axe","chariot","archer"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
+  }
+};
+let aiProfile=AI_PROFILES.balanced.china;
+function tickAI(dt){
+  for(const g of activeAiGods){
+    const st=S.aiGods[g.key];
+    if(!st.unlocked && elapsed()>=aiProfile.godSched[g.key] && S.aiFavor>=g.cost){
+      S.aiFavor-=g.cost; st.unlocked=true;
+      banner(`Enemy unlocked ${g.name}!`,"#ff9a7a");
+      fx(bldCenter(getBld(1,"temple")),"ring","#c0392b");
+    }
+  }
+  aiPowerT-=dt;
+  if(aiPowerT<=0){
+    aiPowerT=aiProfile.powerMin+Math.random()*aiProfile.powerRand;
+    const keys=activeAiGods.filter(g=>S.aiGods[g.key].unlocked).map(g=>g.key);
+    for(const k of keys.sort(()=>Math.random()-0.5)) if(aiCastPower(k)) break;
+  }
+  aiTrainT-=dt;
+  if(aiTrainT>0) return;
+  aiTrainT=aiProfile.trainMin+Math.random()*aiProfile.trainRand;
+  const aiUnitsTbl=FACTIONS[S.aiFaction].units;
+  let key=null;
+  const myths=activeAiGods.filter(g=>S.aiGods[g.key].unlocked).map(g=>g.myth)
+    .filter(m=>S.aiFavor>=aiUnitsTbl[m].cost.v+30);
+  const aiHeroKey=aiHeroKeys[Math.floor(Math.random()*aiHeroKeys.length)];
+  if(elapsed()>=aiHeroAt && canAfford(aiUnitsTbl[aiHeroKey].cost,1) && !S.units.some(u=>!u.dead&&u.side===1&&u.def.hero)){
+    key=aiHeroKey; aiHeroAt=elapsed()+45;
+  }
+  else if(myths.length && Math.random()<aiProfile.mythChance) key=myths[Math.floor(Math.random()*myths.length)];
+  else{
+    const pool=aiProfile.pool.filter(k=>canAfford(aiUnitsTbl[k].cost,1));
+    if(pool.length) key=pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(!key||!canAfford(aiUnitsTbl[key].cost,1)) return;
+  const invaders=S.units.filter(u=>!u.dead&&u.side===0&&u.hex[1]<6);
+  let src=buildings.find(b=>b.side===1&&!b.dead
+    && S.units.some(u=>!u.dead&&u.side===0&&unitDist(u,b)<=2)); // defend the attacked building directly
+  if(!src){
+    src=getBld(1,"city");
+    if(src.dead && !getBld(1,"fortress").dead) src=getBld(1,"fortress");
+    if(src.dead) src=buildings.find(b=>b.side===1&&!b.dead);
+  }
+  if(!src) return;
+  const starts=bldAdjacent(src,aiUnitsTbl[key].flying).sort((a,b)=>b[1]-a[1]);
+  if(!starts.length) return;
+  const defenders=S.units.filter(u=>!u.dead&&u.side===1&&u.duty==="defend").length;
+  const duty=(invaders.length>=2 && defenders<Math.min(3,invaders.length)) ? "defend" : "attack";
+  let goals;
+  if(duty==="defend"){
+    const v=invaders[0];
+    goals=[v.hex,...neighbors(v.hex[0],v.hex[1])].filter(h=>routeOK(h[0],h[1],aiUnitsTbl[key].flying));
+  } else {
+    const alive=buildings.filter(b=>b.side===0&&!b.dead);
+    if(!alive.length) return;
+    const city=getBld(0,"city");
+    const tgt=(aiProfile.rushCity && city && !city.dead) ? city : alive[aiTargetRot++ % alive.length];
+    goals=bldAdjacent(tgt,aiUnitsTbl[key].flying);
+  }
+  if(!goals||!goals.length) return;
+  const p=findPath(starts[0],goals,aiUnitsTbl[key].flying);
+  if(!p) return;
+  pay(aiUnitsTbl[key].cost,1);
+  queueTrain(1,key,p,src,duty);
+}
+
+/* ================================================================
+   RENDERING
+   ================================================================ */
+const ctx=board.getContext("2d");
+const bg=document.createElement("canvas");
+let DPR=1;
+/* ================================================================
+   VECTOR SPRITES (static, no animation)
+   ================================================================ */
+const PAL=[
+  {skin:"#e2b184",cloth:"#2e6fd0",cloth2:"#1d4a94",trim:"#e8b84b",metal:"#d9dbe4",dark:"#26314e",wood:"#8a5a33"},
+  {skin:"#ecc79a",cloth:"#c0392b",cloth2:"#8e2418",trim:"#f1c40f",metal:"#ccd0d8",dark:"#3a1510",wood:"#7a4a28"}
+];
+function bodyBase(g,p,s){ // legs + tunic + belt + head + helmet
+  g.fillStyle=p.dark; g.fillRect(-3.5*s,-7*s,2.6*s,7*s); g.fillRect(0.9*s,-7*s,2.6*s,7*s);
+  g.fillStyle=p.cloth;
+  g.beginPath(); g.moveTo(-5*s,-7*s); g.lineTo(5*s,-7*s); g.lineTo(3.6*s,-15*s); g.lineTo(-3.6*s,-15*s); g.closePath(); g.fill();
+  g.fillStyle=p.trim; g.fillRect(-5*s,-8.2*s,10*s,1.6*s);
+  g.fillStyle=p.skin; g.beginPath(); g.arc(0,-18.5*s,3.4*s,0,7); g.fill();
+  g.fillStyle=p.cloth2; g.beginPath(); g.arc(0,-19.3*s,3.5*s,Math.PI,0); g.fill();
+}
+const SPRITES={
+ spearman(g,p,s){
+  bodyBase(g,p,s);
+  g.strokeStyle=p.wood; g.lineWidth=1.4*s; g.beginPath(); g.moveTo(6*s,-2*s); g.lineTo(6*s,-26*s); g.stroke();
+  g.fillStyle=p.metal; g.beginPath(); g.moveTo(6*s,-29.5*s); g.lineTo(4.6*s,-25.5*s); g.lineTo(7.4*s,-25.5*s); g.closePath(); g.fill();
+  g.fillStyle=p.trim; g.strokeStyle=p.cloth2; g.lineWidth=s;
+  g.beginPath(); g.ellipse(-6*s,-11*s,3.4*s,4.6*s,0,0,7); g.fill(); g.stroke();
+ },
+ archer(g,p,s){
+  bodyBase(g,p,s);
+  g.fillStyle=p.cloth2; g.fillRect(-6.8*s,-16*s,2.4*s,8*s); // quiver
+  g.strokeStyle=p.wood; g.lineWidth=1.4*s;
+  g.beginPath(); g.arc(6.5*s,-13*s,6*s,-1.35,1.35); g.stroke(); // bow
+  g.strokeStyle="#eee"; g.lineWidth=0.7*s;
+  g.beginPath(); g.moveTo(6.5*s+6*s*Math.cos(-1.35),-13*s+6*s*Math.sin(-1.35));
+  g.lineTo(6.5*s+6*s*Math.cos(1.35),-13*s+6*s*Math.sin(1.35)); g.stroke();
+ },
+ axeman(g,p,s){
+  bodyBase(g,p,s);
+  g.strokeStyle=p.wood; g.lineWidth=1.5*s; g.beginPath(); g.moveTo(5.5*s,-3*s); g.lineTo(8.5*s,-22*s); g.stroke();
+  g.fillStyle=p.metal; g.beginPath(); g.moveTo(8.5*s,-24*s); g.quadraticCurveTo(14*s,-21*s,9.5*s,-17.5*s); g.lineTo(7.3*s,-20.5*s); g.closePath(); g.fill();
+ },
+ rider(g,p,s){
+  g.strokeStyle=p.wood; g.lineWidth=1.6*s;
+  [[-6,-1],[-3,-.5],[3,-.5],[6,-1]].forEach(l=>{g.beginPath();g.moveTo(l[0]*s,-6*s);g.lineTo((l[0]+l[1])*s,0);g.stroke();});
+  g.lineWidth=1.1*s; g.beginPath(); g.moveTo(-8*s,-9*s); g.quadraticCurveTo(-11.5*s,-6*s,-9.5*s,-2.5*s); g.stroke(); // tail
+  g.fillStyle=p.wood; g.beginPath(); g.ellipse(0,-8*s,8.5*s,4.6*s,0,0,7); g.fill(); // horse body
+  g.lineWidth=2.6*s; g.strokeStyle=p.wood; g.beginPath(); g.moveTo(7*s,-9.5*s); g.lineTo(10.5*s,-15*s); g.stroke(); // neck
+  g.beginPath(); g.ellipse(11.5*s,-16.2*s,2.9*s,1.8*s,-0.5,0,7); g.fill(); // head
+  g.fillStyle=p.cloth; g.fillRect(-4.2*s,-12*s,7*s,4.2*s); // blanket
+  g.beginPath(); g.moveTo(-2.5*s,-11.5*s); g.lineTo(2.5*s,-11.5*s); g.lineTo(1.7*s,-17.5*s); g.lineTo(-1.7*s,-17.5*s); g.closePath(); g.fill(); // rider torso
+  g.fillStyle=p.skin; g.beginPath(); g.arc(0,-19.8*s,2.6*s,0,7); g.fill();
+  g.fillStyle=p.cloth2; g.beginPath(); g.arc(0,-20.4*s,2.7*s,Math.PI,0); g.fill();
+ },
+ priest(g,p,s){
+  g.fillStyle=p.cloth2;
+  g.beginPath(); g.moveTo(-5.5*s,0); g.lineTo(5.5*s,0); g.lineTo(3.2*s,-15*s); g.lineTo(-3.2*s,-15*s); g.closePath(); g.fill();
+  g.fillStyle=p.trim; g.fillRect(-1.1*s,-15*s,2.2*s,15*s);
+  g.fillStyle=p.skin; g.beginPath(); g.arc(0,-18.5*s,3.3*s,0,7); g.fill();
+  g.fillStyle=p.trim; g.beginPath(); g.arc(0,-19.2*s,3.4*s,Math.PI,0); g.fill();
+  g.strokeStyle=p.trim; g.lineWidth=1.2*s;
+  g.beginPath(); g.moveTo(-6.5*s,0); g.lineTo(-6.5*s,-23*s); g.stroke();
+  g.beginPath(); g.arc(-6.5*s,-25*s,2*s,0,7); g.stroke();
+ },
+ hero(g,p,s){
+  s*=1.15;
+  g.fillStyle=p.trim; g.beginPath(); g.moveTo(-3.4*s,-15*s); g.quadraticCurveTo(-9*s,-9*s,-7.5*s,-1*s); g.lineTo(-3*s,-6*s); g.closePath(); g.fill(); // cape
+  bodyBase(g,p,s);
+  g.fillStyle=p.trim; g.beginPath();
+  g.moveTo(-3.4*s,-20.6*s); g.lineTo(3.4*s,-20.6*s); g.lineTo(3.4*s,-23.6*s); g.lineTo(1.7*s,-21.9*s);
+  g.lineTo(0,-24.8*s); g.lineTo(-1.7*s,-21.9*s); g.lineTo(-3.4*s,-23.6*s); g.closePath(); g.fill(); // crown
+  g.strokeStyle=p.metal; g.lineWidth=1.4*s; g.beginPath(); g.moveTo(6*s,-4*s); g.lineTo(10.5*s,-20*s); g.stroke(); // sword
+  g.fillStyle=p.trim; g.fillRect(5*s,-9.6*s,4.6*s,1.5*s);
+ },
+ falcon(g,p,s){
+  g.fillStyle="#b98b4e";
+  g.beginPath(); g.moveTo(-14*s,-13*s); g.quadraticCurveTo(-5*s,-22*s,0,-15*s);
+  g.quadraticCurveTo(5*s,-22*s,14*s,-13*s); g.quadraticCurveTo(6*s,-13.5*s,3*s,-11*s);
+  g.lineTo(-3*s,-11*s); g.quadraticCurveTo(-6*s,-13.5*s,-14*s,-13*s); g.closePath(); g.fill(); // wings
+  g.fillStyle="#8a6234"; g.beginPath(); g.ellipse(0,-10.5*s,4*s,6.5*s,0,0,7); g.fill();
+  g.fillStyle="#e8d9b8"; g.beginPath(); g.ellipse(0,-8*s,2.6*s,4*s,0,0,7); g.fill();
+  g.fillStyle="#8a6234"; g.beginPath(); g.arc(0,-18*s,3*s,0,7); g.fill();
+  g.fillStyle=p.trim; g.beginPath(); g.moveTo(0.6*s,-17.6*s); g.lineTo(4*s,-16.6*s); g.lineTo(0.6*s,-15.6*s); g.closePath(); g.fill(); // beak
+  g.fillStyle="#222"; g.beginPath(); g.arc(1*s,-19*s,0.7*s,0,7); g.fill();
+ },
+ lion(g,p,s){
+  g.strokeStyle="#c99b52"; g.lineWidth=2*s;
+  [[-7],[-3],[3],[7]].forEach(l=>{g.beginPath();g.moveTo(l[0]*s,-5*s);g.lineTo(l[0]*s,0);g.stroke();});
+  g.lineWidth=1.2*s; g.strokeStyle="#a87b3a";
+  g.beginPath(); g.moveTo(-10*s,-9*s); g.quadraticCurveTo(-13*s,-4*s,-11*s,-2*s); g.stroke(); // tail
+  g.fillStyle="#c99b52"; g.beginPath(); g.ellipse(-1*s,-7.5*s,9.5*s,4.8*s,0,0,7); g.fill();
+  g.fillStyle="#8a5a26"; g.beginPath(); g.arc(8*s,-11.5*s,5*s,0,7); g.fill(); // mane
+  g.fillStyle="#c99b52"; g.beginPath(); g.arc(8.8*s,-11.5*s,3.1*s,0,7); g.fill();
+  g.fillStyle="#222"; g.beginPath(); g.arc(9.8*s,-12.3*s,0.6*s,0,7); g.fill();
+ },
+ mummy(g,p,s){
+  g.fillStyle="#cfc7ae";
+  g.fillRect(-3.6*s,-7*s,2.8*s,7*s); g.fillRect(0.8*s,-7*s,2.8*s,7*s);
+  g.beginPath(); g.moveTo(-5*s,-7*s); g.lineTo(5*s,-7*s); g.lineTo(4*s,-16*s); g.lineTo(-4*s,-16*s); g.closePath(); g.fill();
+  g.beginPath(); g.arc(0,-19*s,3.5*s,0,7); g.fill();
+  g.strokeStyle="#cfc7ae"; g.lineWidth=1.8*s; g.beginPath(); g.moveTo(4.5*s,-14*s); g.lineTo(9.5*s,-11.5*s); g.stroke(); // arm
+  g.strokeStyle="#a79e83"; g.lineWidth=0.7*s;
+  for(let i=0;i<4;i++){ g.beginPath(); g.moveTo(-4.6*s,(-8.5-2.2*i)*s); g.lineTo(4.6*s,(-9.5-2.2*i)*s); g.stroke(); }
+  g.beginPath(); g.moveTo(-3.2*s,-20*s); g.lineTo(3.2*s,-19.2*s); g.stroke();
+  g.fillStyle="#3fae6a"; g.beginPath(); g.arc(-1.2*s,-18.4*s,0.7*s,0,7); g.fill();
+  g.beginPath(); g.arc(1.4*s,-18.2*s,0.7*s,0,7); g.fill();
+ },
+ sphinx(g,p,s){
+  g.strokeStyle="#c99b52"; g.lineWidth=2.2*s;
+  [[-7],[-2],[4]].forEach(l=>{g.beginPath();g.moveTo(l[0]*s,-5*s);g.lineTo(l[0]*s,0);g.stroke();});
+  g.fillStyle="#c99b52"; g.beginPath(); g.ellipse(-1*s,-7*s,10*s,5*s,0,0,7); g.fill();
+  g.beginPath(); g.moveTo(6*s,-7*s); g.lineTo(11.5*s,-7*s); g.lineTo(11.5*s,0); g.lineTo(7.5*s,0); g.closePath(); g.fill(); // front legs
+  g.fillStyle=p.skin; g.beginPath(); g.arc(9*s,-14*s,3.4*s,0,7); g.fill();
+  g.fillStyle="#2e6fd0";
+  g.beginPath(); g.moveTo(5.2*s,-15.2*s); g.lineTo(12.8*s,-15.2*s); g.lineTo(14*s,-8.5*s); g.lineTo(11.2*s,-10.2*s);
+  g.lineTo(6.8*s,-10.2*s); g.lineTo(4*s,-8.5*s); g.closePath(); g.fill(); // nemes
+  g.fillStyle=p.trim; g.fillRect(5.2*s,-16.6*s,7.6*s,1.6*s);
+  g.fillStyle="#222"; g.beginPath(); g.arc(8.2*s,-13*s,0.55*s,0,7); g.fill();
+  g.beginPath(); g.arc(10.4*s,-13*s,0.55*s,0,7); g.fill();
+ },
+ celestial(g,p,s){
+  g.fillStyle="#9fc6e8"; g.fillRect(-3.6*s,-7*s,2.8*s,7*s); g.fillRect(0.8*s,-7*s,2.8*s,7*s);
+  g.fillStyle="#cfe4f5"; g.beginPath(); g.moveTo(-5.5*s,-7*s); g.lineTo(5.5*s,-7*s); g.lineTo(4*s,-16*s); g.lineTo(-4*s,-16*s); g.closePath(); g.fill();
+  g.fillStyle=p.trim; g.fillRect(-5.5*s,-8.3*s,11*s,1.6*s);
+  g.fillStyle="#e8f2fa"; g.beginPath(); g.arc(0,-18.5*s,3.3*s,0,7); g.fill();
+  g.strokeStyle="rgba(140,220,255,.85)"; g.lineWidth=1.2*s;
+  g.beginPath(); g.ellipse(0,-23.5*s,5*s,1.6*s,0,0,7); g.stroke(); // halo
+  g.strokeStyle="#cfe4f5"; g.lineWidth=1.4*s; g.beginPath(); g.moveTo(6*s,-1*s); g.lineTo(6*s,-25*s); g.stroke();
+  g.fillStyle=p.trim; g.beginPath(); g.moveTo(6*s,-28*s); g.lineTo(4.4*s,-24.5*s); g.lineTo(7.6*s,-24.5*s); g.closePath(); g.fill();
+ },
+ dragon(g,p,s){
+  g.lineCap="round";
+  g.strokeStyle="#2e8b57"; g.lineWidth=4.5*s;
+  g.beginPath(); g.moveTo(-11*s,-4*s); g.quadraticCurveTo(-4*s,-15*s,2*s,-8*s); g.quadraticCurveTo(8*s,-3*s,11*s,-13*s); g.stroke();
+  g.lineWidth=2.4*s; g.beginPath(); g.moveTo(-11*s,-4*s); g.quadraticCurveTo(-14.5*s,-2*s,-15.5*s,-6*s); g.stroke(); // tail
+  g.strokeStyle="#f1c40f"; g.lineWidth=1*s;
+  g.beginPath(); g.moveTo(-9*s,-6.5*s); g.quadraticCurveTo(-4*s,-12.5*s,1*s,-9*s); g.stroke(); // belly line
+  g.fillStyle="#2e8b57"; g.beginPath(); g.ellipse(12*s,-15*s,3.6*s,2.5*s,0.35,0,7); g.fill();
+  g.strokeStyle="#f1c40f"; g.lineWidth=1.1*s;
+  g.beginPath(); g.moveTo(13.5*s,-17.3*s); g.lineTo(15.3*s,-20.6*s); g.stroke();
+  g.beginPath(); g.moveTo(11.4*s,-17.5*s); g.lineTo(12.2*s,-21*s); g.stroke();
+  g.fillStyle="#fff"; g.beginPath(); g.arc(13*s,-15.4*s,0.7*s,0,7); g.fill();
+ },
+ golem(g,p,s){
+  g.fillStyle="#8d8d94";
+  g.fillRect(-7*s,-14*s,14*s,11*s);
+  g.fillRect(-10*s,-13*s,3*s,10*s); g.fillRect(7*s,-13*s,3*s,10*s);
+  g.fillRect(-5.5*s,-3.5*s,4*s,3.5*s); g.fillRect(1.5*s,-3.5*s,4*s,3.5*s);
+  g.fillRect(-3.5*s,-19*s,7*s,5.5*s);
+  g.fillStyle="#5ee0c0"; g.fillRect(-2.2*s,-17.6*s,1.6*s,1.6*s); g.fillRect(0.8*s,-17.6*s,1.6*s,1.6*s);
+  g.strokeStyle="#6d6d74"; g.lineWidth=0.8*s;
+  g.beginPath(); g.moveTo(-5*s,-9*s); g.lineTo(-1*s,-6*s); g.moveTo(2*s,-12*s); g.lineTo(5*s,-9*s); g.stroke();
+ },
+ demon(g,p,s){
+  g.fillStyle="#a03325";
+  g.fillRect(-3.4*s,-7*s,2.6*s,7*s); g.fillRect(0.8*s,-7*s,2.6*s,7*s);
+  g.beginPath(); g.moveTo(-5*s,-7*s); g.lineTo(5*s,-7*s); g.lineTo(3.6*s,-16*s); g.lineTo(-3.6*s,-16*s); g.closePath(); g.fill();
+  g.beginPath(); g.arc(0,-18.6*s,3.3*s,0,7); g.fill();
+  g.strokeStyle="#5e1408"; g.lineWidth=1.1*s;
+  g.beginPath(); g.moveTo(-2.3*s,-21*s); g.lineTo(-3.6*s,-24.5*s); g.stroke();
+  g.beginPath(); g.moveTo(2.3*s,-21*s); g.lineTo(3.6*s,-24.5*s); g.stroke();
+  g.fillStyle="#ffd97a"; g.beginPath(); g.arc(-1.2*s,-18.8*s,0.7*s,0,7); g.fill();
+  g.beginPath(); g.arc(1.4*s,-18.8*s,0.7*s,0,7); g.fill();
+  g.strokeStyle="#d9dbe4"; g.lineWidth=1.3*s;
+  g.beginPath(); g.moveTo(5.5*s,-3*s); g.quadraticCurveTo(11*s,-10*s,7.5*s,-19*s); g.stroke();
+ }
+};
+const SPRITE_KEY={spear:"spearman",ji:"spearman",archer:"archer",xbow:"archer",axe:"axeman",dao:"axeman",
+  chariot:"rider",horse:"rider",priest:"priest",monk:"priest",
+  sinuhe:"hero",doomedprince:"hero",bata:"hero",nezha:"hero",houyi:"hero",liji:"hero",tepoztecatl:"hero",topiltzin:"hero",xelhua:"hero",
+  falcon:"falcon",lion:"lion",mummy:"mummy",sphinx:"sphinx",
+  celestial:"celestial",dragon:"dragon",stone:"golem",demon:"demon",
+  slinger:"archer",camel:"rider",khopesh:"spearman",
+  phoenix:"falcon",jackal:"demon",
+  macuahuitl:"spearman",atlatl:"archer",jaguar:"axeman",otomi:"rider",cihuacoatl:"priest",
+  xiuhcoatl:"falcon",jaguarspirit:"lion",featheredserpent:"dragon",raintitan:"golem"};
+/* Uploaded sprites, keyed by unit key (not SPRITE_KEY's shared vector-shape grouping —
+   real art is distinctive per unit, unlike the abstract vector shapes several keys
+   currently share). Empty by default: zero images means zero behavior change, every
+   unit falls through to the existing vector path untouched. Values are paths relative
+   to this HTML file, pointing into assets/sprites/ (added 2026-07-16 — base64-embedding
+   every unit's art would have made this single file grow to many MB; a real image file
+   loads fast regardless of how many units get art, and file:// pages can load sibling
+   files by relative path with no server needed, same "just open it" workflow as
+   before). Populate incrementally, one `IMG_SPRITES[key] = "assets/sprites/....png"`
+   entry per uploaded sprite — or, when the unit needs a different pose per controlling
+   side (e.g. a photographed model shown from the back for the player and from the
+   front for the AI), `IMG_SPRITES[key] = {0:"assets/sprites/...png", 1:"assets/sprites/...png"}`. */
+const IMG_SPRITES = {};
+/* spear (Egyptian Spearman): side 0 (player-controlled) sees the back render since the
+   player's own units march away up the board; side 1 (AI-controlled) sees the front
+   render since AI units march down toward the player/camera. Both are real alpha-
+   transparent PNGs -- chromaKeyed() detects existing transparency and leaves it
+   untouched (it only cleans up a flat, fully-opaque backdrop, e.g. from a JPEG). */
+IMG_SPRITES.spear = {
+  0: "assets/sprites/spear_back.png",
+  1: "assets/sprites/spear_front.png"
+};
+/* Egyptian roster art (2026-07-20, direct chat request — "there are new sprites saved
+   in the folder for the egyptians"). Same per-side back/front convention as spear above:
+   side 0 (player) gets the back render, side 1 (AI) gets the front render. All 7 came in
+   as already-transparent PNGs (verified: corner pixels sampled at alpha 0, no chroma-key
+   cleanup needed — chromaKeyed() confirms this itself at draw time and leaves them
+   untouched) and were resized from ~1-1.5MB/~1000-1500px sources down to 420px on the
+   long side before landing here, matching decision 16b's established convention; the
+   uncropped originals live in Draft Materials/Egypt Sprite Sources/ as backups, not
+   shipped. */
+IMG_SPRITES.archer  = { 0:"assets/sprites/archer_back.png",  1:"assets/sprites/archer_front.png" };
+IMG_SPRITES.axe     = { 0:"assets/sprites/axe_back.png",     1:"assets/sprites/axe_front.png" };
+IMG_SPRITES.camel   = { 0:"assets/sprites/camel_back.png",   1:"assets/sprites/camel_front.png" };
+IMG_SPRITES.chariot = { 0:"assets/sprites/chariot_back.png", 1:"assets/sprites/chariot_front.png" };
+IMG_SPRITES.khopesh = { 0:"assets/sprites/khopesh_back.png", 1:"assets/sprites/khopesh_front.png" };
+IMG_SPRITES.priest  = { 0:"assets/sprites/priest_back.png",  1:"assets/sprites/priest_front.png" };
+IMG_SPRITES.slinger = { 0:"assets/sprites/slinger_back.png", 1:"assets/sprites/slinger_front.png" };
+/* Aztec roster art (2026-07-20, direct chat request — "please incorporate the aztec
+   sprites"). Same treatment as the Egyptian batch above: verified already-transparent
+   (corner alpha 0), resized from ~1-1.3MB/~1000-1500px sources to 420px on the long
+   side, uncropped originals kept in Draft Materials/Aztec Sprite Sources/. Aztec is
+   player-only (side 0) per 7.8's sign-off — side 1 (front) is wired anyway, at no extra
+   cost, since the art already exists and it's a no-op until/unless Aztec ever becomes
+   AI-playable. Covers 5 of Aztec's 5 human units; hero tier (renamed 2026-07-20 to
+   tepoztecatl/topiltzin/xelhua, see the hero-rename decision) and the 4 myths still
+   fall back to vector art. */
+IMG_SPRITES.atlatl     = { 0:"assets/sprites/atlatl_back.png",     1:"assets/sprites/atlatl_front.png" };
+IMG_SPRITES.cihuacoatl = { 0:"assets/sprites/cihuacoatl_back.png", 1:"assets/sprites/cihuacoatl_front.png" };
+IMG_SPRITES.jaguar     = { 0:"assets/sprites/jaguar_back.png",     1:"assets/sprites/jaguar_front.png" };
+IMG_SPRITES.macuahuitl = { 0:"assets/sprites/macuahuitl_back.png", 1:"assets/sprites/macuahuitl_front.png" };
+IMG_SPRITES.otomi      = { 0:"assets/sprites/otomi_back.png",      1:"assets/sprites/otomi_front.png" };
+/* Chinese roster art (2026-07-20, direct chat request — "yes please" (incorporate the
+   China sprites)). Same treatment as the Egyptian/Aztec batches: verified already-
+   transparent, resized to 420px on the long side. One real difference from Aztec's
+   batch: China IS the AI's default faction (unlike Aztec, which is player-only), so the
+   side-1 (front) entry here is genuinely load-bearing in a normal match, not just
+   forward-compatible plumbing — every AI-controlled ji/xbow/dao/horse/monk in a default
+   match will now render as real art, not vector. These 5 files arrived already named
+   to match the final `<key>_back.png`/`<key>_front.png` convention (unlike every prior
+   batch's `<faction>_<key>_..._view.png` naming), so the raw ~1-2MB uploads were moved
+   into Draft Materials/China Sprite Sources/ first, then resized copies written back
+   under the same final filenames — same end state as every other batch, different
+   intermediate step. Covers all 5 of China's human units; hero tier (renamed 2026-07-20
+   to nezha/houyi/liji, see the hero-rename decision) and the 4 myths are still vector,
+   matching every other faction's own gap. */
+IMG_SPRITES.dao   = { 0:"assets/sprites/dao_back.png",   1:"assets/sprites/dao_front.png" };
+IMG_SPRITES.horse = { 0:"assets/sprites/horse_back.png", 1:"assets/sprites/horse_front.png" };
+IMG_SPRITES.ji    = { 0:"assets/sprites/ji_back.png",    1:"assets/sprites/ji_front.png" };
+IMG_SPRITES.monk  = { 0:"assets/sprites/monk_back.png",  1:"assets/sprites/monk_front.png" };
+IMG_SPRITES.xbow  = { 0:"assets/sprites/xbow_back.png",  1:"assets/sprites/xbow_front.png" };
+/* Egyptian myth-unit art (2026-07-20, direct chat request — "yes please" to
+   incorporating the myth sprites). Same treatment as every human-roster batch: verified
+   already-transparent (corner A=0), resized to 420px on the long side, side-0-back/
+   side-1-front convention. Unlike human units, myths are `size:2` ("big") -- this
+   doesn't change how they're resized (still the standard 420px long-side target,
+   consistent with every other batch) since sizing-on-screen is already handled
+   entirely at draw time by drawUnitSprite's existing `big?1.2:0.95` scale factor, not
+   by shipping a higher-resolution source image. Keys map 1:1 to their EG_UNITS entries
+   (falcon, lion, mummy, sphinx, phoenix, jackal) -- all 6 Egyptian myth units now have
+   real art, alongside the already-fully-arted Egyptian human roster (16d). Hero tier
+   (renamed 2026-07-20 to sinuhe/doomedprince/bata, see the hero-rename decision) is now
+   the only remaining vector-only Egyptian category. */
+IMG_SPRITES.falcon = { 0:"assets/sprites/falcon_back.png", 1:"assets/sprites/falcon_front.png" };
+IMG_SPRITES.jackal  = { 0:"assets/sprites/jackal_back.png",  1:"assets/sprites/jackal_front.png" };
+IMG_SPRITES.lion    = { 0:"assets/sprites/lion_back.png",    1:"assets/sprites/lion_front.png" };
+IMG_SPRITES.mummy   = { 0:"assets/sprites/mummy_back.png",   1:"assets/sprites/mummy_front.png" };
+IMG_SPRITES.phoenix = { 0:"assets/sprites/phoenix_back.png", 1:"assets/sprites/phoenix_front.png" };
+IMG_SPRITES.sphinx  = { 0:"assets/sprites/sphinx_back.png",  1:"assets/sprites/sphinx_front.png" };
+/* Hero art, all 9 at once, across all 3 factions (2026-07-20, direct chat request —
+   "please incorporate the hero sprites"). Same treatment as every prior unit batch:
+   verified already-transparent (corner A=0), resized to 420px on the long side,
+   side-0-back/side-1-front convention. Keys are the renamed hero identities from the
+   same-day rename (see decision 11e) -- sinuhe/doomedprince/bata (Egypt), nezha/houyi/
+   liji (China), tepoztecatl/topiltzin/xelhua (Aztec); uploaded already under the final
+   names, no "_view"-suffixed intermediate naming this time (like the China/building/
+   arena-background batches, not the Egypt/Aztec-unit-batch pattern). Raw uploads
+   (no separate "_source" originals this time, same as the arena backgrounds) moved to
+   Draft Materials/Hero Sprite Sources/ before resizing. This closes the very last
+   IMG_SPRITES gap flagged across 16d/16j/11e's own notes -- every human, myth, AND
+   hero unit across all 3 playable factions now has real art; the only remaining
+   vector-only rendering in the game is the terrain ground shapes' own decorative
+   details (renderBG) and card/god portraits (still emoji, DOM not canvas). */
+IMG_SPRITES.sinuhe       = { 0:"assets/sprites/sinuhe_back.png",       1:"assets/sprites/sinuhe_front.png" };
+IMG_SPRITES.doomedprince = { 0:"assets/sprites/doomedprince_back.png", 1:"assets/sprites/doomedprince_front.png" };
+IMG_SPRITES.bata         = { 0:"assets/sprites/bata_back.png",         1:"assets/sprites/bata_front.png" };
+IMG_SPRITES.nezha        = { 0:"assets/sprites/nezha_back.png",        1:"assets/sprites/nezha_front.png" };
+IMG_SPRITES.houyi        = { 0:"assets/sprites/houyi_back.png",        1:"assets/sprites/houyi_front.png" };
+IMG_SPRITES.liji         = { 0:"assets/sprites/liji_back.png",         1:"assets/sprites/liji_front.png" };
+IMG_SPRITES.tepoztecatl  = { 0:"assets/sprites/tepoztecatl_back.png",  1:"assets/sprites/tepoztecatl_front.png" };
+IMG_SPRITES.topiltzin    = { 0:"assets/sprites/topiltzin_back.png",    1:"assets/sprites/topiltzin_front.png" };
+IMG_SPRITES.xelhua       = { 0:"assets/sprites/xelhua_back.png",       1:"assets/sprites/xelhua_front.png" };
+/* Building art (2026-07-20, direct chat request — "there are new sprites for the
+   buildings, please input them"). Buildings share this same IMG_SPRITES registry and
+   the exact same getSpriteImage()/chromaKeyed() plumbing units use — no changes needed
+   there, both are already keyed generically by an arbitrary string + side. Keys are
+   namespaced "bld_<faction>_<type>" (faction from factionForSide(b.side), type is
+   "city"/"fortress"/"temple") since buildings don't have a `key` field the way units
+   do; drawBuilding() reads this registry directly (see its own early-exit below), not
+   through drawUnitSprite. Same side-0-back/side-1-front convention as every unit sprite
+   -- a building's "front" faces its own forward direction (toward the enemy half), so
+   the same camera-relative logic applies: bottom-half (side 0) buildings face up-board,
+   away from the player's own viewpoint, showing their back; top-half (side 1)
+   buildings face down-board, toward the player, showing their front. All 9 (3 factions
+   x city/fortress/temple) came in already-transparent and already named to the final
+   `<faction>_<type>_<side>.png` convention (like the Chinese unit batch, not the
+   `_..._view.png` pattern of the earlier Egypt/Aztec unit batches) -- raw ~1.5-2.5MB
+   uploads moved to Draft Materials/Building Sprite Sources/ first, then 420px-long-side
+   resized copies (140-245KB each) written back under the same final filenames. Dead
+   buildings still render as vector rubble regardless (no rubble art exists) -- see
+   drawBuilding's early return above this registry check. */
+IMG_SPRITES.bld_egypt_city     = { 0:"assets/sprites/egypt_city_back.png",     1:"assets/sprites/egypt_city_front.png" };
+IMG_SPRITES.bld_egypt_fortress = { 0:"assets/sprites/egypt_fortress_back.png", 1:"assets/sprites/egypt_fortress_front.png" };
+IMG_SPRITES.bld_egypt_temple   = { 0:"assets/sprites/egypt_temple_back.png",   1:"assets/sprites/egypt_temple_front.png" };
+IMG_SPRITES.bld_china_city     = { 0:"assets/sprites/china_city_back.png",     1:"assets/sprites/china_city_front.png" };
+IMG_SPRITES.bld_china_fortress = { 0:"assets/sprites/china_fortress_back.png", 1:"assets/sprites/china_fortress_front.png" };
+IMG_SPRITES.bld_china_temple   = { 0:"assets/sprites/china_temple_back.png",   1:"assets/sprites/china_temple_front.png" };
+IMG_SPRITES.bld_aztec_city     = { 0:"assets/sprites/aztec_city_back.png",     1:"assets/sprites/aztec_city_front.png" };
+IMG_SPRITES.bld_aztec_fortress = { 0:"assets/sprites/aztec_fortress_back.png", 1:"assets/sprites/aztec_fortress_front.png" };
+IMG_SPRITES.bld_aztec_temple   = { 0:"assets/sprites/aztec_temple_back.png",   1:"assets/sprites/aztec_temple_front.png" };
+/* Terrain art, take two (2026-07-20, direct chat request — "I want to use the
+   backgrounds that are in the folder as the background for each side of the arena.
+   the hexes are on top of the background and transparent but with distinct outlines
+   and the special terrain tiles are simple placed on top."). This SUPERSEDES the
+   per-hex P/D texture approach from earlier the same day (the previous "Terrain tile
+   art" entry, and HANDOFF decision 16h): that approach clipped a photo into every
+   single plains/desert hex individually, tiled; this one instead draws ONE big
+   background image across an entire half of the arena (that side's controlling
+   faction's own art), with the hex grid on top reduced to a transparent outline
+   overlay so the background reads as a single continuous scene rather than a hex
+   mosaic. `IMG_SPRITES.terrain_egypt_desert/china_plains/aztec_plains` and
+   `terrainImgKey()` are removed as a direct result — the per-hex P/D texture files
+   themselves were deleted from assets/sprites/ (now unused for their original
+   purpose); their raw uploads remain in Draft Materials/Terrain Sprite Sources/ as
+   before, so nothing is unrecoverable if a future direction wants them back.
+   `terrain_shared_forest/mountain/water` are UNCHANGED and still wired — only how
+   they're drawn changed, from a full-hex clipped fill to a small "simply placed"
+   decal (see drawSpecialTile() below), matching the new "hexes are transparent"
+   philosophy: nothing should opaquely cover a whole hex except the special tiles'
+   own compact icon. */
+IMG_SPRITES.terrain_shared_forest  = "assets/sprites/terrain_shared_forest.png";
+IMG_SPRITES.terrain_shared_mountain= "assets/sprites/terrain_shared_mountain.png";
+IMG_SPRITES.terrain_shared_water   = "assets/sprites/terrain_shared_water.png";
+/* One full-bleed backdrop per faction, covering an entire half of the arena (not
+   per-hex, not per-side of a unit/building — a genuinely different shape of asset).
+   Plain strings: a battlefield backdrop has no facing direction. These arrived fully
+   opaque (corner/center alpha all 255, verified before writing any code) — real
+   full-bleed photos, not cutout subjects — so drawArenaBgRect() below deliberately
+   does NOT run them through chromaKeyed(): that function's no-alpha fallback path
+   keys out near-white pixels assuming a flat photo backdrop behind a subject, which
+   would incorrectly punch holes in a legitimately light-colored area of a photo
+   that IS the entire content (bright sand, a pale sky). getSpriteImage() is still
+   used for its decode-once caching, just without the chroma-key post-processing
+   step every other sprite category gets. */
+IMG_SPRITES.arena_bg_egypt = "assets/sprites/arena_bg_egypt.jpg";
+IMG_SPRITES.arena_bg_china = "assets/sprites/arena_bg_china.jpg";
+IMG_SPRITES.arena_bg_aztec = "assets/sprites/arena_bg_aztec.jpg";
+const IMG_CACHE = {}; // cache key -> decoded Image, lazy + cached so we never re-decode base64 every frame
+function getSpriteImage(key,side){
+  const entry=IMG_SPRITES[key];
+  if(!entry) return null;
+  const perSide=typeof entry==="object";
+  const src=perSide?entry[side]:entry;
+  if(!src) return null;
+  const cacheKey=perSide?key+":"+side:key;
+  if(!IMG_CACHE[cacheKey]){
+    const img=new Image();
+    // a typo'd path or a missing assets/sprites/ folder otherwise fails silently
+    // (falls back to vector art with no signal at all) -- see decision 16b/16c
+    img.onerror=()=>console.warn("Sprite failed to load:",key,"side",side,src);
+    img.src=src;
+    IMG_CACHE[cacheKey]=img;
+  }
+  return IMG_CACHE[cacheKey];
+}
+/* Some uploaded renders arrive on a flat white backdrop instead of a real transparent
+   PNG (a plain JPEG can never carry alpha, so this is unavoidable for JPEG sources).
+   Decoded once per cache key (alongside IMG_CACHE) into an offscreen canvas; if the
+   decoded pixels already contain any real transparency (a proper alpha PNG), they're
+   left completely untouched — only a source with ZERO alpha variation (i.e. no
+   transparency information at all) gets near-white pixels keyed out. Threshold is
+   deliberately tight (only the top ~5% of the brightness range, feathered) so
+   genuinely white/cream fabric on the subject (headwrap, kilt) stays opaque; only the
+   flat, perfectly-even backdrop plane gets keyed out. Result cached like IMG_CACHE
+   itself — decoded/processed once, reused every frame after that.
+   getImageData can throw (canvas "tainted by cross-origin data") on some browsers
+   when a file:// page reads pixels from a sibling image file loaded by relative path
+   (assets/sprites/... — this wasn't a concern back when sprites were base64-embedded,
+   since data: URIs never taint a canvas). If that happens, there's no way to inspect
+   pixels at all, so just trust the source image as-is (this matches how every real
+   upload has actually arrived so far — already-transparent PNGs). */
+const IMG_PROCESSED={};
+function chromaKeyed(img,cacheKey){
+  if(IMG_PROCESSED[cacheKey]) return IMG_PROCESSED[cacheKey];
+  const w=img.naturalWidth,h=img.naturalHeight;
+  const c=document.createElement("canvas"); c.width=w; c.height=h;
+  const cctx=c.getContext("2d");
+  cctx.drawImage(img,0,0);
+  let id;
+  try{ id=cctx.getImageData(0,0,w,h) || {data:[]}; }
+  catch(e){ IMG_PROCESSED[cacheKey]=img; return img; }
+  const d=id.data;
+  let hasAlpha=false;
+  for(let i=3;i<d.length;i+=4){ if(d[i]<255){ hasAlpha=true; break; } }
+  if(hasAlpha){
+    // already-transparent source: nothing to key out, and no reason to hold a
+    // pixel-identical offscreen canvas copy alongside the decoded Image forever
+    IMG_PROCESSED[cacheKey]=img;
+    return img;
+  }
+  for(let i=0;i<d.length;i+=4){
+    const minc=Math.min(d[i],d[i+1],d[i+2]);
+    if(minc>236) d[i+3]=Math.max(0,Math.min(255,Math.round((248-minc)*21.25)));
+  }
+  cctx.putImageData(id,0,0);
+  IMG_PROCESSED[cacheKey]=c;
+  return c;
+}
+function drawUnitSprite(u){
+  const big=u.size>1, s=(HEX/24)*(big?1.2:0.95)*1.56; // 2026-07-16: +30% (direct chat request); 2026-07-18: further +20% on top, cumulative x1.56
+  ctx.save();
+  const p=toScreen(u.pos.x,u.pos.y); // camera tilt: project the anchor only, sprite art itself stays undistorted
+  ctx.translate(p.x,p.y+HEX*0.42);
+  const entry=IMG_SPRITES[u.key];
+  const perSide=entry && typeof entry==="object";
+  if(u.side===1 && !perSide) ctx.scale(-1,1); // per-side art is already correctly oriented; the legacy mirror is only for one shared image
+  if(entry){
+    const img=getSpriteImage(u.key,u.side);
+    if(img && img.complete && img.naturalWidth>0){
+      const cacheKey=perSide?u.key+":"+u.side:u.key;
+      const src=chromaKeyed(img,cacheKey);
+      const aspect=img.naturalHeight?(img.naturalWidth/img.naturalHeight):(22/32);
+      const h=32*s, w=h*aspect;
+      ctx.drawImage(src,-w/2,-h,w,h);
+      ctx.restore();
+      return;
+    }
+  }
+  (SPRITES[SPRITE_KEY[u.key]]||SPRITES.spearman)(ctx,PAL[u.side],s);
+  ctx.restore();
+}
+/* Decode is otherwise lazy: the first time a unit key is ever drawn, new Image()
+   starts an async load and the unit renders as vector for a few frames before
+   popping to image art. Called once at init (see the bottom of the file) so every
+   registered sprite starts decoding behind the menu screen instead of causing a
+   mid-battle art pop-in the first time each key appears. Units/buildings self-heal
+   from this "vector for a frame or two" gap for free (draw() reruns every frame, so
+   the very next frame just picks up the now-decoded image) -- terrain does NOT: it's
+   pre-rendered once into the cached `bg` canvas by renderBG(), which by this point in
+   INIT has almost certainly already run (via resize()/startMatch()) while the terrain
+   images were still mid-decode, so a stale vector-rendered background would otherwise
+   persist until some unrelated event (a resize, a terrain paint, a faction swap)
+   happened to trigger another renderBG() call. The renderBG() call below closes that
+   gap explicitly, for every key uniformly (cheap no-op for unit/building keys, whose
+   own next-frame redraw already made it unnecessary for them -- simpler than special-
+   casing "only terrain keys need this"). */
+function warmSpriteCache(){
+  for(const key in IMG_SPRITES){
+    const entry=IMG_SPRITES[key];
+    const perSide=typeof entry==="object";
+    for(const side of perSide?[0,1]:[0]){
+      const img=getSpriteImage(key,side);
+      if(!img) continue;
+      const cacheKey=perSide?key+":"+side:key;
+      if(img.complete && img.naturalWidth>0){ chromaKeyed(img,cacheKey); renderBG(); }
+      else img.onload=()=>{ chromaKeyed(img,cacheKey); renderBG(); };
+    }
+  }
+}
+/* ---------- vector buildings ---------- */
+function cnRoof(g,x,y,w,h){
+  g.fillStyle="#5c1010";
+  g.beginPath(); g.moveTo(x-w,y); g.quadraticCurveTo(x-w*0.6,y-h*0.45,x,y-h);
+  g.quadraticCurveTo(x+w*0.6,y-h*0.45,x+w,y);
+  g.quadraticCurveTo(x+w*0.55,y-h*0.2,x,y-h*0.5);
+  g.quadraticCurveTo(x-w*0.55,y-h*0.2,x-w,y); g.closePath(); g.fill();
+}
+function azTier(g,cx,baseY,w,h){ // one trapezoid step of an Aztec stepped pyramid (teocalli)
+  g.beginPath(); g.moveTo(cx-w,baseY); g.lineTo(cx-w*0.72,baseY-h); g.lineTo(cx+w*0.72,baseY-h); g.lineTo(cx+w,baseY); g.closePath(); g.fill();
+}
+function drawBuilding(b,c){
+  const s=HEX/24; ctx.save(); ctx.translate(c.x,c.y+HEX*0.55);
+  if(b.dead){
+    ctx.fillStyle="#57534e";
+    ctx.beginPath(); ctx.moveTo(-14*s,0); ctx.lineTo(-6*s,-8*s); ctx.lineTo(0,-3*s); ctx.lineTo(7*s,-9*s); ctx.lineTo(14*s,0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="rgba(130,130,130,.45)";
+    ctx.beginPath(); ctx.arc(2*s,-13*s,3.5*s,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(6*s,-18*s,2.6*s,0,7); ctx.fill();
+    ctx.restore(); return;
+  }
+  const bldFaction=factionForSide(b.side);
+  const bldKey="bld_"+bldFaction+"_"+b.type;
+  const bldEntry=IMG_SPRITES[bldKey];
+  if(bldEntry){
+    const img=getSpriteImage(bldKey,b.side);
+    if(img && img.complete && img.naturalWidth>0){
+      const src=chromaKeyed(img,bldKey+":"+b.side); // every building entry is per-side, same cache-key shape getSpriteImage uses internally
+      const aspect=img.naturalHeight?(img.naturalWidth/img.naturalHeight):1.4;
+      const h=30*s, w=h*aspect;
+      ctx.drawImage(src,-w/2,-h,w,h);
+      ctx.restore();
+      return;
+    }
+  }
+  if(bldFaction==="egypt"){
+    if(b.type==="city"){
+      ctx.fillStyle="#d9b475"; ctx.beginPath(); ctx.moveTo(-17*s,0); ctx.lineTo(-3*s,-20*s); ctx.lineTo(11*s,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#c29a58"; ctx.beginPath(); ctx.moveTo(-3*s,-20*s); ctx.lineTo(11*s,0); ctx.lineTo(-3*s,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#e8b84b"; ctx.beginPath(); ctx.moveTo(-5.8*s,-16*s); ctx.lineTo(-3*s,-20*s); ctx.lineTo(-0.2*s,-16*s); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#d9b475"; ctx.fillRect(12.5*s,-15*s,3*s,15*s);
+      ctx.beginPath(); ctx.moveTo(12.5*s,-15*s); ctx.lineTo(14*s,-19.5*s); ctx.lineTo(15.5*s,-15*s); ctx.closePath(); ctx.fill();
+    } else if(b.type==="fortress"){
+      ctx.fillStyle="#cba368"; ctx.fillRect(-15*s,-14*s,30*s,14*s);
+      ctx.fillStyle="#b98e52"; for(let i=0;i<5;i++) ctx.fillRect((-14.5+i*6.4)*s,-17*s,4*s,3.5*s);
+      ctx.fillStyle="#7a5a30"; ctx.beginPath(); ctx.arc(0,0,5*s,Math.PI,0); ctx.fill();
+      ctx.fillStyle="#2e6fd0"; ctx.fillRect(-13*s,-13*s,2.2*s,6*s); ctx.fillRect(10.8*s,-13*s,2.2*s,6*s);
+    } else {
+      ctx.fillStyle="#d9b475";
+      ctx.beginPath(); ctx.moveTo(-15*s,0); ctx.lineTo(-13*s,-15*s); ctx.lineTo(-5*s,-15*s); ctx.lineTo(-4*s,0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(4*s,0); ctx.lineTo(5*s,-15*s); ctx.lineTo(13*s,-15*s); ctx.lineTo(15*s,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#e8b84b"; ctx.fillRect(-14*s,-17.6*s,28*s,3*s);
+      ctx.fillStyle="#b06ef0"; ctx.beginPath(); ctx.arc(0,-8*s,2.6*s,0,7); ctx.fill();
+    }
+  } else if(bldFaction==="china"){
+    if(b.type==="city"){
+      ctx.fillStyle="#8e2418"; ctx.fillRect(-6.5*s,-8*s,13*s,8*s);
+      cnRoof(ctx,0,-8*s,11*s,4.5*s);
+      ctx.fillStyle="#8e2418"; ctx.fillRect(-4.8*s,-16*s,9.6*s,4.8*s);
+      cnRoof(ctx,0,-16*s,9*s,4*s);
+      ctx.fillStyle="#8e2418"; ctx.fillRect(-3.2*s,-22.5*s,6.4*s,3.5*s);
+      cnRoof(ctx,0,-22.5*s,7*s,3.5*s);
+      ctx.fillStyle="#f1c40f"; ctx.fillRect(-0.8*s,-28*s,1.6*s,2.6*s);
+    } else if(b.type==="fortress"){
+      ctx.fillStyle="#9c9c9c"; ctx.fillRect(-14*s,-13*s,28*s,13*s);
+      ctx.fillStyle="#8a8a8a"; ctx.fillRect(-9*s,-19*s,18*s,6*s);
+      cnRoof(ctx,0,-19*s,13*s,4.5*s);
+      ctx.fillStyle="#5c1010"; ctx.beginPath(); ctx.arc(0,0,4.5*s,Math.PI,0); ctx.fill();
+      ctx.fillStyle="#c0392b"; ctx.fillRect(-12.5*s,-12*s,2.2*s,6*s); ctx.fillRect(10.3*s,-12*s,2.2*s,6*s);
+    } else {
+      ctx.fillStyle="#8e2418"; ctx.fillRect(-12*s,-14*s,3.4*s,14*s); ctx.fillRect(8.6*s,-14*s,3.4*s,14*s);
+      cnRoof(ctx,0,-14*s,15*s,5*s);
+      ctx.fillStyle="#f1c40f"; ctx.fillRect(-12*s,-12.6*s,24*s,1.8*s);
+      ctx.fillStyle="#b06ef0"; ctx.beginPath(); ctx.arc(0,-6*s,2.4*s,0,7); ctx.fill();
+    }
+  } else { // aztec: stepped pyramid (teocalli) city/temple, wooden palisade fortress
+    if(b.type==="city"){
+      ctx.fillStyle="#c9a56b"; azTier(ctx,0,0,16*s,7*s);
+      ctx.fillStyle="#b8935a"; azTier(ctx,0,-7*s,12*s,6*s);
+      ctx.fillStyle="#a8824c"; azTier(ctx,0,-13*s,8*s,5.5*s);
+      ctx.fillStyle="#6b5030";
+      ctx.beginPath(); ctx.moveTo(-2.4*s,0); ctx.lineTo(-1.6*s,-18.5*s); ctx.lineTo(1.6*s,-18.5*s); ctx.lineTo(2.4*s,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#8e2418"; ctx.fillRect(-3.5*s,-22.5*s,7*s,4*s);
+      ctx.fillStyle="#5c1010"; ctx.beginPath(); ctx.moveTo(-4*s,-22.5*s); ctx.lineTo(0,-27*s); ctx.lineTo(4*s,-22.5*s); ctx.closePath(); ctx.fill();
+    } else if(b.type==="fortress"){
+      ctx.fillStyle="#8a6642"; ctx.fillRect(-15*s,-11*s,30*s,11*s);
+      ctx.fillStyle="#6b4c2e"; for(let i=0;i<9;i++) ctx.fillRect((-14+i*3.3)*s,-15*s,2.2*s,5*s);
+      ctx.fillStyle="#4a3420"; ctx.beginPath(); ctx.arc(0,0,5*s,Math.PI,0); ctx.fill();
+      ctx.fillStyle="#1a9e8f"; ctx.fillRect(-13*s,-10*s,2.2*s,6*s); ctx.fillRect(10.8*s,-10*s,2.2*s,6*s);
+    } else {
+      ctx.fillStyle="#c9a56b"; azTier(ctx,0,0,13*s,8*s);
+      ctx.fillStyle="#b8935a"; azTier(ctx,0,-8*s,8*s,6*s);
+      ctx.fillStyle="#6b5030";
+      ctx.beginPath(); ctx.moveTo(-1.8*s,0); ctx.lineTo(-1.2*s,-14*s); ctx.lineTo(1.2*s,-14*s); ctx.lineTo(1.8*s,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle="#b06ef0"; ctx.beginPath(); ctx.arc(0,-8*s,2.6*s,0,7); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+/* ---------- vector terrain details ---------- */
+function vTree(g,x,y,s){
+  g.fillStyle="#4a2f1b"; g.fillRect(x-s*0.09,y-s*0.28,s*0.18,s*0.32);
+  g.fillStyle="#1e4620";
+  g.beginPath(); g.moveTo(x,y-s*1.15); g.lineTo(x+s*0.44,y-s*0.45); g.lineTo(x-s*0.44,y-s*0.45); g.closePath(); g.fill();
+  g.fillStyle="#265a29";
+  g.beginPath(); g.moveTo(x,y-s*0.85); g.lineTo(x+s*0.52,y-s*0.1); g.lineTo(x-s*0.52,y-s*0.1); g.closePath(); g.fill();
+}
+function vMtn(g,x,y,s){
+  g.fillStyle="#7d7973";
+  g.beginPath(); g.moveTo(x-s*0.75,y+s*0.5); g.lineTo(x-s*0.1,y-s*0.55); g.lineTo(x+s*0.38,y+s*0.5); g.closePath(); g.fill();
+  g.fillStyle="#8d8983";
+  g.beginPath(); g.moveTo(x+s*0.02,y+s*0.5); g.lineTo(x+s*0.45,y-s*0.22); g.lineTo(x+s*0.8,y+s*0.5); g.closePath(); g.fill();
+  g.fillStyle="#e8e6e1";
+  g.beginPath(); g.moveTo(x-s*0.1,y-s*0.55); g.lineTo(x+s*0.07,y-s*0.28); g.lineTo(x-s*0.3,y-s*0.28); g.closePath(); g.fill();
+}
+
+function hexPoly(g,cx,cy,s){
+  g.beginPath();
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i);
+    const x=cx+s*Math.cos(a), y=cy+s*Math.sin(a);
+    i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  g.closePath();
+}
+/* Same hexagon, pre-flattened by TILT_SQUASH in local space -- for ground-plane hex
+   outlines drawn in draw()'s per-frame pass (which isn't under a canvas-level squash
+   transform, unlike renderBG's terrain layer, so sprite/text drawing there stays
+   undistorted). cx,cy must already be a toScreen()-projected point. */
+function squashedHexPoly(g,cx,cy,s){
+  g.beginPath();
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i);
+    const x=cx+s*Math.cos(a), y=cy+s*Math.sin(a)*TILT_SQUASH;
+    i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  g.closePath();
+}
+/* Draws one faction's full-bleed arena background, "cover"-fit (aspect-preserving,
+   centered, cropped to fill) into the given rect and clipped to it so it never bleeds
+   into the other half. No chromaKeyed() -- see the IMG_SPRITES.arena_bg_* comment for
+   why these opaque photos deliberately skip that step. */
+function drawArenaBgRect(g,faction,x,y,w,h){
+  const img=getSpriteImage("arena_bg_"+faction);
+  g.save();
+  g.beginPath(); g.rect(x,y,w,h); g.clip();
+  if(img && img.complete && img.naturalWidth>0){
+    const boxAspect=w/h, imgAspect=img.naturalWidth/img.naturalHeight;
+    let dw,dh;
+    if(imgAspect>boxAspect){ dh=h; dw=dh*imgAspect; } else { dw=w; dh=dw/imgAspect; }
+    g.drawImage(img,x+w/2-dw/2,y+h/2-dh/2,dw,dh);
+  } else {
+    // still decoding (or missing) -- flat color matching that faction's old base
+    // terrain look, so there's no blank/black flash while the real art loads in
+    g.fillStyle = faction==="egypt" ? "#c7a15c" : "#6f8a41";
+    g.fillRect(x,y,w,h);
+  }
+  g.restore();
+}
+/* Special terrain tiles (forest/mountain/water) are "simply placed on top" of the
+   transparent hex grid -- a compact icon sized to sit within the hex, not a full-hex
+   clipped fill (see the IMG_SPRITES terrain-art comment for why this is a deliberate
+   change from the same-day earlier approach). Falls back to the original vector
+   decorations if the image isn't loaded yet. R/H have no art and no vector
+   decoration either at this point -- see terrain architecture note 2. */
+function drawSpecialTile(g,T,cx,cy){
+  const key = T==="F"?"terrain_shared_forest" : T==="M"?"terrain_shared_mountain" : T==="W"?"terrain_shared_water" : null;
+  if(!key) return;
+  const img=getSpriteImage(key);
+  if(img && img.complete && img.naturalWidth>0){
+    const src=chromaKeyed(img,key);
+    const size=HEX*1.5; // comfortably within the hex's own ~1.7*HEX flat-to-flat extent
+    const aspect=img.naturalWidth/img.naturalHeight;
+    const dw=aspect>=1?size:size*aspect, dh=aspect>=1?size/aspect:size;
+    g.drawImage(src,cx-dw/2,cy-dh/2,dw,dh);
+    return;
+  }
+  if(T==="F"){
+    vTree(g,cx-HEX*0.3,cy+HEX*0.18,HEX*0.5);
+    vTree(g,cx+HEX*0.26,cy+HEX*0.32,HEX*0.62);
+    vTree(g,cx-0.02*HEX,cy+HEX*0.52,HEX*0.44);
+  } else if(T==="M"){ vMtn(g,cx,cy,HEX); }
+  else if(T==="W"){
+    g.fillStyle="rgba(160,220,240,.10)"; g.beginPath(); g.ellipse(cx,cy,HEX*0.55,HEX*0.34,0,0,7); g.fill();
+    g.strokeStyle="rgba(190,235,255,.35)"; g.lineWidth=1;
+    for(const dy of [-0.18,0.16]){ g.beginPath();
+      g.moveTo(cx-HEX*.38,cy+HEX*dy); g.quadraticCurveTo(cx-HEX*.13,cy+HEX*(dy-.16),cx,cy+HEX*dy);
+      g.quadraticCurveTo(cx+HEX*.13,cy+HEX*(dy+.16),cx+HEX*.38,cy+HEX*dy); g.stroke(); }
+  }
+}
+function renderBG(){
+  const g=bg.getContext("2d");
+  g.setTransform(DPR,0,0,DPR,0,0);
+  g.clearRect(0,0,bg.width,bg.height);
+  // ground plane (terrain hexes + the mid-board boundary) renders under a canvas-level
+  // squash so the hex tiles themselves come out visually flattened -- restored below,
+  // before the vignette, since a lens vignette isn't part of the tilted ground plane.
+  const pivot=boardPivotY();
+  g.save();
+  g.translate(0,pivot); g.scale(1,TILT_SQUASH); g.translate(0,-pivot);
+  // One full-bleed background per half of the arena (that half's controlling
+  // faction's own art), THEN a transparent hex grid on top -- the background reads
+  // as a single continuous scene, not a tiled mosaic of individually-textured hexes.
+  // Top/bottom bounds must check BOTH column parities, not just column 0 -- odd
+  // columns sit HEX*SQ3*0.5 lower than even columns in the same row (the odd-q
+  // offset), so a bound taken only from column 0 undershoots the true bottom edge of
+  // the last row by that much, leaving odd-column hexes there half-uncovered by the
+  // background (this was a real bug, not just tight padding -- fixed 2026-07-20,
+  // direct chat request: "let it over hang on either end of the arena because
+  // currently the player's hexes on the bottom are only half filled"). Padding bumped
+  // to a full HEX beyond that true bound as well, so the art visibly overhangs past
+  // the arena's top/bottom edges instead of just barely reaching them.
+  const bgLeft=hexCenter(0,0).x-HEX*1.3, bgRight=hexCenter(COLS-1,0).x+HEX*1.3;
+  const bgTop=Math.min(hexCenter(0,0).y,hexCenter(1,0).y)-HEX*1.4;
+  const bgBot=Math.max(hexCenter(0,TMAP.length-1).y,hexCenter(1,TMAP.length-1).y)+HEX*1.4;
+  if(S.setupStep==="terrain"){
+    // local half-board: entirely the player's own territory, one backdrop, no split
+    drawArenaBgRect(g,factionForSide(0),bgLeft,bgTop,bgRight-bgLeft,bgBot-bgTop);
+  } else {
+    const midY=(hexCenter(0,5).y+hexCenter(0,6).y)/2;
+    drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,midY-bgTop);   // AI half (top)
+    drawArenaBgRect(g,factionForSide(0),bgLeft,midY,bgRight-bgLeft,bgBot-midY);    // player half (bottom)
+  }
+  for(let r=0;r<TMAP.length;r++)for(let c=0;c<COLS;c++){
+    const ct=hexCenter(c,r);
+    hexPoly(g,ct.x,ct.y,HEX-0.6);
+    g.strokeStyle="rgba(0,0,0,.32)"; g.lineWidth=2.4; g.stroke(); // dark base pass, keeps the line legible over light background areas
+    hexPoly(g,ct.x,ct.y,HEX-0.6);
+    g.strokeStyle="rgba(255,244,214,.65)"; g.lineWidth=1.1; g.stroke(); // distinct light grid line on top -- hexes are otherwise fully transparent
+    drawSpecialTile(g,terrain(c,r),ct.x,ct.y);
+  }
+  if(S.setupStep!=="terrain"){
+    const y=(hexCenter(0,5).y+hexCenter(0,6).y)/2;
+    g.strokeStyle="rgba(255,255,255,.12)"; g.setLineDash([6,6]);
+    g.beginPath(); g.moveTo(0,y); g.lineTo(bg.width/DPR,y); g.stroke(); g.setLineDash([]);
+  }
+  g.restore(); // back to the plain DPR transform -- the vignette below is a lens effect, not part of the tilted ground
+  const VW=bg.width/DPR, VH=bg.height/DPR;
+  const vg=g.createRadialGradient? g.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.34,VW/2,VH/2,Math.max(VW,VH)*0.7):null;
+  if(vg && vg.addColorStop){ vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.52)");
+    g.fillStyle=vg; g.fillRect(0,0,VW,VH); }
+}
+function rrect(g,x,y,w,h,r){
+  g.beginPath(); g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+function hpBar(x,y,w,frac,color){
+  rrect(ctx,x-w/2-1,y-1.2,w+2,5.6,2.6);
+  ctx.fillStyle="rgba(5,6,9,.88)"; ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.9)"; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle=color;
+  ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,frac)),3.2);
+}
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,board.width/DPR,board.height/DPR);
+  ctx.drawImage(bg,0,0,board.width/DPR,board.height/DPR);
+  const now=elapsed();
+  /* Everything below reads a LOGICAL position (hexCenter/bldCenter/u.pos, all untouched)
+     and projects it through toScreen() right before drawing -- ground-plane discs (wards,
+     ring/boom/spawn effect bursts, building-hex footprint, unit shadow) additionally get
+     their vertical radius squashed by TILT_SQUASH so they read as flat on the tilted
+     ground; sprite art, building art, HP bars, and text/glyphs are translated to the
+     projected anchor but drawn at their normal (unsquashed) local proportions -- exactly
+     the same "project the anchor, not the content" rule renderBG's terrain layer achieves
+     via a canvas-level transform instead (text-free, so that shortcut is safe there). */
+  for(const w of S.wards){
+    if(now>=w.until||w.charges<=0) continue;
+    const ctL=hexCenter(w.c,w.r), ct=toScreen(ctL.x,ctL.y);
+    const R=HEX*SQ3*w.rad*0.92;
+    ctx.fillStyle="rgba(176,110,240,.16)"; ctx.strokeStyle="rgba(176,110,240,.6)";
+    ctx.beginPath(); ctx.ellipse(ct.x,ct.y,R,R*TILT_SQUASH,0,0,7); ctx.fill(); ctx.stroke();
+  }
+  if(S.drag&&S.drag.spawnBld){
+    const d=S.drag, bcL=bldCenter(d.spawnBld), bc=toScreen(bcL.x,bcL.y);
+    ctx.strokeStyle=d.legal?"rgba(232,184,75,.9)":"rgba(255,70,60,.9)";
+    ctx.lineWidth=3; ctx.lineJoin="round"; ctx.setLineDash([7,5]);
+    ctx.beginPath(); ctx.moveTo(bc.x,bc.y);
+    for(const h of d.path){ const ctL=hexCenter(h[0],h[1]), ct=toScreen(ctL.x,ctL.y); ctx.lineTo(ct.x,ct.y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    if(d.path.length){ const eL=hexCenter(...d.path[d.path.length-1]), e=toScreen(eL.x,eL.y);
+      ctx.fillStyle=d.legal?"#e8b84b":"#ff463c";
+      ctx.beginPath(); ctx.arc(e.x,e.y,5,0,7); ctx.fill(); }
+  }
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  const activeBuildings = S.setupStep==="terrain" ? playerHalf.buildings : buildings;
+  for(const b of activeBuildings){
+    const cL=bldCenter(b), c=toScreen(cL.x,cL.y);
+    for(const h of b.hexes){ const ctL=hexCenter(h[0],h[1]), ct=toScreen(ctL.x,ctL.y);
+      squashedHexPoly(ctx,ct.x,ct.y,HEX-1);
+      ctx.fillStyle=b.dead?"rgba(30,30,30,.55)":(b.side?"rgba(192,57,43,.28)":"rgba(232,184,75,.25)");
+      ctx.fill();
+      ctx.strokeStyle=b.side?"#c0392b":"#e8b84b"; ctx.lineWidth=1.5; ctx.stroke(); }
+    drawBuilding(b,c);
+    const lbl=b.name.toUpperCase();
+    ctx.font=`bold ${Math.max(7,HEX*0.3)}px sans-serif`;
+    const mm=ctx.measureText(lbl)||{width:HEX*1.4};
+    const tw=(mm.width||HEX*1.4)+HEX*0.55, ly=c.y+HEX*0.86, lh=HEX*0.5;
+    rrect(ctx,c.x-tw/2,ly,tw,lh,3);
+    ctx.fillStyle="rgba(10,12,16,.85)"; ctx.fill();
+    ctx.strokeStyle=b.side?"rgba(210,80,60,.85)":"rgba(232,184,75,.85)"; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle="#ddd6c4"; ctx.fillText(lbl,c.x,ly+lh/2+0.5);
+    if(!b.dead) hpBar(c.x,c.y-HEX*1.15,HEX*2.2,b.hp/b.maxhp,b.side?"#e74c3c":"#e8b84b");
+  }
+  const us=S.units.filter(u=>!u.dead).sort((a,b)=>a.pos.y-b.pos.y); // squash is monotonic in y, so logical-y sort order == screen-y sort order
+  for(const u of us){
+    const big=u.size>1;
+    const p=toScreen(u.pos.x,u.pos.y);
+    ctx.beginPath(); ctx.ellipse(p.x,p.y+HEX*0.34*TILT_SQUASH,HEX*(big?0.55:0.38),HEX*0.17*TILT_SQUASH,0,0,7);
+    ctx.fillStyle=u.side?"rgba(192,57,43,.5)":"rgba(46,111,208,.5)"; ctx.fill();
+    drawUnitSprite(u);
+    hpBar(p.x,p.y-HEX*(big?1.05:0.78),HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff");
+    ctx.font=`${HEX*0.45}px serif`;
+    if(u.hold) ctx.fillText("⚓",p.x+HEX*0.6,p.y-HEX*0.5);
+    if(now<u.stunUntil) ctx.fillText("💫",p.x,p.y-HEX*1.05);
+    else if(now<u.buffUntil) ctx.fillText("✨",p.x+HEX*0.55,p.y-HEX*0.5);
+  }
+  for(let i=S.effects.length-1;i>=0;i--){
+    const e=S.effects[i]; e.t+=1/60;
+    const p=e.t/e.life;
+    if(p>=1){ S.effects.splice(i,1); continue; }
+    const s1=toScreen(e.x,e.y);
+    if(e.kind==="tracer"){
+      const s2=toScreen(e.x2,e.y2);
+      ctx.strokeStyle=e.color; ctx.lineWidth=2; ctx.globalAlpha=1-p;
+      ctx.beginPath(); ctx.moveTo(s1.x,s1.y); ctx.lineTo(s2.x,s2.y); ctx.stroke(); ctx.globalAlpha=1;
+    } else if(e.kind==="ring"){
+      const R=6+p*HEX*1.8;
+      ctx.strokeStyle=e.color; ctx.lineWidth=2.5; ctx.globalAlpha=1-p;
+      ctx.beginPath(); ctx.ellipse(s1.x,s1.y,R,R*TILT_SQUASH,0,0,7); ctx.stroke(); ctx.globalAlpha=1;
+    } else if(e.kind==="boom"){
+      const R=4+p*HEX*1.1;
+      ctx.fillStyle=e.color; ctx.globalAlpha=(1-p)*0.8;
+      ctx.beginPath(); ctx.ellipse(s1.x,s1.y,R,R*TILT_SQUASH,0,0,7); ctx.fill(); ctx.globalAlpha=1;
+    } else if(e.kind==="heal"){
+      ctx.fillStyle=e.color; ctx.globalAlpha=1-p;
+      ctx.font=`${HEX*0.55}px serif`; ctx.fillText("＋",s1.x,s1.y-p*14); ctx.globalAlpha=1;
+    } else if(e.kind==="spawn"){
+      const R=3+p*HEX;
+      ctx.strokeStyle=e.color; ctx.globalAlpha=1-p; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.ellipse(s1.x,s1.y,R,R*TILT_SQUASH,0,0,7); ctx.stroke(); ctx.globalAlpha=1;
+    } else if(e.kind==="text"){
+      ctx.fillStyle=e.color; ctx.globalAlpha=1-p;
+      ctx.font=`bold ${HEX*0.5}px sans-serif`; ctx.fillText(e.text,s1.x,s1.y-p*20); ctx.globalAlpha=1;
+    }
+  }
+}
+
+/* ================================================================
+   RESIZE / END / MAIN LOOP
+   ================================================================ */
+/* Keeps #app itself phone-shaped (iPhone 14 Pro CSS viewport ratio, same device
+   HANDOFF's board-sizing math is calibrated against) regardless of the actual
+   browser window's shape — a wide/short desktop window used to leave the board
+   (bound by whichever of width/height was tighter) narrower than the full-width
+   bottom bar, since #app used to just fill height:100% of any window shape.
+   Fit-inside-the-viewport, letterboxed like a real phone frame, not stretched. */
+function fitAppToPhone(){
+  const PHONE_W=393, PHONE_H=852;
+  const maxW=Math.min(520, window.innerWidth), maxH=window.innerHeight;
+  let w=maxW, h=w*PHONE_H/PHONE_W;
+  if(h>maxH){ h=maxH; w=h*PHONE_W/PHONE_H; }
+  const app=$("app");
+  app.style.width=w+"px";
+  app.style.height=h+"px";
+}
+function computeCamera(){
+  const wrap=$("boardwrap"), W=wrap.clientWidth, H=wrap.clientHeight;
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  board.width=W*DPR; board.height=H*DPR;
+  bg.width=W*DPR; bg.height=H*DPR;
+  const rows=TMAP.length;
+  // Terrain step: the floating palette panel sits at the top of the board area and would
+  // otherwise cover part of the player's half — reserve its real rendered height as a top
+  // inset so the board renders below it instead of underneath it.
+  const topInset = S.setupStep==="terrain" ? ($("stepterrain").offsetHeight||0) : 0;
+  const availH = H-topInset;
+  // The camera tilt (TILT_SQUASH) renders the board TILT_SQUASH-times shorter than its
+  // logical/unsquashed height, so the height budget below has that much more real room
+  // than the raw formula alone would suggest -- without dividing by TILT_SQUASH here,
+  // HEX stayed capped at the old (taller) height need even though less vertical space
+  // is now actually used on screen, leaving the board narrower than the available width
+  // for no reason (visible as blank margins on the sides).
+  HEX=Math.min(W/(1.5*COLS+0.5), availH/(SQ3*(rows+0.5)*TILT_SQUASH));
+  OX=(W-HEX*(1.5*COLS+0.5))/2;
+  OY=topInset + (availH-HEX*SQ3*(rows+0.5))/2;
+  renderBG();
+}
+function resize(){
+  fitAppToPhone();
+  computeCamera();
+}
+function checkInstantWin(){
+  for(const side of [0,1])
+    if(buildings.filter(b=>b.side===side&&b.dead).length===3){ endMatch(); return; }
+}
+function endMatch(){
+  if(S.over) return; S.over=true;
+  const pKills=buildings.filter(b=>b.side===1&&b.dead).length;
+  const aKills=buildings.filter(b=>b.side===0&&b.dead).length;
+  let win = pKills>aKills?1 : aKills>pKills?-1
+          : S.bldDmg[0]>S.bldDmg[1]?1 : S.bldDmg[1]>S.bldDmg[0]?-1 : 0;
+  $("endtitle").textContent = win>0?"⚜ VICTORY ⚜":win<0?"DEFEAT":"DRAW";
+  $("endtitle").style.color = win>0?"#e8b84b":win<0?"#ff5b4d":"#ccc";
+  $("enddetail").textContent =
+    `Buildings destroyed — You: ${pKills}  Enemy: ${aKills}\n`+
+    `Building damage dealt — You: ${Math.floor(S.bldDmg[0])}  Enemy: ${Math.floor(S.bldDmg[1])}`;
+  $("endscreen").style.display="flex";
+}
+
+function applyFactionUI(){
+  $("aititle").textContent=FACTIONS[S.aiFaction].aiTitle;
+  $("subtitle").textContent=`${FACTIONS[S.playerFaction].name} vs ${FACTIONS[S.aiFaction].name} AI`;
+}
+function renderFactionPicker(){
+  $("factionbtn-egypt").classList.toggle("selected", S.playerFaction==="egypt");
+  $("factionbtn-china").classList.toggle("selected", S.playerFaction==="china");
+  $("factionbtn-aztec").classList.toggle("selected", S.playerFaction==="aztec");
+}
+/* Setup is a three-step wizard, each its own full page ("faction" split out 2026-07-18,
+   direct chat request — was folded into "units"; picking a faction first, before the
+   loadout/hero/god pickers that faction drives, reads more naturally as its own step).
+   Steps "faction" and "units" are both true full-screen pages — #menupanel goes opaque
+   via .fullpage and blocks the whole board, since there's nothing to tap there. Step
+   "terrain" shows ONLY the player's own half as its own standalone board (TMAP points
+   at playerHalf.terrain, buildings render from playerHalf.buildings) — not a crop of the
+   full arena. Leaving "terrain" composes playerHalf back into the live absolute TMAP/
+   buildings the rest of the game already expects. */
+function renderSetupStep(){
+  const onFaction = S.setupStep==="faction";
+  const onTerrain = S.setupStep==="terrain";
+  const onUnits = !onFaction && !onTerrain;
+  $("stepfaction").style.display = onFaction? "block":"none";
+  $("stepunits").style.display = onUnits? "block":"none";
+  $("stepterrain").style.display = onTerrain? "block":"none";
+  $("menupanel").classList.toggle("fullpage", !onTerrain);
+  if(onTerrain){ TMAP = playerHalf.terrain; }
+  else { TMAP = composeAbsoluteTMAP(); composeAbsoluteBuildings(); }
+  computeCamera();
+}
+function goToFactionStep(){ S.setupStep="faction"; renderSetupStep(); }
+function goToUnitsStep(){ S.setupStep="units"; renderSetupStep(); }
+function goToTerrainStep(){
+  if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before continuing."); return; }
+  S.setupStep="terrain"; renderSetupStep();
+}
+function setPlayerFaction(faction){
+  if(faction===S.playerFaction) return;
+  S.playerFaction=faction;
+  // Aztec is player-only (see 7.8's sign-off) — the AI still only ever plays Egypt or China,
+  // picked at random when the player picks Aztec; otherwise it's the simple binary complement.
+  if(faction==="egypt") S.aiFaction="china";
+  else if(faction==="china") S.aiFaction="egypt";
+  else S.aiFaction = Math.random()<0.5 ? "egypt" : "china";
+  S.loadout=[...FACTIONS[faction].defaultLoadout];
+  S.heroPick=[...FACTIONS[faction].defaultHeroes];
+  S.godPick=[...FACTIONS[faction].defaultGodPick];
+  S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
+  startMatch(false);
+}
+function startMatch(keepTerrain){
+  applyFactionUI();
+  S.t=180; S.over=false;
+  S.food=60; S.favor=40; S.aiFood=60; S.aiFavor=40;
+  S.units.length=0; S.effects.length=0; S.wards.length=0; S.deadHumans.length=0; S.training.length=0;
+  S.bldDmg=[0,0];
+  HUMAN_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="human");
+  HERO_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="hero");
+  S.heroPick = S.heroPick.filter(k=>HERO_KEYS.includes(k));
+  if(S.heroPick.length!==2) S.heroPick=[...FACTIONS[S.playerFaction].defaultHeroes];
+  const allAiHeroKeys = Object.keys(FACTIONS[S.aiFaction].units).filter(k=>FACTIONS[S.aiFaction].units[k].cat==="hero");
+  aiHeroKeys = allAiHeroKeys.sort(()=>Math.random()-0.5).slice(0,2);
+  activeGods = FACTIONS[S.playerFaction].allGods.filter(g=>S.godPick.includes(g.key));
+  S.playerGods = {};
+  activeGods.forEach(g=>{ S.playerGods[g.key]={unlocked:false,cdUntil:0}; });
+  buildPlayerGodsUI();
+  activeAiGods = FACTIONS[S.aiFaction].allGods.filter(g=>S.aiGodPick.includes(g.key));
+  S.aiGods = {};
+  activeAiGods.forEach(g=>{ S.aiGods[g.key]={unlocked:false,cdUntil:0}; });
+  buildEnemyGodsUI();
+  S.armedPower=null; S.drag=null; S.paintSelected=null;
+  buildings.forEach(b=>{ b.hp=b.maxhp; b.dead=false; b.atkTimer=0; });
+  DECK_INITIAL = [...S.loadout, ...S.heroPick];
+  DECK.length=0; DECK.push(...DECK_INITIAL);
+  aiTrainT=3; aiPowerT=8; aiHeroAt=55; aiTargetRot=0;
+  const profileStyles=Object.keys(AI_PROFILES);
+  const profileStyle=profileStyles[Math.floor(Math.random()*profileStyles.length)];
+  aiProfile=AI_PROFILES[profileStyle][S.aiFaction];
+  $("ainame").textContent=`${FACTIONS[S.aiFaction].label} — ${profileStyle[0].toUpperCase()}${profileStyle.slice(1)}`;
+  if(!keepTerrain){ playerHalf.terrain=freshPlayerHalfTerrain(); S.painted={F:0,M:0,W:0}; S.paintMap={}; }
+  $("endscreen").style.display="none";
+  S.setupStep="faction";
+  renderCards();
+  refreshUI();
+  renderFactionPicker();
+  renderSetupStep();
+  renderPalette();
+  renderLoadout();
+  renderHeroPicker();
+  renderGodPicker();
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(!S.over && S.phase==="battle"){
+    S.t-=dt;
+    tickEconomy(dt);
+    tickTraining();
+    tickFortresses(dt);
+    tickAI(dt);
+    for(const u of S.units) updateUnit(u,dt);
+    S.units=S.units.filter(u=>!u.dead);
+    S.wards=S.wards.filter(w=>elapsed()<w.until&&w.charges>0);
+    if(S.t<=0){ S.t=0; endMatch(); }
+  }
+  refreshUI();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- INIT ---------------- */
+renderCards();
+window.addEventListener("resize",resize);
+if(typeof ResizeObserver!=="undefined") new ResizeObserver(()=>resize()).observe($("boardwrap"));
+resize();
+startMatch();
+warmSpriteCache();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
