@@ -9,6 +9,7 @@
     --egypt-gold:#e8b84b; --egypt-blue:#2e6fd0; --china-red:#c0392b; --china-gold:#f1c40f;
     --ui-dark:#171a22; --ui-panel:#232733; --ui-border:#3a4052;
     --favor:#b06ef0; --food:#7ec46a;
+    --passage-gold:#d5ab58; --passage-bronze:#826738; --passage-teal:#0d4948;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
   html,body{height:100%;background:#0b0d12;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;color:#e8e4d8;}
@@ -30,7 +31,9 @@
   #aititle{font-size:9px;white-space:nowrap;}
   #enemygods{display:flex;gap:3px;flex:0 0 auto;}
   .egod{width:26px;border-radius:6px;background:linear-gradient(180deg,#241a12,#120d09);border:1px solid #6b5426;text-align:center;padding:2px 1px;font-size:7px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.6);}
-  .egod .gport{font-size:14px;line-height:1.1;filter:grayscale(85%);opacity:.55;background:radial-gradient(circle at 50% 42%,#3a2416 0%,transparent 70%);}
+  .egod .gport{width:16px;height:16px;margin:0 auto;line-height:1;filter:grayscale(85%);opacity:.55;background:#120d09;border-radius:4px;overflow:hidden;}
+  .egod .gport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .gportemoji{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;line-height:1;background:#0c0e13;border-radius:4px;}
   .egod.unlocked .gport{filter:none;opacity:1;}
   .egod.unlocked{border-color:var(--china-gold);box-shadow:0 0 6px rgba(241,196,15,.45);}
   .egod .gcost{color:var(--favor);font-weight:700;}
@@ -48,25 +51,101 @@
   #menuscreen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:55;text-align:center;pointer-events:none;}
   #menupanel{pointer-events:auto;width:100%;padding:14px 0 18px;background:rgba(8,8,14,.92);border-bottom:1px solid #6b5426;}
   #menupanel.fullpage{height:100%;display:flex;flex-direction:column;justify-content:flex-start;overflow-y:auto;background:rgba(8,8,14,.97);border-bottom:none;}
+  #menupanel.home-active{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(180deg,rgba(3,7,10,.42),rgba(3,7,10,.18) 38%,rgba(3,7,10,.7) 75%,rgba(3,7,10,.92)),url("assets/sprites/menu_bg_pantheon_passage.png") center/cover no-repeat;}
+  #menupanel.home-active::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 0 28%,rgba(2,5,8,.3) 68%,rgba(2,5,8,.7) 100%);}
+  #menupanel.home-active #stephome{position:relative;z-index:1;padding:clamp(18px,5vh,42px) 3% 16px;}
+  #menupanel.home-active #stephome h1{margin:0;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;font-size:clamp(20px,6vw,30px);letter-spacing:3px;color:#f4d99b;text-shadow:0 2px 2px #000,0 0 14px rgba(213,171,88,.45);}
   #menuscreen h1{font-size:28px;margin-bottom:8px;color:var(--egypt-gold);letter-spacing:2px;}
   #menuscreen p{font-size:14px;color:#bbb;margin-bottom:18px;}
   #menuscreen button{font-size:16px;padding:10px 26px;border-radius:8px;border:1px solid var(--egypt-gold);background:#2a2413;color:var(--egypt-gold);font-weight:700;cursor:pointer;}
-  #terrainpalette,#factionpicker{display:flex;gap:6px;justify-content:center;margin:0 0 14px;flex-wrap:wrap;}
-  #stepterrainbtns,#stepunitsbtns{display:flex;gap:8px;justify-content:center;}
-  #btnback,#btnbackfaction{border-color:#6b5426;background:#241a12;color:#d8c8a8;}
+  /* Pantheon Passage: one material system, three silhouette grammars. */
+  #menupanel button:not(.paintbtn),.factionbtn{--frame-accent:#d5ab58;--frame-jewel:#2e6fd0;position:relative;border:2px solid var(--frame-accent);border-radius:0;color:#f2dfb2;background:linear-gradient(180deg,rgba(18,42,43,.98),rgba(7,16,19,.98));box-shadow:inset 0 0 0 2px rgba(4,8,10,.9),inset 0 0 0 3px rgba(213,171,88,.28),0 4px 12px rgba(0,0,0,.55);text-shadow:0 1px 2px #000;transition:filter .12s,transform .08s,box-shadow .12s;}
+  #menupanel button:not(.paintbtn):active,.factionbtn:active{transform:translateY(1px);filter:brightness(1.12);}
+  #menupanel[data-faction="egypt"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="egypt"]{--frame-jewel:#315eaa;clip-path:polygon(3% 0,97% 0,100% 14%,96% 50%,100% 86%,97% 100%,3% 100%,0 86%,4% 50%,0 14%);}
+  #menupanel[data-faction="china"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="china"]{--frame-jewel:#31705e;clip-path:polygon(4% 0,96% 0,96% 8%,100% 8%,100% 92%,96% 92%,96% 100%,4% 100%,4% 92%,0 92%,0 8%,4% 8%);}
+  #menupanel[data-faction="aztec"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="aztec"]{--frame-jewel:#209a9a;clip-path:polygon(7% 0,93% 0,93% 8%,97% 8%,97% 18%,100% 18%,100% 82%,97% 82%,97% 92%,93% 92%,93% 100%,7% 100%,7% 92%,3% 92%,3% 82%,0 82%,0 18%,3% 18%,3% 8%,7% 8%);}
+  #menupanel button:not(.paintbtn)::after,.factionbtn::after{content:"";position:absolute;inset:5px;pointer-events:none;border:1px solid color-mix(in srgb,var(--frame-accent) 62%,transparent);box-shadow:inset 0 0 8px rgba(0,0,0,.55);}
+  #menupanel button:not(.paintbtn)::before,.factionbtn::before{content:"";position:absolute;left:8px;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);background:var(--frame-jewel);border:1px solid #d5ab58;}
+  #menupanel button.selected:not(.paintbtn),#menupanel .modebtn:not(:disabled):hover,.factionbtn.selected{color:#fff1c8;background:linear-gradient(180deg,#12615e,#082f32);box-shadow:inset 0 0 0 2px rgba(4,8,10,.85),inset 0 0 0 3px rgba(239,194,94,.55),0 0 13px rgba(37,151,145,.34),0 4px 12px rgba(0,0,0,.6);}
+  #factionpicker{display:flex;gap:6px;justify-content:center;margin:0 0 14px;flex-wrap:wrap;}
+  #terrainpalette{display:flex;flex-direction:column;gap:3px;width:min(92%,480px);margin:0 auto 4px;}
+  .setupnav,#stepterrainbtns{display:flex;gap:8px;justify-content:center;flex:0 0 auto;padding:8px 0 2px;}
+  .setupback{border-color:#6b5426!important;background:#241a12!important;color:#d8c8a8!important;}
   .paintbtn,.factionbtn{font-size:15px;padding:5px 9px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+  #terrainpalette .paintbtn{width:100%;min-height:46px;padding:3px 6px;text-align:left;gap:7px;}
+  .terrainhex{width:46px;min-width:46px;height:40px;object-fit:cover;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);pointer-events:none;}
+  .terraincopy{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px;pointer-events:none;}
+  .terrainname{display:flex;align-items:center;justify-content:space-between;color:#f0dca7;font-size:11px;line-height:1;letter-spacing:.4px;text-transform:uppercase;}
+  .terraindesc{color:#bcc3d1;font-size:9px;line-height:1.15;font-weight:500;}
+  #stepterrain .loadouthead{margin-bottom:4px;}
+  #stepterrainbtns{padding:2px 0 0;}
+  #stepterrainbtns button{font-size:14px;padding:6px 18px;}
   .paintbtn .pcount{font-size:10px;color:#9aa0ae;font-weight:700;}
   .paintbtn.selected,.factionbtn.selected{border-color:var(--egypt-gold);color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.5);background:#3a2a14;}
-  #loadoutpicker,#heropicker,#godpicker{margin:0 0 14px;}
-  .loadouthead{font-size:10px;letter-spacing:1px;color:#9aa0ae;font-weight:700;margin-bottom:6px;}
+  #loadoutpicker,#heropicker,#godpicker{margin:0 auto;width:min(94%,520px);display:flex;flex-direction:column;min-height:0;flex:1;}
+  #stephome{width:min(94%,520px);margin:auto;text-align:center;display:flex;flex-direction:column;min-height:0;flex:1;}
+  #homemodes{display:flex;flex-direction:column;gap:10px;margin:14px auto 16px;flex:1;justify-content:flex-end;width:min(100%,430px);}
+  .modebtn{width:100%;min-height:62px;padding:14px;font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:800;letter-spacing:1.2px;border-radius:0;border:1px solid #6b5426;background:#241a12;color:#f0dca7;cursor:pointer;text-transform:uppercase;}
+  .modebtn .modesub{display:block;font-size:10px;font-weight:600;color:#aaa18e;margin-top:3px;letter-spacing:.3px;}
+  .modebtn:disabled{opacity:.35;cursor:not-allowed;}
+  #stepdecks{width:min(94%,520px);margin:auto;text-align:center;}
+  #deckslots{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;margin:14px auto 12px;}
+  #deckslots .deckslot{width:100%;padding:12px;border:1px solid #6b5426;border-radius:10px;background:#241a12;color:#d8c8a8;text-align:left;}
+  #deckslots .deckslot.selected{border-color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.45);}
+  .deckname{font-weight:800;letter-spacing:.8px;margin-bottom:5px;color:#f0dca7;}
+  .decksummary{min-height:13px;white-space:pre-line;font-size:9px;line-height:1.45;color:#aaa18e;margin-bottom:9px;}
+  .deckactions{display:flex;gap:7px;}
+  .deckactions button{flex:1;padding:9px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;}
+  .deckactions button:disabled{opacity:.35;cursor:not-allowed;}
+  #deckslotnote{font-size:9px;color:#85899a;letter-spacing:.4px;text-align:center;margin-top:8px;}
+  .loadouthead{font-size:12px;letter-spacing:1px;color:#9aa0ae;font-weight:700;margin-bottom:8px;}
   #loadoutcount,#herocount,#godpickcount{color:var(--egypt-gold);}
-  #loadoutcards,#herocards,#godpickcards,#godmythcards{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;max-width:340px;margin:0 auto;}
-  .loadoutcard,.herocard,.godpickcard,.mythcard{width:42px;padding:4px 2px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:center;cursor:pointer;}
-  .loadoutcard .uport,.herocard .uport,.godpickcard .uport,.mythcard .uport{font-size:17px;line-height:1.2;}
-  .loadoutcard .uname,.herocard .uname,.godpickcard .uname,.mythcard .uname{font-size:6.3px;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #loadoutcards,#herocards{display:flex;flex-direction:column;gap:7px;overflow-y:auto;min-height:0;padding:2px 3px 8px;}
+  /* 2026-07-23 (direct chat request): god picker became a 3-across tile grid + a
+     separate tap-through detail overlay, instead of one long list of expanded rows
+     (see the "goddetail" rules below). #godpickcards keeps its own id/rule (rather
+     than sharing #loadoutcards/#herocards's list layout) since only the god step
+     changed shape; loadout/hero pickers are untouched. */
+  #godpickcards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow-y:auto;min-height:0;padding:2px 3px 8px;align-content:start;}
+  .godtile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 8px;border-radius:10px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:center;cursor:pointer;}
+  .godtile .uport{width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;}
+  .godtile .uport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .godtile .gtilename{font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:#f0dca7;font-weight:800;}
+  .godtile.selected{border-color:var(--egypt-gold);background:#3a2a14;box-shadow:0 0 6px rgba(232,184,75,.5);}
+  .godtile.selected .gtilename{color:var(--egypt-gold);}
+  .goddetail{position:absolute;inset:0;z-index:6;background:rgba(8,8,14,.97);display:flex;flex-direction:column;padding:12px 0 8px;}
+  #goddetailcard{margin:0 auto;width:min(94%,520px);flex:1;min-height:0;overflow-y:auto;}
+  .goddetailnav{display:flex;gap:8px;justify-content:center;flex:0 0 auto;padding:8px 0 2px;}
+  #btngoddetailselect.selected{border-color:#ff6b5b!important;color:#ff6b5b!important;}
+  .loadoutcard,.herocard,.godpickcard{display:flex;flex:0 0 auto;align-items:stretch;min-height:82px;padding:5px;border-radius:10px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:left;cursor:pointer;overflow:hidden;}
+  .loadoutcard .uport,.herocard .uport,.godpickcard .uport{width:78px;min-width:78px;height:78px;border-radius:7px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;font-size:28px;}
+  .loadoutcard .uport img,.herocard .uport img,.godpickcard .uport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .unitportrait{object-fit:contain!important;object-position:center top;}
+  .pickdetails{flex:1;min-width:0;padding:2px 8px;}
+  .loadoutcard .uname,.herocard .uname,.godpickcard .uname{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:#f0dca7;font-weight:800;margin-bottom:4px;}
+  .pickdesc{font-size:10px;line-height:1.3;color:#bcc3d1;margin-bottom:4px;}
+  .pickstats{font-size:9px;line-height:1.35;color:#8fa3c2;}
+  .godvisuals{width:78px;min-width:78px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .namedportrait{position:relative;}
+  .portraitname{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:12px 2px 3px;background:linear-gradient(transparent,rgba(0,0,0,.9));color:#fff3cf;font-size:9px;font-weight:800;line-height:1.05;text-align:center;text-transform:uppercase;text-shadow:0 1px 2px #000;}
+  .mythdetail{margin-top:6px;padding-top:6px;border-top:1px solid #54452b;}
+  .mythport{width:78px;height:78px;min-width:78px;border-radius:7px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;}
+  .mythport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .mythport .unitportrait{transform:scale(1.28);transform-origin:center top;}
+  .mythcopy{min-width:0;flex:1;}
+  .mythname{font-size:9px;font-weight:800;color:#d8b8ff;text-transform:uppercase;margin-bottom:2px;}
+  .mythdesc{font-size:8px;line-height:1.25;color:#aeb6c6;}
+  .mythstats{font-size:7.5px;line-height:1.25;color:#8395b1;margin-top:2px;}
   .loadoutcard.selected,.herocard.selected,.godpickcard.selected{border-color:var(--egypt-gold);color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.5);background:#3a2a14;}
-  .mythcard{cursor:default;}
-  #btnbattle.disabled,#btnnext.disabled{opacity:.42;cursor:not-allowed;}
+  .selectiontray{flex:0 0 auto;margin:7px 0 0;padding:7px;border-top:1px solid #4d4028;background:#11131a;}
+  .traylabel{font-size:8px;letter-spacing:1.2px;color:#8f98aa;margin-bottom:5px;}
+  .trayitems{display:flex;gap:5px;min-height:42px;overflow-x:auto;justify-content:center;}
+  .trayitem{width:42px;min-width:42px;text-align:center;color:#d8c8a8;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .trayitem img,.trayemoji{display:block;width:32px;height:32px;margin:0 auto 2px;border-radius:5px;object-fit:cover;background:#211a12;}
+  .trayemoji{font-size:20px;line-height:32px;}
+  .trayempty{font-size:10px;color:#6f7786;align-self:center;}
+  #btnbattle.disabled,.setupnext.disabled{opacity:.42;cursor:not-allowed;}
+  .pickstep{height:100%;display:flex;flex-direction:column;min-height:0;padding:12px 0 8px;position:relative;}
 
   /* ---------- BOTTOM BAR ---------- */
   #bottombar{flex:0 0 auto;background:linear-gradient(0deg,#0b0d12 0%,#12151d 100%);border-top:1px solid #6b5426;padding:5px 7px 8px;}
@@ -77,7 +156,8 @@
   #playergods{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;min-width:0;}
   .pgod{display:flex;align-items:center;gap:3px;border-radius:7px;background:#1d2130;border:1px solid #33405e;padding:1px 3px;font-size:8.5px;cursor:pointer;position:relative;transition:transform .08s;overflow:hidden;}
   .pgod:active{transform:scale(.94);}
-  .pgod .gport{font-size:15px;line-height:1;filter:grayscale(85%);opacity:.55;flex:0 0 auto;}
+  .pgod .gport{width:18px;height:18px;line-height:1;filter:grayscale(85%);opacity:.55;flex:0 0 auto;border-radius:4px;overflow:hidden;background:#0c0e13;}
+  .pgod .gport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
   .pgod .gtxt{min-width:0;text-align:left;}
   .pgod .gname{font-size:8.5px;color:#cdd6ee;white-space:nowrap;overflow:hidden;}
   .pgod .gcost{color:var(--favor);font-weight:700;font-size:8.5px;}
@@ -92,7 +172,9 @@
 
   #cards{display:flex;gap:3px;min-width:0;padding-bottom:8px;}
   .card{flex:1 1 0;min-width:0;min-height:44px;border-radius:9px;background:linear-gradient(180deg,#26304a 0%,#111522 78%,#0c0f18 100%);border:1px solid #6b5426;text-align:center;padding:3px 1px 6px;font-size:7.5px;cursor:grab;position:relative;transition:transform .08s, box-shadow .08s;box-shadow:0 2px 6px rgba(0,0,0,.55);}
-  .card .uport{font-size:17px;line-height:1.15;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7));}
+  .card .uport{height:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7));}
+  .card .uport img{display:block;width:100%;height:100%;}
+  .card .uport .trayemoji{font-size:17px;line-height:1;}
   .card .uname{font-size:5.6px;letter-spacing:.4px;text-transform:uppercase;color:#e8dfc8;white-space:nowrap;overflow:hidden;pointer-events:none;}
   .card .ucost{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:radial-gradient(circle at 50% 30%,#8d4fe0,#5a2b9d 75%);border:1px solid #c9a5ff;border-radius:8px;padding:1px 5px;font-weight:800;font-size:7px;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.6);}
   .card .ucost .f,.card .ucost .v{color:#fff;}
@@ -137,11 +219,29 @@
     <div id="endscreen">
       <h1 id="endtitle"></h1>
       <p id="enddetail"></p>
-      <button onclick="startMatch(true)">Rematch</button>
-      <button onclick="startMatch(false); S.phase='setup'; document.getElementById('menuscreen').style.display='flex';">Menu</button>
+      <button onclick="replayCurrentDeck()">Rematch</button>
+      <button onclick="openDeckMenu()">Menu</button>
     </div>
     <div id="menuscreen">
       <div id="menupanel">
+        <div id="stephome">
+          <h1>GODSBOUND</h1>
+          <div id="homemodes">
+            <button class="modebtn selected" onclick="goToDeckStep()">Multiplayer<span class="modesub">(AI for now)</span></button>
+            <button class="modebtn" disabled>Festivals<span class="modesub">Coming soon</span></button>
+            <button class="modebtn" disabled>Legends<span class="modesub">Coming soon</span></button>
+          </div>
+        </div>
+        <div id="stepdecks">
+          <h1>GODSBOUND</h1>
+          <p>Choose a saved deck or build one.</p>
+          <div id="deckslots">
+            <div class="deckslot" id="deckslot-0"><div class="deckname" id="deckname-0">DECK A</div><div class="decksummary" id="decksummary-0"></div><div class="deckactions"><button id="deckselect-0" onclick="playDeckSlot(0)">SELECT</button><button id="deckedit-0" onclick="editDeckSlot(0)">EDIT</button></div></div>
+            <div class="deckslot" id="deckslot-1"><div class="deckname" id="deckname-1">DECK B</div><div class="decksummary" id="decksummary-1"></div><div class="deckactions"><button id="deckselect-1" onclick="playDeckSlot(1)">SELECT</button><button id="deckedit-1" onclick="editDeckSlot(1)">EDIT</button></div></div>
+          </div>
+          <div id="deckslotnote">Saved on this device</div>
+          <div class="setupnav"><button class="setupback" onclick="goToHomeStep()">&larr; Home</button></div>
+        </div>
         <div id="stepfaction">
           <h1>GODSBOUND</h1>
           <p id="subtitle">Egyptians vs Chinese AI</p>
@@ -150,39 +250,46 @@
             <button class="factionbtn" id="factionbtn-china" data-faction="china">⛩ Chinese</button>
             <button class="factionbtn" id="factionbtn-aztec" data-faction="aztec">🐆 Aztecs</button>
           </div>
-          <button id="btnnextfaction" onclick="goToUnitsStep()">Next: Warriors →</button>
+          <div class="setupnav"><button class="setupback" onclick="goToDeckStep()">← Decks</button><button id="btnnextfaction" class="setupnext" onclick="beginGodSelection()">Next: Gods →</button></div>
         </div>
-        <div id="stepunits" style="display:none;">
-          <div id="loadoutpicker">
-            <div class="loadouthead">YOUR WARRIORS — pick <span id="loadoutcount">4/4</span></div>
-            <div id="loadoutcards"></div>
+        <div id="stepgods" class="pickstep" style="display:none;">
+          <div id="godpicker">
+            <div class="loadouthead">CHOOSE YOUR GODS — <span id="godpickcount">0/4</span></div>
+            <div id="godpickcards"></div>
+            <div class="selectiontray"><div class="traylabel">SELECTED GODS</div><div id="godtray" class="trayitems"></div></div>
           </div>
+          <div class="setupnav"><button class="setupback" onclick="goToFactionStep()">← Back</button><button id="btnnextgods" class="setupnext" onclick="goToHeroesStep()">Next: Heroes →</button></div>
+          <div id="goddetail" class="goddetail" style="display:none;">
+            <div id="goddetailcard"></div>
+            <div class="goddetailnav"><button class="setupback" data-godaction="close">← Gods</button><button id="btngoddetailselect" class="setupnext" data-godaction="select">Select</button></div>
+          </div>
+        </div>
+        <div id="stepheroes" class="pickstep" style="display:none;">
           <div id="heropicker">
             <div class="loadouthead">YOUR HEROES — pick <span id="herocount">2/2</span></div>
             <div id="herocards"></div>
+            <div class="selectiontray"><div class="traylabel">SELECTED HEROES</div><div id="herotray" class="trayitems"></div></div>
           </div>
-          <div id="godpicker">
-            <div class="loadouthead">YOUR GODS — pick <span id="godpickcount">4/4</span></div>
-            <div id="godpickcards"></div>
-            <div class="loadouthead">MYTH UNITS</div>
-            <div id="godmythcards"></div>
+          <div class="setupnav"><button class="setupback" onclick="goToGodsStep()">← Back</button><button id="btnnextheroes" class="setupnext" onclick="goToUnitsStep()">Next: Units →</button></div>
+        </div>
+        <div id="stepunits" class="pickstep" style="display:none;">
+          <div id="loadoutpicker">
+            <div class="loadouthead">YOUR HUMAN UNITS — pick <span id="loadoutcount">4/4</span></div>
+            <div id="loadoutcards"></div>
+            <div class="selectiontray"><div class="traylabel">SELECTED UNITS</div><div id="unittray" class="trayitems"></div></div>
           </div>
-          <div id="stepunitsbtns">
-            <button id="btnbackfaction" onclick="goToFactionStep()">← Back</button>
-            <button id="btnnext" onclick="goToTerrainStep()">Next: Terrain →</button>
-          </div>
+          <div class="setupnav"><button class="setupback" onclick="goToHeroesStep()">← Back</button><button id="btnnext" class="setupnext" onclick="goToTerrainStep()">Next: Terrain →</button></div>
         </div>
         <div id="stepterrain" style="display:none;">
           <div class="loadouthead">PAINT TERRAIN &amp; DRAG YOUR BUILDINGS ON THE MAP</div>
           <div id="terrainpalette">
-            <button class="paintbtn" id="paintbtn-F" data-paint="F">🌲<span class="pcount" id="paintbtn-F-count"></span></button>
-            <button class="paintbtn" id="paintbtn-M" data-paint="M">⛰<span class="pcount" id="paintbtn-M-count"></span></button>
-            <button class="paintbtn" id="paintbtn-W" data-paint="W">🌊<span class="pcount" id="paintbtn-W-count"></span></button>
-            <button class="paintbtn" id="paintbtn-D" data-paint="D">✖</button>
+            <button class="paintbtn" id="paintbtn-F" data-paint="F"><img class="terrainhex" src="assets/sprites/terrain_shared_forest.png" alt="Forest hex"><span class="terraincopy"><span class="terrainname">Forest <span class="pcount" id="paintbtn-F-count"></span></span><span class="terraindesc">Slows movement by 25%. Units inside take 25% less ranged damage.</span></span></button>
+            <button class="paintbtn" id="paintbtn-M" data-paint="M"><img class="terrainhex" src="assets/sprites/terrain_shared_mountain.png" alt="Mountain hex"><span class="terraincopy"><span class="terrainname">Mountain <span class="pcount" id="paintbtn-M-count"></span></span><span class="terraindesc">Impassable to ground units and blocks ranged line of sight.</span></span></button>
+            <button class="paintbtn" id="paintbtn-W" data-paint="W"><img class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname">Water <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc">Slows movement by 50%.</span></span></button>
           </div>
           <div id="stepterrainbtns">
-            <button id="btnback" onclick="goToUnitsStep()">← Back</button>
-            <button id="btnbattle" onclick="onBattleTap()">Battle</button>
+            <button id="btnback" class="setupback" onclick="goToUnitsStep()">← Back</button>
+            <button id="btnbattle" onclick="onFinishDeckTap()">Finish</button>
           </div>
         </div>
       </div>
@@ -299,12 +406,23 @@ const EG_UNITS = {
   falcon: {name:"Falcon Grd.",emoji:"🦅",  cost:{v:55}, cat:"myth", armor:"light",  dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475, size:2, train:2, flying:true, god:"horus"},
   lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
   mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
-  sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"isis"},
+  sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"bastet", strongerNearBuildings:true}, // 2026-07-23: reassigned from Isis to Bastet per mythology_game_design.xlsx
   slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1},
   camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2},
   khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2},
-  phoenix:{name:"Phoenix",     emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra"},
-  jackal: {name:"Jackal Warrior",emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis"}
+  phoenix:{name:"Bennu Bird",  emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra", revivesOnce:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "phoenix" -- same art/stats, now revives once on death)
+  jackal: {name:"Anubite",     emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis", fearImmune:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "jackal")
+  // ---- New Egyptian myths added 2026-07-23 to match mythology_game_design.xlsx
+  // (direct chat request). No dedicated art yet -- falls back to vector rendering
+  // via SPRITE_KEY, and to an emoji portrait in the god picker (see godPortrait()).
+  serpopard:{name:"Serpopard", emoji:"🐍", cost:{v:65}, cat:"myth", armor:"heavy", dtype:"melee",  hp:260, dmg:26, as:1.0, range:1, speed:0.7,      size:2, train:2, god:"horus"},
+  apis:     {name:"Apis Bull", emoji:"🐂", cost:{v:70}, cat:"myth", armor:"heavy", dtype:"melee",  hp:350, dmg:18, as:0.9, range:1, speed:0.6,      size:2, train:2, god:"osiris", generatesFavor:0.5},
+  scorpion: {name:"Scorpion Guard",emoji:"🦂",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee",hp:150, dmg:10, as:1.1, range:1, speed:0.9,      size:1, train:2, god:"isis", poisons:true, poisonDps:8, poisonDur:4},
+  apep:     {name:"Apep",      emoji:"🐍", cost:{v:90}, cat:"myth", armor:"heavy", dtype:"crushing",hp:450,dmg:32, as:0.8, range:1, speed:0.459,    size:2, train:2, siege:true, god:"set", chaosSplash:0.3},
+  ammit:    {name:"Ammit",     emoji:"🐊", cost:{v:60}, cat:"myth", armor:"light", dtype:"melee",  hp:220, dmg:20, as:1.0, range:1, speed:0.860625, size:1, train:2, god:"thoth", executesBelow:0.3},
+  plaguebearer:{name:"Plague Bearer",emoji:"🏹",cost:{v:65}, cat:"myth", armor:"light", dtype:"ranged",hp:150,dmg:12, as:0.9, range:2, speed:0.7,    size:1, train:2, god:"sekhmet", multiTarget:3, weakens:true},
+  sheut:    {name:"Sheut",     emoji:"👤", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",  hp:170, dmg:6,  as:1.0, range:1, speed:0.9,      size:1, train:2, god:"nephthys", drainsFavor:6},
+  ushabti:  {name:"Ushabti",   emoji:"🗿", cost:{v:30}, cat:"myth", armor:"light", dtype:"melee",  hp:70,  dmg:8,  as:1.0, range:1, speed:0.860625, size:1, train:2, god:"ptah", spawnCount:3}
 };
 const CN_UNITS = {
   ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
@@ -315,10 +433,27 @@ const CN_UNITS = {
   nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
   liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
-  celestial:{name:"Celestial Grd.",emoji:"⚡", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885, size:2, train:2, god:"jade"},
-  dragon: {name:"Dragon Warr.",emoji:"🐉",  cost:{v:65}, cat:"myth", armor:"light",  dtype:"melee",   hp:280, dmg:28, as:1.1, range:1, speed:0.860625, size:2, train:2, god:"guan"},
-  stone:  {name:"Stone Grd.",  emoji:"🗿",  cost:{v:75}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:400, dmg:28, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"nuwa"},
-  demon:  {name:"Demon Hunter",emoji:"👹",  cost:{v:60}, cat:"myth", armor:"light",  dtype:"melee",   hp:220, dmg:24, as:1.2, range:1, speed:0.918, size:1, train:2, god:"zhong"}
+  // 2026-07-23 (direct chat request, mythology_game_design.xlsx): Chinese pantheon
+  // realigned from 4 gods to the sheet's 10 (Jade Emperor, Sun Wukong, Nu Wa, Long
+  // Wang, Gong Gong, Erlang Shen, Xi Wangmu, Zhu Rong, Chang'e, Lei Gong). Guan Yu
+  // and Zhong Kui are NOT on the sheet -- dropped per Willem's direct call, rather
+  // than kept as extras (see HANDOFF.md decision 21). "celestial"/"stone" keep their
+  // keys+stats, redisplayed as Jade Emperor's Qilin and Nu Wa's Hundun (same
+  // rename-in-place precedent as the Aztec pass's Xiuhcoatl/Nagual/Ahuizotl).
+  // "dragon" is repurposed (not a rename -- Guan Yu's Dragon Warrior is genuinely
+  // gone) for Long Wang's Eastern Dragon, since the shape and name both already fit
+  // a literal dragon far better than they ever fit Guan Yu. "demon" (Zhong Kui's
+  // Demon Hunter) has no natural reuse among the 7 new myths and is simply removed.
+  celestial:{name:"Qilin",       emoji:"⚡", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885, size:2, train:2, god:"jade"},
+  stone:    {name:"Hundun",      emoji:"🗿",  cost:{v:75}, cat:"myth", armor:"heavy", dtype:"crushing",hp:400, dmg:28, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"nuwa"},
+  dragon:   {name:"Eastern Dragon",emoji:"🐉",cost:{v:80}, cat:"myth", armor:"light", dtype:"melee",   hp:300, dmg:26, as:1.0, range:1, speed:1.03275, size:2, train:2, god:"longwang", fastInWater:true}, // "moves at extraordinary speed along water tiles"
+  stonemonkey:{name:"Stone Monkey Army",emoji:"🐒",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee", hp:80, dmg:9, as:1.2, range:1, speed:1.0, size:1, train:2, god:"sunwukong", spawnCount:3}, // "individually weak but numerous" -- reuses Ushabti's exact spawnCount mechanic
+  xiangliu: {name:"Xiangliu",    emoji:"🐍",  cost:{v:80}, cat:"myth", armor:"heavy", dtype:"melee",   hp:350, dmg:24, as:0.9, range:1, speed:0.6885, size:2, train:2, god:"gonggong", slows:true}, // "wherever his heads touched became marsh" simplified to a slow-on-hit (reuses att.def.slows), not persistent terrain
+  xiaotianquan:{name:"Xiaotian Quan",emoji:"🐕",cost:{v:50}, cat:"myth", armor:"light", dtype:"melee",  hp:200, dmg:20, as:1.3, range:1, speed:1.2, size:1, train:2, god:"erlangshen", bonusVsHero:1.6}, // "hunts specifically hero units, dealing massive bonus damage"
+  fenghuang:{name:"Fenghuang",   emoji:"🐦",  cost:{v:65}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:22, as:1.0, range:1, speed:1.03275, size:2, train:2, flying:true, god:"xiwangmu"}, // Chinese phoenix -- flying, same "already ignores all terrain" precedent as other flying myths
+  huoshu:   {name:"Huo Shu",     emoji:"🌲",  cost:{v:75}, cat:"myth", armor:"heavy", dtype:"melee",   hp:300, dmg:16, as:0.8, range:1, speed:0.35, size:2, train:2, god:"zhurong", auraDps:10, auraRange:1}, // "moves slowly but radiates fire damage to all adjacent enemies constantly"
+  jaderabbit:{name:"Jade Rabbit",emoji:"🐇",  cost:{v:45}, cat:"myth", armor:"light", dtype:"ranged",  hp:100, dmg:4,  as:0.8, range:1, speed:1.0, size:1, train:2, god:"chang", heal:6}, // "moves across the battlefield applying regeneration to allied units it passes" -- reuses the existing generic heal mechanic (same field priests/monks already use)
+  kui:      {name:"Kui",         emoji:"🐂",  cost:{v:85}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:30, as:0.85,range:1, speed:0.5, size:2, train:2, siege:true, god:"leigong"} // one-legged ox-like thunder creature
 };
 const AZ_UNITS = {
   macuahuitl: {name:"Macuahuitl Warrior",emoji:"🗡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
@@ -329,33 +464,124 @@ const AZ_UNITS = {
   tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
   xelhua:     {name:"Xelhua",            emoji:"🗿",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
-  xiuhcoatl:      {name:"Xiuhcoatl",        emoji:"🔥", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475,   size:2, train:2, flying:true, god:"huitzilopochtli"},
-  jaguarspirit:   {name:"Jaguar Spirit",    emoji:"✨", cost:{v:65}, cat:"myth", armor:"heavy", dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"tezcatlipoca"},
-  featheredserpent:{name:"Feathered Serpent",emoji:"🐉",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"quetzalcoatl"},
-  raintitan:      {name:"Rain Titan",       emoji:"🌊", cost:{v:90}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459,    size:2, train:2, siege:true, god:"tlaloc"}
+  // 2026-07-23 (direct chat request, mythology_game_design.xlsx): xiuhcoatl/jaguarspirit/
+  // raintitan gained new mechanical flags (kept their keys/base stats -- same rename-in-place
+  // pattern used for Egypt's Bennu Bird/Anubite); jaguarspirit is redisplayed as "Nagual"
+  // per the doc (Tezcatlipoca's myth is named Nagual, not Jaguar Spirit); raintitan is
+  // redisplayed as "Ahuizotl" (Tlaloc's myth). 6 new myth units added for the 6 new gods.
+  xiuhcoatl:      {name:"Xiuhcoatl",        emoji:"🔥", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475,   size:2, train:2, flying:true, god:"huitzilopochtli", poisons:true, poisonDps:6, poisonDur:3}, // "leaves burning terrain" simplified to a burn-on-hit DOT (reuses the existing poison fields) rather than a persistent scorched-terrain hazard
+  jaguarspirit:   {name:"Nagual",           emoji:"✨", cost:{v:65}, cat:"myth", armor:"heavy", dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"tezcatlipoca", surpriseAttack:1.4}, // "disguised until it strikes" simplified to a first-attack-ever damage bonus
+  featheredserpent:{name:"Feathered Serpent",emoji:"🐉",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"quetzalcoatl"}, // already flying == already ignores all terrain/obstacles, matches the doc exactly with zero changes needed
+  raintitan:      {name:"Ahuizotl",         emoji:"🌊", cost:{v:90}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459,    size:2, train:2, siege:true, god:"tlaloc", ambushInWater:true}, // bonus damage while standing on a water tile ("lurks in water... drags victims under")
+  tlaltecuhtli:   {name:"Tlaltecuhtli",     emoji:"🐸", cost:{v:80}, cat:"myth", armor:"heavy", dtype:"melee",   hp:380, dmg:26, as:0.85,range:1, speed:0.459,    size:2, train:2, god:"xipetotec", chaosSplash:0.3}, // "deals damage to all units around her, both enemy and allied" -- reuses Set's Apep chaosSplash mechanic exactly
+  tzitzimitl:     {name:"Tzitzimitl",       emoji:"💀", cost:{v:85}, cat:"myth", armor:"heavy", dtype:"melee",   hp:320, dmg:26, as:0.95,range:1, speed:0.6885,   size:2, train:2, god:"coatlicue", strongerAsBuildingsFall:true}, // dmg scales up as the owner's own buildings' average HP% falls
+  itzcuintli:     {name:"Itzcuintli",       emoji:"🐕", cost:{v:50}, cat:"myth", armor:"light", dtype:"melee",   hp:200, dmg:16, as:1.1, range:1, speed:1.03275,  size:1, train:2, god:"mictlantecuhtli", slows:true}, // "debuffs enemy units it engages... slowed" -- reuses the existing generic att.def.slows mechanic
+  centzonhuitznahua:{name:"Centzon Huitznahua",emoji:"⭐",cost:{v:60}, cat:"myth", armor:"light", dtype:"melee", hp:180, dmg:18, as:1.1, range:1, speed:0.918,    size:1, train:2, god:"coyolxauhqui", spawnsOnKill:true}, // "spawns additional copies of itself when it kills an enemy"
+  ehecatotontin:  {name:"Ehecatotontin",    emoji:"💨", cost:{v:45}, cat:"myth", armor:"light", dtype:"melee",   hp:90,  dmg:8,  as:1.3, range:1, speed:1.2,       size:1, train:2, god:"ehecatl", disruptsRoute:true}, // "individually does little damage but disrupts enemy routes through chaotic movement"
+  colotl:         {name:"Colotl",           emoji:"🦂", cost:{v:65}, cat:"myth", armor:"light", dtype:"melee",   hp:220, dmg:20, as:1.0, range:1, speed:0.918,    size:1, train:2, god:"itzpapalotl", poisons:true, poisonDps:8, poisonDur:4} // scorpion warriors -- reuses the same poison fields as Isis's Scorpion Guard
+};
+/* Greek roster foundation. Statistics mirror China's matching roles; Greece is not
+   in FACTIONS or the picker yet. Peltast converts the Dao profile to ranged, and
+   Companion Cavalry converts the Horse Archer profile to heavy melee. */
+const GR_UNITS = {
+  hoplite:   {name:"Hoplite",            emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  toxotes:   {name:"Toxotes",            emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
+  peltast:   {name:"Peltast",            emoji:"🎯",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"ranged", hp:105, dmg:16, as:0.9, range:2, speed:0.516375, size:1, train:1},
+  companion: {name:"Companion Cavalry", emoji:"🐎",  cost:{f:35}, cat:"human", armor:"heavy",    dtype:"melee",  hp:90,  dmg:10, as:1.1, range:1, speed:1.03275, size:1, train:2},
+  priestess: {name:"Priestess",          emoji:"🏺",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  atalanta:  {name:"Atalanta",           emoji:"⚔️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee",   hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  odysseus:  {name:"Odysseus",           emoji:"🏹", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged",  hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
+  heracles:  {name:"Heracles",           emoji:"🦁", cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  cerberus:  {name:"Cerberus",           emoji:"🐕", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885,   size:2, train:2, god:"hades"},
+  satyr:     {name:"Satyr",              emoji:"🐐", cost:{v:65}, cat:"myth", armor:"light", dtype:"melee",   hp:280, dmg:28, as:1.1, range:1, speed:0.860625, size:2, train:2, god:"dionysus"},
+  calydonianboar:{name:"Calydonian Boar",emoji:"🐗",cost:{v:60}, cat:"myth", armor:"light", dtype:"melee",   hp:220, dmg:24, as:1.2, range:1, speed:0.918,    size:1, train:2, god:"artemis"},
+  talos:     {name:"Talos",              emoji:"🗿", cost:{v:75}, cat:"myth", armor:"heavy", dtype:"crushing",hp:400, dmg:28, as:0.8, range:1, speed:0.459,    size:2, train:2, siege:true, god:"hephaestus"}
 };
 
 /* ---------------- GODS ---------------- */
 const EG_GODS = [
-  {key:"horus", name:"Horus",  emoji:"🦅", cost:80,  power:"Falcon Strike", pcost:40, cd:20, myth:"falcon", desc:"130 dmg to enemy units within 1 hex of target", passiveKey:"rangedDmg10", passive:"+10% ranged damage"},
-  {key:"bastet",name:"Bastet", emoji:"🐈", cost:120, power:"Cat's Grace",   pcost:40, cd:20, myth:"lion",   desc:"Allies within 2 hexes: +50% speed, +30% dmg for 8s", passiveKey:"moveSpeed10", passive:"+10% move speed"},
-  {key:"osiris",name:"Osiris", emoji:"☥",  cost:150, power:"Resurrection",  pcost:60, cd:25, myth:"mummy",  desc:"Revives up to 3 recently fallen warriors near your nearest building"},
-  {key:"isis",  name:"Isis",   emoji:"🌙", cost:200, power:"Divine Ward",   pcost:50, cd:25, myth:"sphinx", desc:"Raises a ward (2 hexes) that blocks up to 2 enemy power casts, lasts 25s"},
-  {key:"ra",    name:"Ra",     emoji:"☀️", cost:150, power:"Solar Flare",   pcost:50, cd:25, myth:"phoenix",desc:"90 dmg within 1 hex of target, 45 dmg within 2 hexes"},
-  {key:"anubis",name:"Anubis", emoji:"🐺", cost:120, power:"Judgment",      pcost:50, cd:25, myth:"jackal", desc:"Instantly kills enemy humans below 30% HP within 2 hexes"}
+  // Realigned 2026-07-23 to match mythology_game_design.xlsx (direct chat request);
+  // 5 new gods added (set, thoth, sekhmet, nephthys, ptah). See HANDOFF.md for the
+  // mechanic-by-mechanic mapping and any deliberate simplifications vs. the doc text.
+  {key:"horus", name:"Horus",  emoji:"🦅", cost:80,  power:"Falcon's Wrath", pcost:40, cd:20, myth:"serpopard", desc:"Falcon strike sweeps the target's entire row, dealing 70 dmg to every enemy unit hit", passiveKey:"fortressDefense", passive:"-15% incoming damage within 2 hexes of your fortress"},
+  {key:"bastet",name:"Bastet", emoji:"🐈", cost:120, power:"Guardian's Grace", pcost:40, cd:20, myth:"sphinx", desc:"One of your buildings becomes immune to all damage for 8s", passiveKey:"cityFoodBoost", passive:"City generates food 20% faster"},
+  {key:"osiris",name:"Osiris", emoji:"☥",  cost:150, power:"Field of Reeds", pcost:60, cd:25, myth:"apis",   desc:"Temporarily revives up to 3 recently fallen warriors near your nearest building for 20s", passiveKey:"deathFavorNearTemple", passive:"Units dying within 3 hexes of your temple generate 3 favor"},
+  {key:"isis",  name:"Isis",   emoji:"🌙", cost:200, power:"Secret Name",   pcost:50, cd:25, myth:"scorpion", desc:"Locks the enemy god closest to being ready, preventing its use for 15s", passiveKey:"heroRegen", passive:"Hero units slowly regenerate health"},
+  {key:"ra",    name:"Ra",     emoji:"☀️", cost:150, power:"Solar Barque",  pcost:50, cd:25, myth:"phoenix",desc:"Solar barque sweeps the target's entire row, dealing 70 dmg to every enemy unit hit", passiveKey:"openTileDmg", passive:"+15% damage while standing on open (non-forest, non-mountain) terrain"},
+  {key:"anubis",name:"Anubis", emoji:"🐺", cost:120, power:"Judgment",      pcost:50, cd:25, myth:"jackal", desc:"Target enemy unit has a % chance to survive equal to its remaining health", passiveKey:"corpseWindow", passive:"Fallen allies stay eligible for Osiris's revival for 90s (was 60s)"},
+  {key:"set",   name:"Set",    emoji:"🌪️", cost:150, power:"Desert Storm", pcost:50, cd:25, myth:"apep",   desc:"A sandstorm slows every unit (both sides) within 2 hexes of target for 6s", passiveKey:"chaosDamageBoost", passive:"+20% damage for 5s immediately after any enemy god power is cast"},
+  {key:"thoth", name:"Thoth",  emoji:"📜", cost:200, power:"Rewrite",       pcost:50, cd:25, myth:"ammit",  desc:"Reverses target enemy unit's route, sending it marching back the way it came", passiveKey:"revealHandCard", passive:"Reveals one enemy hand card the moment Thoth unlocks"},
+  {key:"sekhmet",name:"Sekhmet",emoji:"👁️",cost:150, power:"Eye Unleashed", pcost:50, cd:25, myth:"plaguebearer", desc:"Your units within 2 hexes of target attack the nearest unit regardless of allegiance for 6s", passiveKey:"pestilence", passive:"Enemies are weakened for 3s after engaging any of your units"},
+  {key:"nephthys",name:"Nephthys",emoji:"🌘",cost:120, power:"Twilight Veil", pcost:40, cd:20, myth:"sheut", desc:"One of your units becomes invisible to the enemy until it attacks", passiveKey:"deathFavorSurge", passive:"Losing a building grants a favor surge"},
+  {key:"ptah",  name:"Ptah",   emoji:"🔨", cost:80,  power:"Creator's Word", pcost:40, cd:20, myth:"ushabti", desc:"Instantly completes your next unit in training", passiveKey:"buildingHpBoost", passive:"Buildings gain +15% max HP when Ptah unlocks"}
 ];
 const CN_GODS = [
-  {key:"jade", name:"Jade Emp.", emoji:"☯️", cost:80,  power:"Heavenly Mandate", pcost:40, cd:20, myth:"celestial", passiveKey:"rangedDmg10", passive:"+10% ranged damage", desc:"Allies within 2 hexes: +25% speed, +40% dmg for 8s"},
-  {key:"guan", name:"Guan Yu",   emoji:"⚔️", cost:120, power:"Martial Honor",    pcost:40, cd:20, myth:"dragon",    passiveKey:"moveSpeed10", passive:"+10% move speed", desc:"Allies within 2 hexes: +60% dmg for 8s"},
-  {key:"nuwa", name:"Nüwa",      emoji:"🐍", cost:150, power:"Earth Repair",     pcost:50, cd:25, myth:"stone", desc:"Heals your most damaged building by 400 HP"},
-  {key:"zhong",name:"Zhong Kui", emoji:"👹", cost:200, power:"Banish",           pcost:50, cd:25, myth:"demon", desc:"Stuns the enemy's strongest myth unit for 6s"}
+  // 2026-07-23 (direct chat request, mythology_game_design.xlsx): realigned from 4
+  // gods to the sheet's 10. Guan Yu and Zhong Kui are gone (not on the sheet at all --
+  // see HANDOFF.md decision 21 for why they were dropped rather than kept as extras).
+  {key:"jade", name:"Jade Emperor", emoji:"☯️", cost:80,  power:"Celestial Decree", pcost:80, cd:20, myth:"celestial", desc:"Temporarily conscripts one enemy unit to fight for you for 8s, then it returns to its own side", passiveKey:"mandateOfHeaven", passive:"While all three of your buildings stand, resource generation is boosted; losing one weakens the mandate"},
+  {key:"sunwukong", name:"Sun Wukong", emoji:"🐒", cost:120, power:"72 Transformations", pcost:100, cd:20, myth:"stonemonkey", desc:"Transforms into a fighting copy of the enemy's strongest myth unit currently on the board", passiveKey:"cloudSomersault", passive:"Your hero units ignore all terrain movement penalties"},
+  {key:"nuwa", name:"Nu Wa", emoji:"🐍", cost:150, power:"Five Colored Stones", pcost:50, cd:25, myth:"stone", desc:"Instantly repairs your most damaged building to full health", passiveKey:"motherOfHumanity", passive:"Human units cost 10% less food to train"},
+  {key:"longwang", name:"Long Wang", emoji:"🐉", cost:150, power:"Dragon Rain", pcost:50, cd:25, myth:"dragon", desc:"Floods a large zone into water for 8s, dealing 40 dmg to every unit caught in the deluge", passiveKey:"lordOfFourSeas", passive:"Water tiles on your half generate extra favor; your units move faster in or adjacent to water"},
+  {key:"gonggong", name:"Gong Gong", emoji:"⛰️", cost:150, power:"Broken Pillar", pcost:50, cd:25, myth:"xiangliu", desc:"Collapses a zone into impassable rubble for 8s, blocking every route through it", passiveKey:"floodCurrent", passive:"Your units move faster in or adjacent to water"},
+  {key:"erlangshen", name:"Erlang Shen", emoji:"👁️", cost:80, power:"Third Eye", pcost:40, cd:20, myth:"xiaotianquan", desc:"Reveals every hidden or invisible unit on the board and prevents the enemy from hiding units for 10s", passiveKey:"trueSight", passive:"Your units can always see and target invisible enemy units"},
+  {key:"xiwangmu", name:"Xi Wangmu", emoji:"🍑", cost:120, power:"Peach of Immortality", pcost:40, cd:20, myth:"fenghuang", desc:"Grants one of your units near target complete invulnerability for 4s", passiveKey:"gardenOfImmortality", passive:"Hero units gain +20% max HP the moment Xi Wangmu unlocks"},
+  {key:"zhurong", name:"Zhu Rong", emoji:"🔥", cost:150, power:"Primordial Fire", pcost:50, cd:25, myth:"huoshu", desc:"Sets a zone ablaze for 6s, dealing continuous damage to any unit standing in it", passiveKey:"fireDefeatsWater", passive:"+25% damage against enemy units in or adjacent to water"},
+  {key:"chang", name:"Chang'e", emoji:"🌕", cost:150, power:"Moonfall", pcost:50, cd:25, myth:"jaderabbit", desc:"Slows every unit on the battlefield, both sides, for 5s, and reveals all hidden or invisible units", passiveKey:"moonsGlow", passive:"Your units move faster early in the match, fading as it progresses"},
+  {key:"leigong", name:"Lei Gong", emoji:"⚡", cost:200, power:"Heaven's Judgment", pcost:50, cd:25, myth:"kui", desc:"Thunder strike stuns every enemy unit within 2 hexes of target for 6s and reveals any that were hidden", passiveKey:"thundersWarning", passive:"Enemy units approaching your buildings are briefly slowed"}
 ];
 const AZ_GODS = [
-  {key:"huitzilopochtli",name:"Huitzilopochtli",emoji:"☀️", cost:80,  power:"Solar Wrath",     pcost:40, cd:20, myth:"xiuhcoatl",       passiveKey:"rangedDmg10", passive:"+10% ranged damage", desc:"130 dmg to enemy units within 1 hex of target"},
-  {key:"quetzalcoatl",   name:"Quetzalcoatl",   emoji:"🐍", cost:120, power:"Wind's Blessing", pcost:40, cd:20, myth:"featheredserpent",passiveKey:"moveSpeed10", passive:"+10% move speed",    desc:"Allies within 2 hexes: +25% speed, +40% dmg for 8s"},
-  {key:"tlaloc",         name:"Tlaloc",         emoji:"🌧️",cost:150, power:"Rain's Renewal",  pcost:50, cd:25, myth:"raintitan",       desc:"Heals your most damaged building by 400 HP"},
-  {key:"tezcatlipoca",   name:"Tezcatlipoca",   emoji:"🌑", cost:200, power:"Smoking Mirror",  pcost:50, cd:25, myth:"jaguarspirit",    desc:"Stuns the enemy's strongest myth unit for 6s"}
+  // Realigned 2026-07-23 to match mythology_game_design.xlsx (direct chat request,
+  // "integrate the Aztec Gods, Myth units and powers from the excel sheet"); 6 new
+  // gods added (xipetotec, coatlicue, mictlantecuhtli, coyolxauhqui, ehecatl,
+  // itzpapalotl). Aztec is player-only (S.aiFaction never becomes "aztec", see the
+  // FACTIONS.aztec sign-off note) so none of these need pickAiPowerHex branches --
+  // same reasoning that already applied to the original 4. See HANDOFF.md for the
+  // full mechanic-by-mechanic mapping and simplifications.
+  {key:"huitzilopochtli",name:"Huitzilopochtli",emoji:"☀️", cost:80,  power:"Solar War", pcost:40, cd:20, myth:"xiuhcoatl", desc:"Buffs all your units (+30% dmg, +20% speed) for 6s, costing each 15% of its current HP", passiveKey:"bloodFavor", passive:"Killing an enemy unit generates 2 favor"},
+  {key:"quetzalcoatl",   name:"Quetzalcoatl",   emoji:"🐍", cost:120, power:"Wind Serpent", pcost:40, cd:20, myth:"featheredserpent", desc:"A rushing wind resets every enemy unit's route, forcing them to re-path from scratch", passiveKey:"morningStar", passive:"Food generation starts accelerated, fading to normal by 60s"},
+  {key:"tezcatlipoca",   name:"Tezcatlipoca",   emoji:"🌑", cost:150, power:"Smoking Mirror",  pcost:50, cd:25, myth:"jaguarspirit", desc:"Creates a mirror image of the target enemy unit that immediately attacks the original", passiveKey:"discordReverse", passive:"The moment Tezcatlipoca unlocks, one random enemy unit's route is reversed"},
+  {key:"tlaloc",         name:"Tlaloc",         emoji:"🌧️",cost:150, power:"The Weeping Rain",  pcost:50, cd:25, myth:"raintitan", desc:"Floods every open tile within 2 hexes of target into water for 8s", passiveKey:"waterDamageBonus", passive:"+20% damage while in or adjacent to a water tile"},
+  {key:"xipetotec", name:"Xipe Totec", emoji:"🩶", cost:150, power:"The Flaying", pcost:50, cd:25, myth:"tlaltecuhtli", desc:"Strips every passive bonus from all enemy units for 10s", passiveKey:"newGrowth", passive:"Any building destroyed (yours or the enemy's) grants you a food surge"},
+  {key:"coatlicue", name:"Coatlicue", emoji:"🐍", cost:150, power:"Serpent Skirt", pcost:50, cd:25, myth:"tzitzimitl", desc:"A wave of serpents poisons every enemy unit on the battlefield", passiveKey:"earthMother", passive:"One of your units dying generates a small amount of food"},
+  {key:"mictlantecuhtli", name:"Mictlantecuhtli", emoji:"💀", cost:120, power:"The Bargain", pcost:40, cd:20, myth:"itzcuintli", desc:"Grants the enemy a burst of favor, then after 8s spawns a unit that fights for you near their base", passiveKey:"inevitable", passive:"Enemy units dying anywhere generate a tiny trickle of favor for you"},
+  {key:"coyolxauhqui", name:"Coyolxauhqui", emoji:"🌙", cost:120, power:"Dismemberment", pcost:40, cd:20, myth:"centzonhuitznahua", desc:"Splits the target enemy unit into two weakened copies that fight each other, then expire", passiveKey:"moonlight", passive:"Early in the match your units hit harder and move faster, fading as it progresses"},
+  {key:"ehecatl", name:"Ehecatl", emoji:"🌬️", cost:80, power:"First Wind", pcost:40, cd:20, myth:"ehecatotontin", desc:"Dramatically accelerates all your units' movement speed for 4s", passiveKey:"clearingWind", passive:"Your units ignore all terrain movement penalties"},
+  {key:"itzpapalotl", name:"Itzpapalotl", emoji:"🦋", cost:150, power:"Obsidian Wings", pcost:50, cd:25, myth:"colotl", desc:"Deals 60 dmg and a 6s slow to every enemy unit within 2 hexes of target", passiveKey:"razorWings", passive:"Your units deal +50% damage on their first-ever attack"}
 ];
+/* Identity/link records only while Greece remains unavailable. Powers and unlock
+   values will be designed before Greece is added to FACTIONS. */
+const GR_GODS = [
+  {key:"hades",      name:"Hades",      emoji:"💀", myth:"cerberus"},
+  {key:"dionysus",   name:"Dionysus",   emoji:"🍇", myth:"satyr"},
+  {key:"artemis",    name:"Artemis",    emoji:"🏹", myth:"calydonianboar"},
+  {key:"hephaestus", name:"Hephaestus", emoji:"🔨", myth:"talos"}
+];
+
+/* Square, mobile-optimized god portraits shared by the setup picker and both battle UIs. */
+const GOD_PORTRAITS = {
+  horus:"assets/sprites/god_horus.jpg", bastet:"assets/sprites/god_bastet.jpg",
+  osiris:"assets/sprites/god_osiris.jpg", isis:"assets/sprites/god_isis.jpg",
+  ra:"assets/sprites/god_ra.jpg", anubis:"assets/sprites/god_anubis.jpg",
+  set:"assets/sprites/god_set.jpg", thoth:"assets/sprites/god_thoth.jpg",
+  sekhmet:"assets/sprites/god_sekhmet.jpg", nephthys:"assets/sprites/god_nephthys.jpg",
+  ptah:"assets/sprites/god_ptah.jpg",
+  jade:"assets/sprites/god_jade.jpg",
+  nuwa:"assets/sprites/god_nuwa.jpg",
+  huitzilopochtli:"assets/sprites/god_huitzilopochtli.jpg",
+  quetzalcoatl:"assets/sprites/god_quetzalcoatl.jpg", tlaloc:"assets/sprites/god_tlaloc.jpg",
+  tezcatlipoca:"assets/sprites/god_tezcatlipoca.jpg",
+  xipetotec:"assets/sprites/god_xipetotec.jpg", coatlicue:"assets/sprites/god_coatlicue.jpg",
+  mictlantecuhtli:"assets/sprites/god_mictlantecuhtli.jpg", coyolxauhqui:"assets/sprites/god_coyolxauhqui.jpg",
+  ehecatl:"assets/sprites/god_ehecatl.jpg", itzpapalotl:"assets/sprites/god_itzpapalotl.jpg",
+  sunwukong:"assets/sprites/god_sunwukong.jpg", longwang:"assets/sprites/god_longwang.jpg",
+  gonggong:"assets/sprites/god_gonggong.jpg", erlangshen:"assets/sprites/god_erlangshen.jpg",
+  xiwangmu:"assets/sprites/god_xiwangmu.jpg", zhurong:"assets/sprites/god_zhurong.jpg",
+  chang:"assets/sprites/god_chang.jpg", leigong:"assets/sprites/god_leigong.jpg"
+};
+const godPortrait=g=>GOD_PORTRAITS[g.key]
+  ? `<img src="${GOD_PORTRAITS[g.key]}" alt="" draggable="false">`
+  : `<div class="gportemoji">${g.emoji}</div>`; // every god now has real portrait art
 
 /* ---------------- FACTIONS (which unit/god tables apply to which side) ---------------- */
 const FACTIONS = {
@@ -364,7 +590,7 @@ const FACTIONS = {
            defaultGodPick:["horus","bastet","osiris","isis"] },
   china: { units:CN_UNITS, allGods:CN_GODS, name:"Chinese", label:"⛩ Chinese",
            aiTitle:"SHANG-DI AI", defaultLoadout:["ji","xbow","dao","horse"], defaultHeroes:["nezha","houyi"],
-           defaultGodPick:["jade","guan","nuwa","zhong"] },
+           defaultGodPick:["jade","sunwukong","nuwa","longwang"] },
   aztec: { units:AZ_UNITS, allGods:AZ_GODS, name:"Aztecs", label:"🐆 Aztec",
            defaultLoadout:["macuahuitl","atlatl","jaguar","otomi"], defaultHeroes:["tepoztecatl","topiltzin"],
            defaultGodPick:["huitzilopochtli","quetzalcoatl","tlaloc","tezcatlipoca"] }
@@ -432,11 +658,28 @@ let playerHalf = {
     mkBld(0,"temple","Temple","🛕",[[1,4],[2,4]],800),
   ] // local coords = today's absolute positions minus HALF_ROWS
 };
+let aiHalfTerrain = TMAP_INITIAL.slice(0,HALF_ROWS).map(row=>row.split("")); // placeholder; faction-corrected by first startMatch(), like playerHalf above
 function freshPlayerHalfTerrain(){
   return deriveTMAP().slice(HALF_ROWS).map(row=>[...row]);
 }
+/* AI setup uses the same 4F/3M/3W allowance as the player. The fixed, asymmetric
+   pattern avoids all three AI buildings and leaves open routes from each building
+   to the center boundary; Phase 8.7 can later randomize this without changing the
+   separate-half storage/composition established here. */
+const AI_TERRAIN_LAYOUT={
+  F:[[0,0],[8,0],[0,3],[8,5]],
+  M:[[3,2],[5,3],[3,4]],
+  W:[[0,5],[8,2],[5,5]]
+};
+function freshAiHalfTerrain(){
+  const half=deriveTMAP().slice(0,HALF_ROWS).map(row=>[...row]);
+  for(const [type,hexes] of Object.entries(AI_TERRAIN_LAYOUT))
+    for(const [c,r] of hexes) half[r][c]=type;
+  return half;
+}
 function composeAbsoluteTMAP(){
   const full = deriveTMAP();
+  for(let r=0;r<HALF_ROWS;r++) full[r] = [...aiHalfTerrain[r]];
   for(let r=0;r<HALF_ROWS;r++) full[HALF_ROWS+r] = [...playerHalf.terrain[r]];
   return full;
 }
@@ -485,8 +728,15 @@ const S = {
   loadout:["spear","archer","axe","chariot"],
   heroPick:["sinuhe","doomedprince"],
   godPick:["horus","bastet","osiris","isis"],
-  aiGodPick:["jade","guan","nuwa","zhong"],
-  playerFaction:"egypt", aiFaction:"china"
+  aiGodPick:["jade","sunwukong","nuwa","longwang"],
+  playerFaction:"egypt", aiFaction:"china", deckSlot:0, deckEditing:false,
+  chaosBuffUntil:[0,0], // Set's "Lord of Storms" passive: dmg buff window per side after the OTHER side casts a power
+  // 2026-07-23 (Aztec redesign, mythology_game_design.xlsx):
+  passivesStrippedUntil:[0,0], // Xipe Totec's "The Flaying": hasPassive() returns false for a side while this is in the future
+  floodedHexes:[], // Tlaloc's "The Weeping Rain" / Long Wang's "Dragon Rain" / Gong Gong's "Broken Pillar" / Zhu Rong's "Primordial Fire":
+                    // [{c,r,orig,to,expiresAt,dmgPerSec}] -- temporary real TMAP terrain overrides (to any char, not just water)
+                    // plus an optional per-hex damage tick, all reverted/applied in tickFloods()
+  trueSightUntil:[0,0] // Erlang Shen's "Third Eye": blocks a side from casting Nephthys-style invisibility for a duration
 };
 let HUMAN_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="human");
 let HERO_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="hero");
@@ -495,21 +745,189 @@ let activeAiGods = FACTIONS[S.aiFaction].allGods.filter(g=>S.aiGodPick.includes(
 // S.playerGods/S.aiGods are fully (re)built in startMatch() from activeGods/activeAiGods each match,
 // since the key SET changes whenever a faction changes, not just unlocked/cdUntil values.
 
+/* ---------------- LOCAL DECK PRESETS ----------------
+   Two device-local slots retain the complete player setup. Storage is deliberately
+   guarded: file:// privacy modes and locked-down browsers may reject localStorage,
+   in which case the same two-slot flow still works for the current page session. */
+const DECK_SAVE_KEY="godsbound.deckPresets.v1";
+let deckPresets=[null,null];
+function deckStorage(){
+  try{ return typeof localStorage!=="undefined" ? localStorage : null; }
+  catch(_){ return null; }
+}
+function defaultDeckPreset(faction="egypt"){
+  const f=FACTIONS[faction]||FACTIONS.egypt;
+  const validFaction=FACTIONS[faction]?faction:"egypt", base=validFaction==="egypt"?"D":"P";
+  return {
+    faction:validFaction,
+    loadout:[...f.defaultLoadout], heroes:[...f.defaultHeroes], gods:[...f.defaultGodPick],
+    terrain:Array.from({length:HALF_ROWS},()=>Array(COLS).fill(base)),
+    buildings:[
+      {type:"fortress",hexes:[[6,2],[7,2]]},
+      {type:"city",hexes:[[4,4],[5,4]]},
+      {type:"temple",hexes:[[1,4],[2,4]]}
+    ]
+  };
+}
+function validPick(list,count,allowed){
+  return Array.isArray(list)&&list.length===count&&new Set(list).size===count&&list.every(k=>allowed.includes(k));
+}
+function normalizeDeckPreset(raw){
+  if(!raw||!FACTIONS[raw.faction]) return null;
+  const faction=raw.faction, f=FACTIONS[faction];
+  const humans=Object.keys(f.units).filter(k=>f.units[k].cat==="human");
+  const heroes=Object.keys(f.units).filter(k=>f.units[k].cat==="hero");
+  const gods=f.allGods.map(g=>g.key);
+  if(!validPick(raw.loadout,4,humans)||!validPick(raw.heroes,2,heroes)||!validPick(raw.gods,4,gods)) return null;
+  if(!Array.isArray(raw.terrain)||raw.terrain.length!==HALF_ROWS) return null;
+  const terrain=raw.terrain.map(row=>typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]);
+  if(terrain.some(row=>row.length!==COLS||row.some(ch=>!["P","D","F","M","W"].includes(ch)))) return null;
+  const counts={F:0,M:0,W:0};
+  terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
+  if(Object.keys(counts).some(k=>counts[k]>TERRAIN_BUDGET[k])) return null;
+  if(!Array.isArray(raw.buildings)||raw.buildings.length!==3) return null;
+  const types=new Set(), occupied=new Set(), buildings=[];
+  for(const b of raw.buildings){
+    if(!b||!["temple","city","fortress"].includes(b.type)||types.has(b.type)||!Array.isArray(b.hexes)||b.hexes.length!==2) return null;
+    const hexes=b.hexes.map(h=>Array.isArray(h)?[Number(h[0]),Number(h[1])]:[]);
+    if(hexes.some(h=>h.length!==2||!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=HALF_ROWS)) return null;
+    if(hexDist(hexes[0],hexes[1])!==1) return null;
+    for(const h of hexes){const key=h[0]+","+h[1];if(occupied.has(key)||["M","W"].includes(terrain[h[1]][h[0]]))return null;occupied.add(key);}
+    types.add(b.type); buildings.push({type:b.type,hexes});
+  }
+  return {faction,loadout:[...raw.loadout],heroes:[...raw.heroes],gods:[...raw.gods],terrain,buildings};
+}
+function captureDeckPreset(){
+  return normalizeDeckPreset({
+    faction:S.playerFaction, loadout:S.loadout, heroes:S.heroPick, gods:S.godPick,
+    terrain:playerHalf.terrain.map(row=>[...row]),
+    buildings:playerHalf.buildings.map(b=>({type:b.type,hexes:b.hexes.map(h=>[...h])}))
+  });
+}
+function persistDeckPresets(){
+  const storage=deckStorage(); if(!storage)return;
+  try{storage.setItem(DECK_SAVE_KEY,JSON.stringify({activeSlot:S.deckSlot,slots:deckPresets}));}catch(_){}
+}
+function saveActiveDeck(){
+  const preset=captureDeckPreset();
+  if(preset){deckPresets[S.deckSlot]=preset;persistDeckPresets();return true;}
+  return false;
+}
+function setDeckFaction(faction){
+  S.playerFaction=faction;
+  if(faction==="egypt")S.aiFaction="china";
+  else if(faction==="china")S.aiFaction="egypt";
+  else S.aiFaction=Math.random()<0.5?"egypt":"china";
+  S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
+}
+function applyDeckPreset(slot,useDefault=false){
+  const preset=normalizeDeckPreset(deckPresets[slot])||(useDefault?defaultDeckPreset():null);
+  if(!preset)return false;
+  S.deckSlot=slot; setDeckFaction(preset.faction);
+  // A saved player half must be preserved, but the opposing half still needs its
+  // own normal terrain setup. Without this explicit refresh, first-launch Play
+  // inherited aiHalfTerrain's all-plain placeholder because startMatch(true)
+  // correctly refused to regenerate either half.
+  aiHalfTerrain=freshAiHalfTerrain();
+  S.loadout=[...preset.loadout]; S.heroPick=[...preset.heroes]; S.godPick=[...preset.gods];
+  playerHalf.terrain=preset.terrain.map(row=>[...row]);
+  for(const saved of preset.buildings){
+    const b=playerHalf.buildings.find(x=>x.type===saved.type);
+    b.hexes=saved.hexes.map(h=>[...h]);
+  }
+  S.paintMap={};S.painted={F:0,M:0,W:0};
+  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
+  persistDeckPresets();
+  return true;
+}
+function initDeckPresets(){
+  let saved=null;const storage=deckStorage();
+  try{saved=storage&&JSON.parse(storage.getItem(DECK_SAVE_KEY));}catch(_){}
+  const slots=saved&&Array.isArray(saved.slots)?saved.slots:[];
+  deckPresets=[normalizeDeckPreset(slots[0]),normalizeDeckPreset(slots[1])];
+  applyDeckPreset(saved&&(saved.activeSlot===1)?1:0,true);
+}
+function editDeckSlot(slot){
+  if(slot!==0&&slot!==1)return;
+  if(S.deckEditing)saveActiveDeck();
+  applyDeckPreset(slot,true);startMatch(true);S.phase="setup";S.setupStep="faction";S.selectionFaction=S.playerFaction;S.deckEditing=true;
+  $("menuscreen").style.display="flex";renderDeckSlots();
+}
+function playDeckSlot(slot){
+  if(slot!==0&&slot!==1)return;
+  if(S.deckEditing)saveActiveDeck();
+  if(!applyDeckPreset(slot)){hint("Build this deck before playing it.");return;}
+  startMatch(true);S.phase="battle";S.selectionFaction=S.playerFaction;S.deckEditing=false;
+  $("menuscreen").style.display="none";renderDeckSlots();
+}
+function selectDeckSlot(slot){
+  if(slot!==0&&slot!==1)return;
+  if(S.deckEditing)saveActiveDeck();
+  if(!applyDeckPreset(slot)){hint("Build this deck before selecting it.");return;}
+  S.deckEditing=false;
+  renderDeckSlots();
+}
+function replayCurrentDeck(){
+  applyDeckPreset(S.deckSlot);startMatch(true);S.phase="battle";S.selectionFaction=S.playerFaction;S.deckEditing=false;
+  $("menuscreen").style.display="none";renderDeckSlots();
+}
+function openDeckMenu(){
+  // 2026-07-23 direct chat request: "the menu button after the game takes me to
+  // the home screen" -- S.setupStep was already being set to "home" here, but
+  // startMatch() (called just above) unconditionally sets setupStep="faction"
+  // AND calls renderSetupStep() itself, which flips the visible step DIV to the
+  // faction page. Re-setting S.setupStep="home" afterward updated the STATE
+  // but nothing re-ran renderSetupStep() to match the DOM to it, so the player
+  // visibly landed on the faction picker instead of the home hub. Fix: call
+  // renderSetupStep() again after the state is corrected, same as goToHomeStep().
+  startMatch(true);S.phase="setup";S.setupStep="home";S.selectionFaction=S.playerFaction;S.deckEditing=false;
+  $("menuscreen").style.display="flex";renderDeckSlots();renderSetupStep();
+}
+
 /* ---------------- ECONOMY ---------------- */
+// Jade Emperor: Mandate of Heaven -- while all 3 of a side's buildings stand,
+// resource generation is boosted; losing one weakens the mandate; losing two (down
+// to one or zero standing) removes it entirely.
+function mandateBoost(side){
+  if(!hasPassive(side,"mandateOfHeaven")) return 0;
+  const alive=buildings.filter(b=>b.side===side&&!b.dead).length;
+  return alive>=3 ? 0.15 : (alive===2 ? 0.05 : 0);
+}
+// Long Wang: Lord of the Four Seas -- water tiles on your OWN half generate a small
+// amount of extra favor per second, scaling with how many you have.
+function waterTileBonus(side){
+  if(!hasPassive(side,"lordOfFourSeas")) return 0;
+  const rows = side ? [0,1,2,3,4,5] : [6,7,8,9,10,11];
+  let count=0;
+  for(const r of rows){ if(!TMAP[r]) continue; for(let c=0;c<COLS;c++) if(TMAP[r][c]==="W") count++; }
+  return count*0.05;
+}
 function tickEconomy(dt){
   const pCity=!getBld(0,"city").dead,  pTemple=!getBld(0,"temple").dead;
   const aCity=!getBld(1,"city").dead,  aTemple=!getBld(1,"temple").dead;
-  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*(pCity?5:2));
-  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*(pTemple?3.4:2.2) + (S.playerGods.ra?.unlocked?dt*0.4:0));
-  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*(aCity?5:2));
-  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*(aTemple?3:2));
+  // 2026-07-23: Ra's old ad-hoc "+0.4 favor/s while unlocked" bonus is removed here --
+  // Ra's passive is now "Eye of Ra" (open-tile damage, see calcDmg), matching
+  // mythology_game_design.xlsx. Bastet's new "Home's Protection" passive (city food
+  // +20%) takes its place as the one economy-tick passive, symmetric for both sides.
+  // Quetzalcoatl: Morning Star -- food starts accelerated (+60% at t=0), fading linearly to +0% by 60s elapsed.
+  const pMorning = hasPassive(0,"morningStar") ? Math.max(0,1-elapsed()/60)*0.6 : 0;
+  const aMorning = hasPassive(1,"morningStar") ? Math.max(0,1-elapsed()/60)*0.6 : 0;
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*(1+pMorning)*(1+mandateBoost(0)));
+  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*((pTemple?3.4:2.2)*(1+mandateBoost(0)) + waterTileBonus(0)));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*(1+aMorning)*(1+mandateBoost(1)));
+  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*((aTemple?3:2)*(1+mandateBoost(1)) + waterTileBonus(1)));
 }
 
-/* ---------------- OCCUPANCY (3 slots per hex) ---------------- */
-function hexLoad(c,r,except){
+/* ---------------- OCCUPANCY (1 unit per hex PER LAYER: ground vs flying) ---------------- */
+const HEX_CAPACITY=1; // 2026-07-22 direct chat request: "only one unit of any kind can occupy a hex at a time" (was a 3-slot, size-weighted cap)
+// 2026-07-23 direct chat request: "flying units can be in the same hex as ground
+// units, but not other flying units" -- capacity is now tracked per layer (flying
+// param), so a ground unit and a flying unit can share a hex, but two units of the
+// SAME layer (both flying, or both ground) still cannot. Side-agnostic, same as before.
+function hexLoad(c,r,except,flying){
   let l=0;
   for(const u of S.units)
-    if(!u.dead && u!==except && u.hex[0]===c && u.hex[1]===r) l+=u.size;
+    if(!u.dead && u!==except && u.hex[0]===c && u.hex[1]===r && !!u.flying===!!flying) l++;
   return l;
 }
 
@@ -595,12 +1013,12 @@ function paintTerrain(c,r,type){
 const $=id=>document.getElementById(id);
 function buildEnemyGodsUI(){
   $("enemygods").innerHTML = activeAiGods.map(g=>
-    `<div class="egod" id="egod-${g.key}"><div class="gport">${g.emoji}</div><div class="gname">${g.name}</div><div class="gcost">🔱${g.cost}</div></div>`).join("");
+    `<div class="egod" id="egod-${g.key}"><div class="gport">${godPortrait(g)}</div><div class="gname">${g.name}</div><div class="gcost">🔱${g.cost}</div></div>`).join("");
 }
 function buildPlayerGodsUI(){
   $("playergods").innerHTML = activeGods.map(g=>
     `<div class="pgod" id="pgod-${g.key}" data-god="${g.key}">
-      <div class="gport">${g.emoji}</div>
+      <div class="gport">${godPortrait(g)}</div>
       <div class="gtxt"><div class="gname">${g.name}</div>
       <div class="gcost">🔱${g.cost}</div><div class="gpower">${g.power} 🔱${g.pcost}${g.passive?` · ${g.passive}`:""}</div></div>
     </div>`).join("");
@@ -612,7 +1030,7 @@ function renderCards(){
   $("cards").innerHTML = DECK.slice(0,HAND_SIZE).map(key=>{
     const u=FACTIONS[S.playerFaction].units[key];
     return `<div class="card${u.hero?" hero":""}${u.cat==="myth"?" myth":""}" id="card-${key}" data-unit="${key}">
-      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div><div class="ucost">${costLabel(u.cost)}</div></div>`;
+      <div class="uport">${unitPortrait(key,u,true)}</div><div class="uname">${u.name}</div><div class="ucost">${costLabel(u.cost)}</div></div>`;
   }).join("");
 }
 function useCard(key){ // used card goes to the back of the line
@@ -634,9 +1052,12 @@ function canAfford(cost, side){
   const f = side? S.aiFood:S.food, v = side? S.aiFavor:S.favor;
   return f>=(cost.f||0) && v>=(cost.v||0);
 }
-function pay(cost, side){
-  if(side){ S.aiFood-=(cost.f||0); S.aiFavor-=(cost.v||0); }
-  else    { S.food -=(cost.f||0); S.favor -=(cost.v||0); }
+function pay(cost, side, isHuman){
+  // Nu Wa: Mother of Humanity -- human units cost 10% less food (favor untouched;
+  // only humans have a food-only cost in this game, heroes/myths use favor).
+  const disc = (isHuman && hasPassive(side,"motherOfHumanity")) ? 0.9 : 1;
+  if(side){ S.aiFood-=(cost.f||0)*disc; S.aiFavor-=(cost.v||0); }
+  else    { S.food -=(cost.f||0)*disc; S.favor -=(cost.v||0); }
 }
 function refreshUI(){
   const inBattle = S.phase==="battle";
@@ -669,12 +1090,13 @@ function renderPalette(){
     $("paintbtn-"+t).classList.toggle("selected", S.paintSelected===t);
     $("paintbtn-"+t+"-count").textContent=(TERRAIN_BUDGET[t]-S.painted[t])+"/"+TERRAIN_BUDGET[t];
   }
-  $("paintbtn-D").classList.toggle("selected", S.paintSelected==="D");
 }
 function updateBattleDisabled(){
   const incomplete = S.loadout.length!==4 || S.heroPick.length!==2 || S.godPick.length!==4;
   $("btnbattle").classList.toggle("disabled", incomplete);
   $("btnnext").classList.toggle("disabled", incomplete);
+  $("btnnextgods").classList.toggle("disabled", S.godPick.length!==4);
+  $("btnnextheroes").classList.toggle("disabled", S.heroPick.length!==2);
 }
 function unitTip(u){
   const cost=Object.entries(u.cost).map(([k,v])=>`${v} ${k==="f"?"Food":"Favor"}`).join(" + ");
@@ -686,44 +1108,111 @@ function godTip(g){
   return `Unlock: ${g.cost} Favor\nPower: ${g.power} — ${g.desc}\nPower cost: ${g.pcost} Favor\nCooldown: ${g.cd}s`
     + (g.passive?`\nPassive: ${g.passive}`:"");
 }
+function unitPortrait(key,u,front=false){
+  const entry=IMG_SPRITES[key], src=entry && (typeof entry==="string"?entry:entry[front?1:0]);
+  return src?`<img class="unitportrait" src="${src}" alt="${u.name}" draggable="false">`:`<span class="trayemoji">${u.emoji}</span>`;
+}
+function unitDescription(u){
+  if(u.heal) return "Support unit that heals allies and deals extra damage to myth units.";
+  if(u.siege) return "Durable crushing attacker built to break heavy units and buildings.";
+  if(u.dtype==="ranged") return u.speed>.7?"Fast ranged skirmisher that attacks from two hexes away.":"Ranged attacker that deals damage safely from behind the front line.";
+  if(u.armor==="shielded") return "Shielded front-line fighter, strong against ranged attacks.";
+  if(u.armor==="heavy") return "Heavy close-combat fighter with strong staying power.";
+  return "Mobile close-combat fighter for pressure and pursuit.";
+}
+function unitStats(u){
+  const cost=Object.entries(u.cost).map(([k,v])=>`${v} ${k==="f"?"Food":"Favor"}`).join(" + ");
+  return `HP ${u.hp} · DMG ${u.dmg} · ${u.dtype} · ${u.armor} armor · Range ${u.range} · Cost ${cost}`;
+}
+function renderTray(id,keys,isGod){
+  const units=FACTIONS[S.playerFaction].units, gods=FACTIONS[S.playerFaction].allGods;
+  $(id).innerHTML=keys.length?keys.map(key=>{
+    if(isGod){ const g=gods.find(x=>x.key===key); return `<div class="trayitem">${godPortrait(g)}${g.name}</div>`; }
+    const u=units[key]; return `<div class="trayitem">${unitPortrait(key,u,true)}${u.name}</div>`;
+  }).join(""):`<div class="trayempty">Nothing selected yet</div>`;
+}
 function renderLoadout(){
   $("loadoutcards").innerHTML = HUMAN_KEYS.map(key=>{
     const u=FACTIONS[S.playerFaction].units[key], sel=S.loadout.includes(key);
     return `<div class="loadoutcard${sel?" selected":""}" data-unit="${key}" title="${unitTip(u)}">
-      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div></div>`;
+      <div class="uport">${unitPortrait(key,u,true)}</div><div class="pickdetails"><div class="uname">${u.name}</div>
+      <div class="pickdesc">${unitDescription(u)}</div><div class="pickstats">${unitStats(u)}</div></div></div>`;
   }).join("");
   $("loadoutcount").textContent = S.loadout.length+"/4";
+  renderTray("unittray",S.loadout,false);
   updateBattleDisabled();
 }
 function renderHeroPicker(){
   $("herocards").innerHTML = HERO_KEYS.map(key=>{
     const u=FACTIONS[S.playerFaction].units[key], sel=S.heroPick.includes(key);
     return `<div class="herocard${sel?" selected":""}" data-hero="${key}" title="${unitTip(u)}">
-      <div class="uport">${u.emoji}</div><div class="uname">${u.name}</div></div>`;
+      <div class="uport">${unitPortrait(key,u,true)}</div><div class="pickdetails"><div class="uname">${u.name}</div>
+      <div class="pickdesc">${unitDescription(u)}</div><div class="pickstats">${unitStats(u)}</div></div></div>`;
   }).join("");
   $("herocount").textContent = S.heroPick.length+"/2";
+  renderTray("herotray",S.heroPick,false);
   updateBattleDisabled();
 }
+/* 2026-07-23 (direct chat request): god picker split into a 3-across tile grid
+   (renderGodPicker, portrait + name only) and a full-detail overlay you tap into
+   per god (renderGodDetail/openGodDetail/closeGodDetail, showing the exact same
+   god+myth portraits/description/stats the old expanded row used to show inline,
+   plus a Select button that both toggles the pick AND returns to the grid). */
 function renderGodPicker(){
   $("godpickcards").innerHTML = FACTIONS[S.playerFaction].allGods.map(g=>{
     const sel=S.godPick.includes(g.key);
-    return `<div class="godpickcard${sel?" selected":""}" data-god="${g.key}" title="${godTip(g)}">
-      <div class="uport">${g.emoji}</div><div class="uname">${g.name}</div></div>`;
+    return `<div class="godtile${sel?" selected":""}" data-god="${g.key}" title="${g.name}">
+      <div class="uport">${godPortrait(g)}</div>
+      <div class="gtilename">${g.name}</div></div>`;
   }).join("");
   $("godpickcount").textContent = S.godPick.length+"/4";
-  const unitsTbl=FACTIONS[S.playerFaction].units;
-  $("godmythcards").innerHTML = FACTIONS[S.playerFaction].allGods.map(g=>{
-    const m=unitsTbl[g.myth];
-    return `<div class="mythcard" title="${g.name}'s myth unit\n${unitTip(m)}">
-      <div class="uport">${m.emoji}</div><div class="uname">${m.name}</div></div>`;
-  }).join("");
+  renderTray("godtray",S.godPick,true);
   updateBattleDisabled();
+  closeGodDetail(); // a fresh grid render always starts from the grid, never mid-detail
+}
+let godDetailKey=null;
+function renderGodDetail(key){
+  const g=FACTIONS[S.playerFaction].allGods.find(x=>x.key===key);
+  const myth=FACTIONS[S.playerFaction].units[g.myth];
+  const sel=S.godPick.includes(g.key);
+  $("goddetailcard").innerHTML = `<div class="godpickcard" title="${godTip(g)}">
+    <div class="godvisuals"><div class="uport namedportrait">${godPortrait(g)}<div class="portraitname">${g.name}</div></div>
+    <div class="mythport namedportrait">${unitPortrait(g.myth,myth,true)}<div class="portraitname">${myth.name}</div></div></div>
+    <div class="pickdetails"><div class="pickdesc">${g.power}: ${g.desc}${g.passive?` Passive: ${g.passive}.`:""}</div>
+    <div class="pickstats">Unlock ${g.cost} Favor · Power ${g.pcost} Favor · Cooldown ${g.cd}s</div>
+    <div class="mythdetail"><div class="mythcopy">
+    <div class="mythdesc">${unitDescription(myth)}</div>
+    <div class="mythstats">${unitStats(myth)}</div></div></div></div></div>`;
+  const btn=$("btngoddetailselect");
+  btn.textContent = sel? "Deselect" : "Select";
+  btn.classList.toggle("selected", sel);
+}
+function openGodDetail(key){
+  godDetailKey=key;
+  renderGodDetail(key);
+  $("goddetail").style.display="flex";
+}
+function closeGodDetail(){
+  godDetailKey=null;
+  $("goddetail").style.display="none";
+}
+function toggleGodDetailPick(){
+  if(!godDetailKey) return;
+  const idx=S.godPick.indexOf(godDetailKey);
+  if(idx>=0) S.godPick.splice(idx,1);
+  else if(S.godPick.length<4) S.godPick.push(godDetailKey);
+  renderGodPicker(); // refreshing the grid also closes the detail overlay (see above)
 }
 function onBattleTap(){
   if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before you can battle."); return; }
+  saveActiveDeck();
   $("menuscreen").style.display="none";
   startMatch(true);
-  S.phase="battle";
+  S.phase="battle"; S.deckEditing=false;
+}
+function onFinishDeckTap(){
+  if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before you can finish."); return; }
+  goToDeckStep();
 }
 
 /* ---------------- UNITS: CREATION & TRAINING ---------------- */
@@ -736,32 +1225,44 @@ function makeUnit(side,key,hex,path){
     hp:def.hp, maxhp:def.hp, size:def.size, flying:!!def.flying,
     pos:{x:ct.x,y:ct.y}, hex:[hex[0],hex[1]], lastHex:null, arrived:true,
     path:path||null, pathIdx:0, free:!path,
-    target:null, hold:false, dead:false,
-    atkT:Math.random()*0.4, waitT:0, healT:0,
-    buffUntil:0, buffSpd:1, buffDmg:1, slowUntil:0, stunUntil:0
+    target:null, hold:false, dead:false, sidestepped:false,
+    atkT:Math.random()*0.4, waitT:0, healT:0, assistFrom:null,
+    buffUntil:0, buffSpd:1, buffDmg:1, slowUntil:0, stunUntil:0,
+    // 2026-07-23: fields for the new Egyptian god powers/passives (mythology_game_design.xlsx)
+    poisonUntil:0, poisonDps:0, weakenUntil:0, invisible:false, frenzyUntil:0, despawnAt:0, hasRevived:false,
+    // 2026-07-23: field for the Aztec redesign -- consumed by the FIRST attack this unit
+    // ever lands, whether from its own def.surpriseAttack (Nagual) or the caster-side's
+    // razorWings passive (Itzpapalotl) -- see calcDmg/dealDamage.
+    ambushUsed:false
   };
 }
-function queueTrain(side,key,path,src,duty){
+function queueTrain(side,key,path,src,duty,readyAt){
   const def = unitsFor(side)[key];
-  S.training.push({side,key,path,src,duty,readyAt:elapsed()+def.train});
+  S.training.push({side,key,path,src,duty,readyAt:readyAt!==undefined?readyAt:elapsed()+def.train});
 }
 function tickTraining(){
   for(let i=S.training.length-1;i>=0;i--){
     const t=S.training[i];
     if(elapsed()>=t.readyAt){
       const h=t.path[0];
-      const sz=unitsFor(t.side)[t.key].size;
       let at=h;
-      if(hexLoad(h[0],h[1])+sz>3){ // exit hex blocked: emerge on top of a standing building
+      if(hexLoad(h[0],h[1],undefined,unitsFor(t.side)[t.key].flying)>=HEX_CAPACITY){ // exit hex blocked: emerge on top of a standing building
         const src=(t.src&&!t.src.dead)? t.src
           : buildings.filter(b=>b.side===t.side&&!b.dead)
               .sort((a,b)=>hexDist(a.hexes[0],h)-hexDist(b.hexes[0],h))[0];
         if(src) at=src.hexes.slice().sort((a,b)=>hexDist(a,h)-hexDist(b,h))[0];
         else { t.readyAt+=0.4; continue; }
       }
-      const u=makeUnit(t.side,t.key,at,t.path);
-      u.duty=t.duty;
-      S.units.push(u);
+      // Ptah's Ushabti (def.spawnCount:3, added 2026-07-23): one training slot produces
+      // a small squad instead of a single unit. The first copy gets the drawn path and
+      // marches as normal; the rest spawn alongside it with no path (free-standing,
+      // same as an emergency on-building spawn) rather than each needing its own route.
+      const spawnN=unitsFor(t.side)[t.key].spawnCount||1;
+      for(let k=0;k<spawnN;k++){
+        const u=makeUnit(t.side,t.key,at,k===0?t.path:null);
+        u.duty=t.duty;
+        S.units.push(u);
+      }
       fx(hexCenter(at[0],at[1]),"spawn", t.side?"#c0392b":"#e8b84b");
       S.training.splice(i,1);
     }
@@ -800,7 +1301,7 @@ document.addEventListener("pointerdown",e=>{
   const god=e.target.closest(".pgod");
   if(god){ onGodTap(god.dataset.god); return; }
   const factionBtn=e.target.closest(".factionbtn");
-  if(factionBtn){ setPlayerFaction(factionBtn.dataset.faction); return; }
+  if(factionBtn){ setPlayerFaction(factionBtn.dataset.faction); beginGodSelection(); return; }
   const paint=e.target.closest(".paintbtn");
   if(paint){
     const t=paint.dataset.paint;
@@ -826,18 +1327,23 @@ document.addEventListener("pointerdown",e=>{
     renderHeroPicker();
     return;
   }
-  const godCard=e.target.closest(".godpickcard");
-  if(godCard){
-    const key=godCard.dataset.god;
-    const idx=S.godPick.indexOf(key);
-    if(idx>=0) S.godPick.splice(idx,1);
-    else if(S.godPick.length<4) S.godPick.push(key);
-    renderGodPicker();
+  const godTile=e.target.closest(".godtile");
+  if(godTile){ openGodDetail(godTile.dataset.god); return; }
+  const godAction=e.target.closest("[data-godaction]");
+  if(godAction){
+    if(godAction.dataset.godaction==="select") toggleGodDetailPick();
+    else closeGodDetail();
     return;
   }
   const p=boardXY(e);
   if(p.inside){
     const h=pixelToHex(p.x,p.y);
+    const paintedKey=h && h[0]+","+h[1];
+    if(S.phase==="setup" && h && S.paintMap[paintedKey]!==undefined){
+      paintTerrain(h[0],h[1],"D");
+      renderPalette();
+      e.preventDefault(); return;
+    }
     if(S.phase==="setup" && h && S.paintSelected){
       if(paintTerrain(h[0],h[1],S.paintSelected)) renderPalette();
       else fx(hexCenter(h[0],h[1]),"ring","#ff463c");
@@ -868,7 +1374,7 @@ document.addEventListener("pointermove",e=>{
   const d=S.drag;
   if(!d.spawnBld){
     const b=bldAt(h[0],h[1]);
-    if(b && b.side===0){ d.spawnBld=b; hint("Now draw the route. Release to deploy."); }
+    if(b && b.side===0){ d.spawnBld=b; d.trainStart=elapsed(); hint("Now draw the route. Release to deploy."); }
     return;
   }
   const onBld=bldAt(h[0],h[1]);
@@ -910,8 +1416,9 @@ document.addEventListener("pointerup",e=>{
   if(!d.spawnBld){ hint("Route cancelled — start by dragging through one of your buildings."); return; }
   if(d.path.length<1){ hint("Draw at least one hex of route."); return; }
   if(!canAfford(d.def.cost,0)){ hint("Not enough resources."); return; }
-  pay(d.def.cost,0);
-  queueTrain(0,d.key,d.path,d.spawnBld,"attack");
+  pay(d.def.cost,0,d.def.cat==="human");
+  const readyAt=elapsed()+Math.max(0, d.def.train-(elapsed()-d.trainStart));
+  queueTrain(0,d.key,d.path,d.spawnBld,"attack",readyAt);
   useCard(d.key);
   fx(bldCenter(d.spawnBld),"ring","#e8b84b");
   hint(`${d.def.name} training…`);
@@ -928,10 +1435,26 @@ function onGodTap(key){
       banner(`${g.name} unlocked!`,"#e8b84b");
       hint(`${g.power} available. ${FACTIONS[S.playerFaction].units[g.myth].name} joined your card rotation.`);
       fx(bldCenter(getBld(0,"temple")),"ring","#b06ef0");
+      if(g.passiveKey==="buildingHpBoost"){ // Ptah: Creator's Word passive fires once, at unlock
+        buildings.filter(b=>b.side===0&&!b.dead).forEach(b=>{ const r=b.hp/b.maxhp; b.maxhp*=1.15; b.hp=b.maxhp*r; });
+      }
+      if(g.passiveKey==="discordReverse"){ // Tezcatlipoca: Lord of Discord, same "fires at unlock" simplification as Ptah's above
+        const enemyUnits=S.units.filter(u=>!u.dead&&u.side===1);
+        if(enemyUnits.length){
+          const victim=enemyUnits[Math.floor(Math.random()*enemyUnits.length)];
+          const traveled=victim.path? victim.path.slice(0,victim.pathIdx) : [];
+          victim.path=traveled.slice().reverse(); victim.pathIdx=0;
+          victim.free=victim.path.length===0; victim.target=null;
+        }
+      }
+      if(g.passiveKey==="gardenOfImmortality"){ // Xi Wangmu: Garden of Immortality passive fires once, at unlock
+        S.units.filter(u=>!u.dead&&u.side===0&&u.def.cat==="hero").forEach(u=>{ const r=u.hp/u.maxhp; u.maxhp*=1.2; u.hp=u.maxhp*r; });
+      }
     } else hint(`Need 🔱${g.cost} Favor to unlock ${g.name}.`);
     return;
   }
   if(elapsed()<st.cdUntil){ hint(`${g.power} recharging…`); return; }
+  if(elapsed()<(st.lockedUntil||0)){ hint(`${g.name}'s power is locked!`); return; }
   if(S.favor<g.pcost){ hint(`Need 🔱${g.pcost} Favor for ${g.power}.`); return; }
   S.armedPower = (S.armedPower===key)? null : key;
   hint(S.armedPower? `${g.power}: tap a target on the battlefield.` : "Power cancelled.");
@@ -965,9 +1488,32 @@ function unitDist(u,t){
   return hexDist(u.hex,t.hex);
 }
 function hasPassive(side,key){
+  if(elapsed()<(S.passivesStrippedUntil[side]||0)) return false; // Xipe Totec: The Flaying
   return side
     ? activeAiGods.some(g=>g.passiveKey===key && S.aiGods[g.key].unlocked)
     : activeGods.some(g=>g.passiveKey===key && S.playerGods[g.key].unlocked);
+}
+// Coyolxauhqui's "Moonlight" passive: dmg/speed boost strongest early in the match,
+// linearly fading to zero by 50s elapsed. Shared helper so calcDmg/effSpeed agree.
+function moonlightBoost(side,key){
+  return hasPassive(side,key||"moonlight") ? Math.max(0,1-elapsed()/50) : 0;
+}
+// Mictlantecuhtli's "Inevitable" passive: any unit dying anywhere generates a tiny
+// favor trickle for whichever side has this passive active -- called from every
+// major death path (see dealDamage and tickGodEffects's poison tick).
+function grantInevitable(deadSide){
+  const opp=deadSide?0:1;
+  if(hasPassive(opp,"inevitable")){
+    if(opp) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+1); else S.favor=Math.min(S.FAVOR_CAP,S.favor+1);
+  }
+}
+// Shared hex-radius utility (Tlaloc's flood zone, Itzpapalotl's Obsidian Wings zone).
+function hexesInRadius(center,rad){
+  const out=[];
+  for(let c=center[0]-rad;c<=center[0]+rad;c++)
+    for(let r=center[1]-rad;r<=center[1]+rad;r++)
+      if(inBounds(c,r) && hexDist(center,[c,r])<=rad) out.push([c,r]);
+  return out;
 }
 function effSpeed(u){
   if(elapsed()<u.stunUntil) return 0;
@@ -975,45 +1521,140 @@ function effSpeed(u){
   if(elapsed()<u.buffUntil) sp*=u.buffSpd;
   if(elapsed()<u.slowUntil) sp*=0.65;
   if(hasPassive(u.side,"moveSpeed10")) sp*=1.1;
+  sp *= 1 + 0.3*moonlightBoost(u.side,"moonsGlow"); // Chang'e: Moon's Glow
   return sp;
 }
 function calcDmg(att,tgt){
+  if(elapsed()<(tgt.invulnUntil||0)) return 0; // Xi Wangmu: Peach of Immortality -- complete invulnerability, skips every other modifier
   let d=att.def.dmg;
   if(elapsed()<att.buffUntil) d*=att.buffDmg;
   if(elapsed()<att.stunUntil) d*=0.5;
+  if(elapsed()<att.weakenUntil) d*=0.7; // Sekhmet's Pestilence passive / Plague Bearer's weaken effect
   if(att.def.dtype==="ranged" && hasPassive(att.side,"rangedDmg10")) d*=1.1;
+  if(hasPassive(att.side,"openTileDmg") && !["F","M"].includes(terrain(att.hex[0],att.hex[1]))) d*=1.15; // Ra: Eye of Ra
+  if(hasPassive(att.side,"chaosDamageBoost") && elapsed()<S.chaosBuffUntil[att.side]) d*=1.2; // Set: Lord of Storms
+  // 2026-07-23 (Aztec redesign, mythology_game_design.xlsx):
+  d *= 1 + 0.3*moonlightBoost(att.side); // Coyolxauhqui: Moonlight
+  if(att.def.surpriseAttack && !att.ambushUsed) d*=att.def.surpriseAttack; // Nagual: disguised until it strikes
+  if(hasPassive(att.side,"razorWings") && att.free && !att.ambushUsed) d*=1.5; // Itzpapalotl: Razor Wings
+  if(att.def.ambushInWater && terrain(att.hex[0],att.hex[1])==="W") d*=1.5; // Ahuizotl: lurks in water tiles
+  if(hasPassive(att.side,"waterDamageBonus") && (terrain(att.hex[0],att.hex[1])==="W" || neighbors(att.hex[0],att.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) d*=1.2; // Tlaloc: Storm Lord
+  if(att.def.strongerAsBuildingsFall){ // Tzitzimitl: stronger as its own side's buildings crumble
+    const own=buildings.filter(b=>b.side===att.side);
+    const avgHp=own.length? own.reduce((s,b)=>s+(b.dead?0:b.hp/b.maxhp),0)/own.length : 1;
+    d *= 1 + (1-avgHp)*0.8;
+  }
   if(isBldg(tgt)){
     d*= att.def.dtype==="crushing"?1.2 : att.def.dtype==="melee"?0.35 : 0.2;
     if(att.def.siege) d*=1.6;
     return d;
   }
+  if(hasPassive(tgt.side,"fortressDefense")){ // Horus: Rightful King
+    const fort=getBld(tgt.side,"fortress");
+    if(fort && !fort.dead && Math.min(...fort.hexes.map(h=>hexDist(tgt.hex,h)))<=2) d*=0.85;
+  }
   if(CAT_BEATS[att.def.cat]===tgt.def.cat) d*=1.5;
   if(att.def.antimyth && tgt.def.cat==="myth") d*=att.def.antimyth;
+  if(att.def.bonusVsHero && tgt.def.cat==="hero") d*=att.def.bonusVsHero; // Xiaotian Quan: hunts hero units specifically
+  if(hasPassive(att.side,"fireDefeatsWater") && (terrain(tgt.hex[0],tgt.hex[1])==="W" || neighbors(tgt.hex[0],tgt.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) d*=1.25; // Zhu Rong: Fire Defeats Water
   if(DMG_STRONG[att.def.dtype]===tgt.def.armor) d*=1.35;
   else if(DMG_WEAK[att.def.dtype]===tgt.def.armor) d*=0.7;
   if(att.def.dtype==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
   return d;
 }
 function dealDamage(att,tgt){
+  if(att.invisible) att.invisible=false; // Nephthys's Twilight Veil ends the instant its unit attacks
+  if(isBldg(tgt)){
+    if(elapsed()<(tgt.invulnUntil||0)) return; // Bastet's Guardian's Grace: building is immune to all damage
+  } else if(att.def.drainsFavor){
+    // Nephthys's Sheut: drains favor instead of dealing HP damage
+    if(tgt.side) S.aiFavor=Math.max(0,S.aiFavor-att.def.drainsFavor);
+    else S.favor=Math.max(0,S.favor-att.def.drainsFavor);
+    fx(tgt.pos,"text","#b06ef0","-"+att.def.drainsFavor+"\u26a1");
+    if(hasPassive(att.side,"pestilence")) tgt.weakenUntil=elapsed()+3;
+    return;
+  }
   const d=calcDmg(att,tgt);
+  if(!att.ambushUsed) att.ambushUsed=true; // Nagual / Itzpapalotl's Razor Wings: only the FIRST attack this unit ever lands can carry the bonus
   if(isBldg(tgt)){
     tgt.hp-=d; S.bldDmg[att.side]+=Math.min(d,Math.max(0,tgt.hp+d));
     if(tgt.hp<=0 && !tgt.dead){
       tgt.dead=true;
       fx(bldCenter(tgt),"boom","#ff8040");
       banner(`${tgt.side?"Enemy":"Your"} ${tgt.name} destroyed!`, tgt.side?"#7ec46a":"#ff5b4d");
+      if(hasPassive(tgt.side,"deathFavorSurge")){ // Nephthys: losing a building grants a favor surge
+        if(tgt.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+15); else S.favor=Math.min(S.FAVOR_CAP,S.favor+15);
+      }
+      // Xipe Totec: New Growth -- ANY building dying (yours or the enemy's) grants a
+      // food surge to whichever side has this passive active, independent of tgt.side.
+      for(const s of [0,1]){
+        if(hasPassive(s,"newGrowth")){
+          if(s) S.aiFood=Math.min(S.FOOD_CAP,S.aiFood+15); else S.food=Math.min(S.FOOD_CAP,S.food+15);
+        }
+      }
       checkInstantWin();
     }
   } else {
     tgt.hp-=d;
     if(att.def.slows) tgt.slowUntil=elapsed()+2;
+    if(att.def.poisons){ tgt.poisonUntil=elapsed()+(att.def.poisonDur||4); tgt.poisonDps=att.def.poisonDps||8; }
+    if(hasPassive(att.side,"pestilence")) tgt.weakenUntil=elapsed()+3; // Sekhmet: Pestilence
+    if(att.def.disruptsRoute && !tgt.dead){ tgt.path=null; tgt.pathIdx=0; tgt.free=true; tgt.target=null; } // Ehecatotontin: chaotic movement disrupts the target's route
     if(tgt.hp<=0 && !tgt.dead){
-      tgt.dead=true;
-      fx(tgt.pos,"boom",tgt.side?"#c0392b":"#e8b84b");
-      if(tgt.def.cat==="human")
-        S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
-      if(tgt.def.cat==="human" && att.side===0 && S.playerGods.anubis?.unlocked)
-        S.food=Math.min(S.FOOD_CAP,S.food+2);
+      if(tgt.def.revivesOnce && !tgt.hasRevived){
+        // Ra's Bennu Bird: revives once with partial health instead of dying
+        tgt.hasRevived=true; tgt.hp=tgt.maxhp*0.4;
+        fx(tgt.pos,"ring","#ffb020"); fx(tgt.pos,"text","#ffb020","Reborn!");
+      } else {
+        tgt.dead=true;
+        fx(tgt.pos,"boom",tgt.side?"#c0392b":"#e8b84b");
+        if(tgt.def.cat==="human")
+          S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
+        if(hasPassive(tgt.side,"deathFavorNearTemple")){ // Osiris: Lord of the Dead
+          const temple=getBld(tgt.side,"temple");
+          if(temple && !temple.dead && Math.min(...temple.hexes.map(h=>hexDist(tgt.hex,h)))<=3){
+            if(tgt.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+3); else S.favor=Math.min(S.FAVOR_CAP,S.favor+3);
+          }
+        }
+        // 2026-07-23 (Aztec redesign): Huitzilopochtli's Blood Debt (killer's side gains
+        // favor), Coatlicue's Earth Mother (the side that just LOST this unit gains food),
+        // and Mictlantecuhtli's Inevitable (any death, either side, trickles favor to
+        // whichever side has it active) all resolve at the same real-kill point.
+        if(hasPassive(att.side,"bloodFavor")){
+          if(att.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+2); else S.favor=Math.min(S.FAVOR_CAP,S.favor+2);
+        }
+        if(hasPassive(tgt.side,"earthMother")){
+          if(tgt.side) S.aiFood=Math.min(S.FOOD_CAP,S.aiFood+2); else S.food=Math.min(S.FOOD_CAP,S.food+2);
+        }
+        grantInevitable(tgt.side);
+        if(att.def.spawnsOnKill){ // Centzon Huitznahua: spawns a fresh copy of itself when it kills, capped so it can't runaway-snowball
+          const alive=S.units.filter(u=>!u.dead&&u.side===att.side&&u.key===att.key).length;
+          if(alive<6){
+            const spot=neighbors(att.hex[0],att.hex[1]).find(n=>hexLoad(n[0],n[1],undefined,att.flying)<HEX_CAPACITY);
+            if(spot){ const clone=makeUnit(att.side,att.key,spot,null); clone.free=true; S.units.push(clone); fx(clone.pos,"ring","#ffd97a"); }
+          }
+        }
+      }
+    }
+    // Thoth's Ammit: executes any enemy unit that dips below a health threshold, on top of the direct hit
+    if(!tgt.dead && att.def.executesBelow && tgt.hp>0 && tgt.hp<tgt.maxhp*att.def.executesBelow){
+      tgt.dead=true; fx(tgt.pos,"boom","#6a4c93");
+      if(tgt.def.cat==="human") S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
+      grantInevitable(tgt.side);
+    }
+    // Set's Apep: chaos incarnate -- splashes a fraction of this hit's damage to every OTHER unit
+    // (any side, including the attacker's own allies) within 1 hex of the primary target.
+    if(att.def.chaosSplash){
+      for(const u of S.units){
+        if(u.dead||u===tgt||u===att) continue;
+        if(hexDist(u.hex,tgt.hex)>1) continue;
+        u.hp-=d*att.def.chaosSplash;
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          grantInevitable(u.side);
+        }
+      }
     }
   }
   if(att.def.dtype==="ranged"){
@@ -1033,17 +1674,20 @@ function losBlocked(a,b){
 }
 function scanEncounter(u){
   const rng=Math.max(u.def.range,1);
+  const frenzied=elapsed()<u.frenzyUntil; // Sekhmet's Eye Unleashed: attack the nearest unit regardless of side
   let best=null,bs=-1e9;
   for(const e of S.units){
-    if(e.dead||e.side===u.side) continue;
+    if(e.dead||e===u) continue;
+    if(!frenzied && e.side===u.side) continue;
+    if(e.invisible && !hasPassive(u.side,"trueSight")) continue; // Nephthys's Twilight Veil: undetectable until it attacks (unless the scanning side has Erlang Shen's True Sight)
     const d=hexDist(u.hex,e.hex);
     if(d>rng) continue;
     if(u.def.dtype==="ranged" && losBlocked(u.hex,e.hex)) continue; // can't fire over a mountain
     let sc=-d*10;
     const next=u.path&&u.pathIdx<u.path.length? u.path[u.pathIdx]:null;
     if(next && hexDist(e.hex,next)<=1) sc+=100;
-    if(attackedByAllies(u,e)) sc+=30;
-    if(CAT_BEATS[u.def.cat]===e.def.cat) sc+=20;
+    if(!frenzied && attackedByAllies(u,e)) sc+=30;
+    if(!frenzied && CAT_BEATS[u.def.cat]===e.def.cat) sc+=20;
     if(sc>bs){bs=sc;best=e;}
   }
   return best;
@@ -1061,7 +1705,10 @@ function moveToward(u,pt,dt){
   const sp=effSpeed(u)*HEX*SQ3;
   if(sp<=0) return false;
   const dx=pt.x-u.pos.x, dy=pt.y-u.pos.y, d=Math.hypot(dx,dy);
-  const terr=u.flying?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1;
+  let terr=(u.flying||hasPassive(u.side,"clearingWind")||(u.def.cat==="hero"&&hasPassive(u.side,"cloudSomersault")))?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1; // Ehecatl: Clearing Wind / Sun Wukong: Cloud Somersault (heroes only)
+  if(u.def.fastInWater && terrain(u.hex[0],u.hex[1])==="W") terr=1.5; // Long Wang's Eastern Dragon: extraordinary speed specifically on water
+  if((hasPassive(u.side,"lordOfFourSeas")||hasPassive(u.side,"floodCurrent")) &&
+     (terrain(u.hex[0],u.hex[1])==="W" || neighbors(u.hex[0],u.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) terr*=1.2; // Long Wang: Lord of the Four Seas / Gong Gong: Flood Current
   const step=sp*terr*dt;
   if(d<=Math.max(step,3)){ u.pos.x=pt.x; u.pos.y=pt.y; return true; }
   u.pos.x+=dx/d*step; u.pos.y+=dy/d*step; return false;
@@ -1070,11 +1717,54 @@ function followPath(u,dt){
   if(!u.path||u.pathIdx>=u.path.length){ u.path=null; u.free=true; return; }
   const nh=u.path[u.pathIdx];
   const entering = u.hex[0]!==nh[0]||u.hex[1]!==nh[1];
-  if(entering && hexLoad(nh[0],nh[1],u)+u.size>3){
+  if(entering && hexDist(u.hex,nh)>1){
+    // A blocker-engage sidestep (updateUnit) can leave u.hex no longer adjacent to
+    // the route's next hex. moveToward below is pure pixel movement with no terrain
+    // awareness -- resuming with a straight slide here could cut across illegal
+    // terrain (e.g. a mountain) sitting between the two hexes (2026-07-23 bug
+    // report). Splice in a real, routeOK-legal path back onto the route instead.
+    const back=findPath(u.hex,[nh],u.flying);
+    const detour=back&&back.length>1?back.slice(1,-1):[];
+    if(detour.length) u.path.splice(u.pathIdx,0,...detour);
+    else u.pathIdx++; // no legal way back (rare) -- skip this route hex, try the next
+    u.sidestepped=false;
+    return;
+  }
+  u.sidestepped=false;
+  if(entering && hexLoad(nh[0],nh[1],u,u.flying)>=HEX_CAPACITY){
+    // a same-layer friendly on the blocking hex who is actively fighting: join
+    // their fight instead of blindly waiting/sidestepping.
+    const blocker=S.units.find(o=>!o.dead&&o!==u&&o.hex[0]===nh[0]&&o.hex[1]===nh[1]
+      &&o.side===u.side&&!!o.flying===!!u.flying);
+    if(blocker && blocker.target && !blocker.target.dead){
+      const jt=blocker.target, rng=Math.max(u.def.range,1);
+      if(unitDist(u,jt)<=rng){ u.target=jt; u.waitT=0; u.assistFrom=null; return; } // already in range -- just attack, no detour needed
+      const goalHexes=isBldg(jt)?jt.hexes:[jt.hex];
+      const toGoal=h=>Math.min(...goalHexes.map(gh=>hexDist(h,gh)));
+      const curD=toGoal(u.hex);
+      // going AROUND a blocker often requires a same-distance lateral hop before the
+      // path toward the target opens up (a hex grid can't always shorten distance in
+      // one step around an obstacle) -- so this only rejects moves that make things
+      // WORSE, not moves that merely tie. u.assistFrom (a dedicated field, separate
+      // from the real path-following u.lastHex) blocks stepping straight back to the
+      // hex this same assist just came from, so a tie can't turn into a ping-pong.
+      const step=neighbors(u.hex[0],u.hex[1])
+        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY
+          && !(u.assistFrom && n[0]===u.assistFrom[0] && n[1]===u.assistFrom[1]))
+        .sort((a,b)=>toGoal(a)-toGoal(b))[0];
+      if(step && toGoal(step)<=curD){
+        u.target=jt;
+        const from=[u.hex[0],u.hex[1]];
+        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; u.assistFrom=from; }
+        u.waitT=0;
+        return;
+      }
+    }
+    u.assistFrom=null;
     u.waitT+=dt;
     if(u.waitT>0.5){
       const alt=neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],u.flying)
-        && hexLoad(n[0],n[1],u)+u.size<=3 && hexDist(n,nh)<=1
+        && hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY && hexDist(n,nh)<=1
         && !(u.lastHex && n[0]===u.lastHex[0] && n[1]===u.lastHex[1])); // don't sidestep straight back to where we just were
       if(alt){ u.path.splice(u.pathIdx,0,alt); u.waitT=0; }
       else u.waitT=0.25;
@@ -1082,6 +1772,7 @@ function followPath(u,dt){
     return;
   }
   u.waitT=0;
+  u.assistFrom=null;
   if(entering){ u.lastHex=[u.hex[0],u.hex[1]]; u.hex=[nh[0],nh[1]]; u.arrived=false; }
   if(moveToward(u,hexCenter(nh[0],nh[1]),dt)){ u.pathIdx++; u.arrived=true; }
 }
@@ -1133,16 +1824,35 @@ function updateUnit(u,dt){
         if(moveToward(u,hexCenter(u.hex[0],u.hex[1]),dt)) u.arrived=true;
         return;
       }
-      if(u.atkT<=0 && !stunned){ u.atkT=1/u.def.as; dealDamage(u,t); }
+      if(u.atkT<=0 && !stunned){
+        u.atkT=1/u.def.as;
+        if(u.def.multiTarget){
+          // Sekhmet's Plague Bearer: hits up to N enemies in range simultaneously
+          const targets=S.units.filter(e=>!e.dead&&e.side!==u.side&&!e.invisible&&hexDist(u.hex,e.hex)<=rng
+            &&!(u.def.dtype==="ranged"&&losBlocked(u.hex,e.hex)))
+            .sort((a,b)=>hexDist(u.hex,a.hex)-hexDist(u.hex,b.hex));
+          if(!targets.includes(t)) targets.unshift(t);
+          targets.slice(0,u.def.multiTarget).forEach(e=>dealDamage(u,e));
+        } else {
+          dealDamage(u,t);
+        }
+      }
       return;
     }
     const blk=!isBldg(t)&&u.path&&u.pathIdx<u.path.length&&hexDist(t.hex,u.path[u.pathIdx])<=1;
-    if(u.def.range<=1 && d<=rng+1 && !isBldg(t) && (blk||u.free)){
+    // u.sidestepped caps a still-routed unit (blk) to ONE hex off its drawn route to
+    // engage a blocker -- without this, defeating one blocker then immediately facing
+    // a second could chain sidesteps arbitrarily far off-route before ever resuming
+    // the path (2026-07-23 bug report: a unit visibly drifted ~2 hexes off-route to
+    // fight, then cut through illegal terrain sliding back -- see followPath's
+    // matching fix for the return leg). Free-roaming units (u.free, no route to
+    // return to) are unaffected -- chasing a moving target is normal for them.
+    if(u.def.range<=1 && d<=rng+1 && !isBldg(t) && ((blk&&!u.sidestepped)||u.free)){
       const step=neighbors(u.hex[0],u.hex[1])
-        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u)+u.size<=3)
+        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY)
         .sort((a,b)=>hexDist(a,t.hex)-hexDist(b,t.hex))[0];
       if(step && hexDist(step,t.hex)<d){
-        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; }
+        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; if(blk) u.sidestepped=true; }
         return;
       }
     }
@@ -1164,6 +1874,92 @@ function updateUnit(u,dt){
 }
 
 /* ---------- fortress defense ---------- */
+function tickGodEffects(dt){
+  // 2026-07-23: per-frame upkeep for the new Egyptian god mechanics that aren't a
+  // one-shot cast effect -- poison damage over time (Isis's Scorpion Guard), hero
+  // regen (Isis's Wings of Protection passive), passive favor generation (Osiris's
+  // Apis Bull), and the despawn timer on Osiris's temporarily-revived warriors.
+  for(const u of S.units){
+    if(u.dead) continue;
+    if(elapsed()<u.poisonUntil){
+      u.hp-=u.poisonDps*dt;
+      if(u.hp<=0 && !u.dead){
+        u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+        if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+        grantInevitable(u.side); // Mictlantecuhtli: Inevitable
+        continue;
+      }
+    }
+    if(u.def.cat==="hero" && hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp){
+      u.hp=Math.min(u.maxhp,u.hp+u.maxhp*0.01*dt);
+    }
+    if(u.def.generatesFavor){
+      if(u.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+u.def.generatesFavor*dt);
+      else S.favor=Math.min(S.FAVOR_CAP,S.favor+u.def.generatesFavor*dt);
+    }
+    if(u.despawnAt && elapsed()>=u.despawnAt && !u.dead){
+      u.dead=true; fx(u.pos,"ring","#7ec46a");
+    }
+    // Jade Emperor: Celestial Decree -- a conscripted unit returns to its own side
+    // once the conscription window expires.
+    if(u.conscriptedUntil && elapsed()>=u.conscriptedUntil){
+      u.side=u.origSide; u.conscriptedUntil=0; u.target=null; u.free=true; u.path=null; u.pathIdx=0;
+      fx(u.pos,"ring","#e8b84b");
+    }
+  }
+  // Huo Shu (Zhu Rong's myth): radiates fire damage to every adjacent enemy unit,
+  // constantly, while alive -- a separate loop since this damages OTHER units, not
+  // the aura-bearer itself.
+  for(const u of S.units){
+    if(u.dead||!u.def.auraDps) continue;
+    for(const e of S.units){
+      if(e.dead||e===u||e.side===u.side) continue;
+      if(hexDist(u.hex,e.hex)>(u.def.auraRange||1)) continue;
+      e.hp-=u.def.auraDps*dt;
+      if(e.hp<=0 && !e.dead){
+        e.dead=true; fx(e.pos,"boom",e.side?"#c0392b":"#e8b84b");
+        if(e.def.cat==="human") S.deadHumans.push({key:e.key,at:elapsed(),hex:[...e.hex],side:e.side});
+        grantInevitable(e.side);
+      }
+    }
+  }
+}
+// Lei Gong: Thunder's Warning -- enemy units approaching any of your buildings are
+// briefly (and repeatedly, while they stay in range) slowed.
+function tickThundersWarning(){
+  for(const side of [0,1]){
+    if(!hasPassive(side,"thundersWarning")) continue;
+    const enemySide=side?0:1;
+    const myBlds=buildings.filter(b=>b.side===side&&!b.dead);
+    if(!myBlds.length) continue;
+    for(const u of S.units){
+      if(u.dead||u.side!==enemySide) continue;
+      if(myBlds.some(b=>Math.min(...b.hexes.map(h=>hexDist(u.hex,h)))<=2)) u.slowUntil=elapsed()+1.5;
+    }
+  }
+}
+// Tlaloc's "The Weeping Rain": reverts any flooded hex back to its original terrain
+// once its timer expires. Casting is in applyGodPower's "tlaloc" case.
+function tickFloods(dt){
+  for(let i=S.floodedHexes.length-1;i>=0;i--){
+    const f=S.floodedHexes[i];
+    if(f.dmgPerSec){ // Zhu Rong's Primordial Fire: damage any unit standing on the hazard hex
+      for(const u of S.units){
+        if(u.dead||u.hex[0]!==f.c||u.hex[1]!==f.r) continue;
+        u.hp-=f.dmgPerSec*dt;
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          grantInevitable(u.side);
+        }
+      }
+    }
+    if(elapsed()>=f.expiresAt){
+      if(TMAP[f.r] && TMAP[f.r][f.c]===(f.to||"W")) TMAP[f.r][f.c]=f.orig; // TMAP rows are arrays of chars (see `TMAP = TMAP_INITIAL.map(row=>[...row])`), not strings
+      S.floodedHexes.splice(i,1);
+    }
+  }
+}
 function tickFortresses(dt){
   for(const b of buildings){
     if(b.type!=="fortress"||b.dead) continue;
@@ -1214,37 +2010,119 @@ function applyGodPower(casterSide,g,hex){
   const key=g.key, enemySide=casterSide?0:1;
   const pt=hexCenter(hex[0],hex[1]);
   switch(key){
-    case "horus": case "ra": case "huitzilopochtli": {
-      const color = (key==="horus"||key==="huitzilopochtli") ? "#ffd97a" : "#ffb020";
+    case "huitzilopochtli": {
+      // 2026-07-23 (Aztec redesign, mythology_game_design.xlsx): Solar War replaces the
+      // old radial nuke -- buffs ALL your own units, but costs each of them a slice of
+      // its own current HP ("the sun demands payment in blood"). A weak unit can die
+      // paying this cost -- that's the intended risk, not a bug.
+      const color="#ffd97a";
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side!==casterSide) continue;
+        u.buffUntil=elapsed()+6; u.buffSpd=1.2; u.buffDmg=1.3;
+        const cost=u.hp*0.15; u.hp-=cost; fx(u.pos,"text","#ff5b4d","-"+Math.round(cost));
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+        }
+        n++;
+      }
+      if(!n) return false;
+      fx(pt,"boom",color); castBanner(casterSide,g,color);
+      return true;
+    }
+    case "horus": case "ra": {
+      // 2026-07-23: line-sweep across the target's entire row, replacing the old
+      // radial nuke -- matches mythology_game_design.xlsx's "sweeps across the map
+      // in a straight line" for both Horus's Falcon's Wrath and Ra's Solar Barque.
+      // Simplified to "the whole row" rather than true line/vector geometry.
+      const color = key==="horus" ? "#ffd97a" : "#ffb020";
+      const row=hex[1];
       fx(pt,"boom",color); fx(pt,"ring",color);
       for(const u of S.units){
-        if(u.dead||u.side===casterSide) continue;
-        const d=hexDist(u.hex,hex);
-        const dmg = (key==="horus"||key==="huitzilopochtli") ? (d>1?null:130) : (d>2?null:(d<=1?90:45));
-        if(dmg==null) continue;
-        u.hp-=dmg; fx(u.pos,"text",color,"-"+dmg);
-        if(u.hp<=0){ u.dead=true; fx(u.pos,"boom","#c0392b"); }
+        if(u.dead||u.side===casterSide||u.hex[1]!==row) continue;
+        u.hp-=70; fx(u.pos,"text",color,"-70");
+        if(u.hp<=0){
+          if(u.def.revivesOnce && !u.hasRevived){
+            u.hasRevived=true; u.hp=u.maxhp*0.4; fx(u.pos,"ring","#ffb020");
+          } else {
+            u.dead=true; fx(u.pos,"boom","#c0392b");
+            if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          }
+        }
       }
       castBanner(casterSide,g,color);
       return true;
     }
-    case "bastet": case "jade": case "guan": case "quetzalcoatl": {
-      const params = key==="bastet"?[1.5,1.3] : key==="jade"?[1.25,1.4] : key==="quetzalcoatl"?[1.25,1.4] : [1,1.6];
-      buffUnits(casterSide,hex,2,params[0],params[1],8);
-      fx(pt,"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
+    case "jade": {
+      // 2026-07-23 (Chinese redesign, mythology_game_design.xlsx): Celestial Decree
+      // replaces the old shared jade/guan buff-aura (Guan Yu is removed -- not on the
+      // sheet, see Willem's decision in HANDOFF.md). Temporarily conscripts the
+      // nearest enemy unit to fight for the caster; it reverts automatically (see
+      // tickGodEffects' conscriptedUntil check). Not a clone -- a genuine side-flip,
+      // a first for this engine.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!target) return false;
+      target.origSide=target.side; target.side=casterSide; target.conscriptedUntil=elapsed()+8;
+      target.free=true; target.target=null; target.path=null; target.pathIdx=0;
+      fx(target.pos,"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
+      return true;
+    }
+    case "sunwukong": {
+      // 72 Transformations: Sun Wukong transforms into a fighting copy of the
+      // enemy's strongest (highest current HP) myth unit anywhere on the board,
+      // fighting for the caster. Built via makeUnit(target.side,...) FIRST so def
+      // resolves against the TARGET's own faction table (same cross-faction-safe
+      // pattern as Tezcatlipoca's Smoking Mirror / Coyolxauhqui's Dismemberment),
+      // then re-tagged to the caster's side. Temporary: despawns after 15s.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&u.def.cat==="myth")
+        .sort((a,b)=>b.hp-a.hp)[0];
+      if(!target) return false;
+      const spot=neighbors(hex[0],hex[1]).find(n=>hexLoad(n[0],n[1],undefined,target.flying)<HEX_CAPACITY)||hex;
+      const clone=makeUnit(target.side,target.key,spot,null);
+      clone.side=casterSide; clone.free=true; clone.despawnAt=elapsed()+15;
+      S.units.push(clone);
+      fx(clone.pos,"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
+      return true;
+    }
+    case "quetzalcoatl": {
+      // 2026-07-23: Wind Serpent -- a rushing wind resets EVERY enemy unit's route,
+      // forcing them to re-path from scratch ("disrupting enemy routes entirely").
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide) continue;
+        u.path=null; u.pathIdx=0; u.free=true; u.target=null; n++;
+        fx(u.pos,"ring","#7ec4d8");
+      }
+      if(!n) return false;
+      fx(pt,"boom","#7ec4d8"); castBanner(casterSide,g,"#7ec4d8");
+      return true;
+    }
+    case "bastet": {
+      // 2026-07-23: Guardian's Grace -- one of your own buildings becomes briefly
+      // immune to all damage, replacing the old shared speed/dmg buff.
+      const bld=buildings.filter(b=>b.side===casterSide&&!b.dead)
+        .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(h,hex)))-Math.min(...b.hexes.map(h=>hexDist(h,hex))))[0];
+      if(!bld) return false;
+      bld.invulnUntil=elapsed()+8;
+      fx(bldCenter(bld),"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
       return true;
     }
     case "osiris": {
+      // 2026-07-23: revived warriors are now TEMPORARY (despawnAt), and the
+      // eligibility window widens to 90s if Anubis's corpseWindow passive is active.
       let bld=null,bd=1e9;
       for(const b of buildings){ if(b.side!==casterSide||b.dead) continue;
         const d=Math.min(...b.hexes.map(h=>hexDist(h,hex))); if(d<bd){bd=d;bld=b;} }
       if(!bld) return false;
-      const spots=bldAdjacent(bld,false).filter(h=>hexLoad(h[0],h[1])<3);
-      const pool=S.deadHumans.filter(d=>d.side===casterSide&&elapsed()-d.at<60).slice(-3);
+      const spots=bldAdjacent(bld,false).filter(h=>hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
+      const window=hasPassive(casterSide,"corpseWindow")?90:60;
+      const pool=S.deadHumans.filter(d=>d.side===casterSide&&elapsed()-d.at<window).slice(-3);
       let n=0;
       for(const d of pool){
         const h=spots[n]||spots[0]; if(!h) break;
-        const u=makeUnit(casterSide,d.key,h,null); u.free=true;
+        const u=makeUnit(casterSide,d.key,h,null); u.free=true; u.despawnAt=elapsed()+20;
         S.units.push(u); fx(u.pos,"ring","#7ec46a"); n++;
       }
       S.deadHumans=S.deadHumans.filter(d=>!pool.includes(d));
@@ -1253,33 +2131,342 @@ function applyGodPower(casterSide,g,hex){
       return true;
     }
     case "isis": {
-      S.wards.push({side:casterSide,c:hex[0],r:hex[1],rad:2,until:elapsed()+25,charges:2});
+      // 2026-07-23: Secret Name -- locks the enemy's soonest-ready unlocked god
+      // instead of raising a ward. Targeting is programmatic (no god-picker UI
+      // exists yet), not hex-based; hex is only used for the cast-location fx.
+      const enemyRoster = enemySide? activeAiGods : activeGods;
+      const enemyState = enemySide? S.aiGods : S.playerGods;
+      const target = enemyRoster.filter(eg=>enemyState[eg.key] && enemyState[eg.key].unlocked)
+        .sort((a,b)=>enemyState[a.key].cdUntil-enemyState[b.key].cdUntil)[0];
+      if(!target) return false;
+      enemyState[target.key].lockedUntil = elapsed()+15;
       fx(pt,"ring","#b06ef0");
-      banner(casterSide?`Enemy casts ${g.power}!`:`${g.power} raised!`, casterSide?"#ff9a7a":"#b06ef0");
+      banner(casterSide?`Enemy locks your ${target.name}'s power!`:`${g.power}! ${target.name}'s power is locked.`,
+        casterSide?"#ff9a7a":"#b06ef0");
       return true;
     }
     case "anubis": {
-      for(const u of S.units){
-        if(u.dead||u.side===casterSide||u.def.cat!=="human"||hexDist(u.hex,hex)>2) continue;
-        if(u.hp<u.maxhp*0.3){ u.dead=true; fx(u.pos,"boom","#c0392b"); }
+      // 2026-07-23: Judgment -- single nearest enemy unit, probabilistic survival
+      // equal to its remaining health%, replacing the old deterministic <30%-HP AOE.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!target) return false;
+      const surviveChance=target.hp/target.maxhp;
+      if(Math.random()>surviveChance){
+        target.dead=true; fx(target.pos,"boom","#6a4c93");
+        if(target.def.cat==="human") S.deadHumans.push({key:target.key,at:elapsed(),hex:[...target.hex],side:target.side});
+      } else {
+        fx(target.pos,"ring","#6a4c93"); fx(target.pos,"text","#6a4c93","Spared");
       }
       castBanner(casterSide,g,"#6a4c93");
       return true;
     }
-    case "nuwa": case "tlaloc": {
+    case "nuwa": {
+      // 2026-07-23: Five Colored Stones now repairs to FULL health (was a flat
+      // +400) -- matches the sheet's "instantly repairs" literally.
       const hurt=buildings.filter(b=>b.side===casterSide&&!b.dead&&b.hp<b.maxhp)
         .sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
       if(!hurt) return false;
-      hurt.hp=Math.min(hurt.maxhp,hurt.hp+400);
+      hurt.hp=hurt.maxhp;
       fx(bldCenter(hurt),"heal","#7ec46a"); castBanner(casterSide,g,"#7ec46a");
       return true;
     }
-    case "zhong": case "tezcatlipoca": {
-      const myth=S.units.filter(u=>!u.dead&&u.side===enemySide&&u.def.cat==="myth")
-        .sort((a,b)=>b.hp-a.hp)[0];
-      if(!myth) return false;
-      myth.stunUntil=elapsed()+6; fx(myth.pos,"ring","#ff5b4d");
-      castBanner(casterSide,g,"#ff5b4d");
+    case "longwang": {
+      // Dragon Rain: floods a large zone into real water for 8s (reuses Tlaloc's
+      // floodedHexes/tickFloods plumbing, wider radius than The Weeping Rain) and
+      // deals one immediate burst of damage to every unit -- either side -- caught
+      // in the deluge when it lands.
+      let n=0;
+      for(const [c,r] of hexesInRadius(hex,3)){
+        const t=terrain(c,r);
+        if(t==="W"||t==="M"||bldAt(c,r)) continue;
+        S.floodedHexes.push({c,r,orig:t,to:"W",expiresAt:elapsed()+8});
+        TMAP[r][c]="W"; n++;
+      }
+      for(const u of S.units){
+        if(u.dead||hexDist(u.hex,hex)>3) continue;
+        u.hp-=40; fx(u.pos,"text","#2f7391","-40");
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          grantInevitable(u.side);
+        }
+      }
+      if(!n) return false;
+      fx(pt,"boom","#2f7391"); castBanner(casterSide,g,"#2f7391");
+      return true;
+    }
+    case "gonggong": {
+      // Broken Pillar: collapses a zone into impassable rubble for 8s -- reuses
+      // real "M" (Mountain) terrain, since TINFO.M already has block:true/speed:0,
+      // giving routeOK/passable a real reason to reject the zone rather than a new
+      // terrain type. Generalizes the same floodedHexes/tickFloods plumbing as
+      // Dragon Rain, targeting "M" instead of "W".
+      let n=0;
+      for(const [c,r] of hexesInRadius(hex,2)){
+        const t=terrain(c,r);
+        if(t==="M"||t==="W"||bldAt(c,r)) continue;
+        S.floodedHexes.push({c,r,orig:t,to:"M",expiresAt:elapsed()+8});
+        TMAP[r][c]="M"; n++;
+      }
+      if(!n) return false;
+      fx(pt,"boom","#7b766d"); castBanner(casterSide,g,"#7b766d");
+      return true;
+    }
+    case "tlaloc": {
+      // 2026-07-23: The Weeping Rain -- floods every open (non-mountain, non-water,
+      // building-free) tile within 2 hexes of target into a REAL water tile for 8s
+      // (see tickFloods for the revert). Gives Storm Lord's "in/adjacent to water"
+      // passive real terrain to hook into, not a fake status flag.
+      let n=0;
+      for(const [c,r] of hexesInRadius(hex,2)){
+        const t=terrain(c,r);
+        if(t==="W"||t==="M"||bldAt(c,r)) continue;
+        S.floodedHexes.push({c,r,orig:t,expiresAt:elapsed()+8});
+        TMAP[r][c]="W"; n++;
+      }
+      if(!n) return false;
+      fx(pt,"boom","#2f7391"); castBanner(casterSide,g,"#2f7391");
+      return true;
+    }
+    case "tezcatlipoca": {
+      // 2026-07-23: Smoking Mirror -- creates a mirror image of the target enemy unit
+      // that immediately attacks the original ("the stronger the unit, the more
+      // devastating the reflection" is inherent: the mirror copies the target's own
+      // stats). Built via makeUnit(target.side,...) so its def resolves against the
+      // TARGET's own faction table, then re-tagged to the caster's side -- building it
+      // the other way around would crash whenever caster and target are different
+      // factions (e.g. an Aztec player mirroring a Chinese "ji", which doesn't exist
+      // in AZ_UNITS). Temporary: despawns after 15s.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!target) return false;
+      const spot=neighbors(target.hex[0],target.hex[1]).find(n=>hexLoad(n[0],n[1],undefined,target.flying)<HEX_CAPACITY)||target.hex;
+      const mirror=makeUnit(target.side,target.key,spot,null);
+      mirror.side=casterSide; mirror.free=false; mirror.target=target; mirror.despawnAt=elapsed()+15;
+      S.units.push(mirror);
+      fx(mirror.pos,"ring","#3a2140"); castBanner(casterSide,g,"#3a2140");
+      return true;
+    }
+    case "set": {
+      // Desert Storm: slows every unit (both sides) in the zone. "Obscuring vision"
+      // is flavor-only -- this engine has no fog-of-war to hook it into.
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||hexDist(u.hex,hex)>2) continue;
+        u.slowUntil=elapsed()+6; n++;
+      }
+      if(!n) return false;
+      fx(pt,"ring","#8a6d3b"); castBanner(casterSide,g,"#8a6d3b");
+      return true;
+    }
+    case "thoth": {
+      // Rewrite: reverses the nearest enemy unit's ALREADY-TRAVELED hexes so it
+      // marches back the way it came. Deliberately does not flip u.side (the doc's
+      // "potentially attacking its own allies" would require temporarily changing
+      // hex-capacity/targeting/training ownership assumptions throughout the
+      // engine) -- simplified to a forced retreat, flagged in HANDOFF.md.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!target) return false;
+      const traveled = target.path? target.path.slice(0,target.pathIdx) : [];
+      target.path = traveled.slice().reverse();
+      target.pathIdx = 0;
+      target.free = target.path.length===0;
+      target.target = null;
+      fx(target.pos,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      return true;
+    }
+    case "sekhmet": {
+      // Eye Unleashed: your units in the zone attack the nearest unit regardless
+      // of allegiance (see scanEncounter's frenzied branch) for 6s.
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side!==casterSide||hexDist(u.hex,hex)>2) continue;
+        u.frenzyUntil=elapsed()+6; n++;
+      }
+      if(!n) return false;
+      fx(pt,"ring","#ff5b4d"); castBanner(casterSide,g,"#ff5b4d");
+      return true;
+    }
+    case "nephthys": {
+      // Twilight Veil: one of your own units (nearest to the cast point) becomes
+      // undetectable until it attacks (see scanEncounter/dealDamage). Blocked
+      // entirely while Erlang Shen's Third Eye is active against this caster.
+      if(elapsed()<S.trueSightUntil[casterSide]) return false;
+      const mine=S.units.filter(u=>!u.dead&&u.side===casterSide)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!mine) return false;
+      mine.invisible=true;
+      fx(mine.pos,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      return true;
+    }
+    case "erlangshen": {
+      // Third Eye: reveals every currently-invisible enemy unit right now, and
+      // blocks that enemy from casting Nephthys-style invisibility for 10s (see
+      // the trueSightUntil gate in the "nephthys" case above). Always succeeds --
+      // the block has an effect even when nothing is currently hidden.
+      for(const u of S.units){
+        if(u.dead||u.side!==enemySide||!u.invisible) continue;
+        u.invisible=false; fx(u.pos,"ring","#f2e14c");
+      }
+      S.trueSightUntil[enemySide]=elapsed()+10;
+      fx(pt,"boom","#f2e14c"); castBanner(casterSide,g,"#f2e14c");
+      return true;
+    }
+    case "xiwangmu": {
+      // Peach of Immortality: one of your own units (nearest to the cast point)
+      // becomes completely invulnerable for 4s (see calcDmg's invulnUntil
+      // short-circuit, checked before every other modifier).
+      const mine=S.units.filter(u=>!u.dead&&u.side===casterSide)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!mine) return false;
+      mine.invulnUntil=elapsed()+4;
+      fx(mine.pos,"ring","#ffb3c6"); castBanner(casterSide,g,"#ffb3c6");
+      return true;
+    }
+    case "zhurong": {
+      // Primordial Fire: a hazard zone that burns for 6s, damaging any unit --
+      // either side -- standing in it every tick (tickFloods' dmgPerSec branch).
+      // Deliberately leaves terrain visually unchanged (to===orig, no new TINFO
+      // entry) -- this is damage-only "scorched earth", not a terrain conversion.
+      let n=0;
+      for(const [c,r] of hexesInRadius(hex,2)){
+        if(bldAt(c,r)) continue;
+        const t=terrain(c,r);
+        S.floodedHexes.push({c,r,orig:t,to:t,dmgPerSec:12,expiresAt:elapsed()+6});
+        n++;
+      }
+      if(!n) return false;
+      fx(pt,"boom","#ff5b2e"); castBanner(casterSide,g,"#ff5b2e");
+      return true;
+    }
+    case "chang": {
+      // Moonfall: slows every unit on the battlefield, both sides (global range,
+      // unlike Set's Desert Storm's hex-radius zone), and reveals all currently-
+      // invisible units.
+      let n=0;
+      for(const u of S.units){
+        if(u.dead) continue;
+        u.slowUntil=elapsed()+5;
+        if(u.invisible) u.invisible=false;
+        n++;
+      }
+      if(!n) return false;
+      fx(pt,"ring","#cfd8ff"); castBanner(casterSide,g,"#cfd8ff");
+      return true;
+    }
+    case "leigong": {
+      // Heaven's Judgment: stuns every enemy unit within 2 hexes of target and
+      // reveals any that were hidden (reuses stunUntil, now an AOE rather than the
+      // old Demon Hunter's single-myth-target stun). fearImmune units (Anubite) are
+      // still exempt from this stun-lock, same "unaffected by fear-based powers"
+      // rule the old Zhong Kui case enforced -- keeps the jackal's flag meaningful
+      // now that it's the only remaining stun-AOE in the game.
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side!==enemySide||hexDist(u.hex,hex)>2||u.def.fearImmune) continue;
+        u.stunUntil=elapsed()+6;
+        if(u.invisible) u.invisible=false;
+        n++; fx(u.pos,"ring","#f2e14c");
+      }
+      if(!n) return false;
+      fx(pt,"boom","#f2e14c"); castBanner(casterSide,g,"#f2e14c");
+      return true;
+    }
+    case "ptah": {
+      // Creator's Word: instantly completes the caster's earliest-queued unit.
+      const queued=S.training.filter(t=>t.side===casterSide).sort((a,b)=>a.readyAt-b.readyAt)[0];
+      if(!queued) return false;
+      queued.readyAt=elapsed();
+      banner(casterSide?`Enemy casts ${g.power}!`:`${g.power}! Training complete.`, casterSide?"#ff9a7a":"#e8b84b");
+      return true;
+    }
+    case "xipetotec": {
+      // The Flaying: strips every passive bonus from all enemy units for a duration
+      // (see hasPassive's early-return check on S.passivesStrippedUntil).
+      S.passivesStrippedUntil[enemySide]=elapsed()+10;
+      fx(pt,"boom","#c98a4b"); fx(pt,"ring","#c98a4b");
+      castBanner(casterSide,g,"#c98a4b");
+      return true;
+    }
+    case "coatlicue": {
+      // Serpent Skirt: a wave of serpents poisons every enemy unit on the battlefield
+      // (reuses the existing poisonUntil/poisonDps fields, same as Isis's Scorpion Guard).
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide) continue;
+        u.poisonUntil=elapsed()+5; u.poisonDps=6; n++;
+      }
+      if(!n) return false;
+      fx(pt,"boom","#6a9a4b"); castBanner(casterSide,g,"#6a9a4b");
+      return true;
+    }
+    case "mictlantecuhtli": {
+      // The Bargain: the enemy gets a REAL favor burst right now ("the enemy sees a
+      // gift, receives a trap") -- then, after a delay, a unit spawns near their own
+      // base that fights for the CASTER. Reuses the training queue (queueTrain) for
+      // the delayed spawn instead of a bespoke timer system.
+      if(enemySide) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+30); else S.favor=Math.min(S.FAVOR_CAP,S.favor+30);
+      const enemyBld=buildings.filter(b=>b.side===enemySide&&!b.dead)
+        .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(h,hex)))-Math.min(...b.hexes.map(h=>hexDist(h,hex))))[0];
+      if(!enemyBld) return false;
+      const spot=bldAdjacent(enemyBld,false).find(h=>hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY)||enemyBld.hexes[0];
+      queueTrain(casterSide,g.myth,[spot],null,null,elapsed()+8);
+      fx(pt,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      return true;
+    }
+    case "coyolxauhqui": {
+      // Dismemberment: kills the target enemy unit, then spawns two weakened copies
+      // of it (one on each side) that fight each other and expire shortly after.
+      // Built via makeUnit(target.side,...) first so def resolves against the
+      // TARGET's own faction table (same cross-faction fix as Smoking Mirror), then
+      // one copy is re-tagged to the caster's side.
+      const target=S.units.filter(u=>!u.dead&&u.side===enemySide&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
+      if(!target) return false;
+      const spot1=target.hex;
+      const spot2=neighbors(target.hex[0],target.hex[1])[0]||target.hex;
+      target.dead=true; fx(target.pos,"boom","#6a4c93");
+      if(target.def.cat==="human") S.deadHumans.push({key:target.key,at:elapsed(),hex:[...target.hex],side:target.side});
+      const half1=makeUnit(target.side,target.key,spot1,null);
+      half1.maxhp=half1.hp*0.4; half1.hp=half1.maxhp; half1.despawnAt=elapsed()+10; half1.free=false;
+      const half2=makeUnit(target.side,target.key,spot2,null);
+      half2.side=casterSide; half2.maxhp=half2.hp*0.4; half2.hp=half2.maxhp; half2.despawnAt=elapsed()+10; half2.free=false;
+      half1.target=half2; half2.target=half1;
+      S.units.push(half1,half2);
+      fx(pt,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      return true;
+    }
+    case "ehecatl": {
+      // First Wind: dramatically accelerates all your units' movement for a short burst.
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side!==casterSide) continue;
+        u.buffUntil=elapsed()+4; u.buffSpd=1.9; n++;
+      }
+      if(!n) return false;
+      fx(pt,"ring","#9adfff"); castBanner(casterSide,g,"#9adfff");
+      return true;
+    }
+    case "itzpapalotl": {
+      // Obsidian Wings: damage burst plus a lingering slow to every enemy in a zone
+      // (a radius burst, deliberately distinct in shape from Horus/Ra's whole-row sweep).
+      const zone=hexesInRadius(hex,2);
+      let n=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide) continue;
+        if(!zone.some(h=>h[0]===u.hex[0]&&h[1]===u.hex[1])) continue;
+        u.hp-=60; u.slowUntil=elapsed()+6; n++;
+        fx(u.pos,"text","#8a5ba0","-60");
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          grantInevitable(u.side);
+        }
+      }
+      if(!n) return false;
+      fx(pt,"boom","#8a5ba0"); castBanner(casterSide,g,"#8a5ba0");
       return true;
     }
   }
@@ -1288,9 +2475,10 @@ function applyGodPower(casterSide,g,hex){
 function castPlayerPower(key,hex){
   const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
   S.armedPower=null;
-  if(!st.unlocked||elapsed()<st.cdUntil||S.favor<g.pcost) return;
+  if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.favor<g.pcost) return;
   S.favor-=g.pcost; st.cdUntil=elapsed()+g.cd;
   applyGodPower(0,g,hex);
+  S.chaosBuffUntil[1]=elapsed()+5; // Set's Lord of Storms: the OTHER side gets a dmg window after any cast
   refreshUI();
 }
 /* AI-side heuristic target selection, kept separate from applyGodPower's effect
@@ -1301,44 +2489,103 @@ function castPlayerPower(key,hex){
 function pickAiPowerHex(key){
   const aiUnits=S.units.filter(u=>!u.dead&&u.side===1);
   const enemyUnits=S.units.filter(u=>!u.dead&&u.side===0);
-  if(key==="jade"||key==="guan"||key==="bastet"){
-    const fighters=aiUnits.filter(u=>u.target&&!isBldg(u.target));
-    const grp=(fighters.length?fighters:aiUnits);
-    if(grp.length<2) return null;
-    return grp[Math.floor(grp.length/2)].hex;
+  if(key==="jade"){
+    // Celestial Decree: conscript the enemy's strongest unit currently on the board.
+    if(!enemyUnits.length) return null;
+    return enemyUnits.slice().sort((a,b)=>b.hp-a.hp)[0].hex;
+  }
+  if(key==="sunwukong"){
+    // 72 Transformations: needs an enemy myth unit to copy; spawn location is near
+    // the AI's own front line (or its base, if it has no units out yet) since the
+    // clone appears next to the cast hex, not at the target.
+    if(!enemyUnits.some(u=>u.def.cat==="myth")) return null;
+    if(!aiUnits.length){
+      const own=buildings.find(b=>b.side===1&&!b.dead);
+      return own? own.hexes[0] : null;
+    }
+    return aiUnits[Math.floor(aiUnits.length/2)].hex;
+  }
+  if(key==="longwang"){
+    if(enemyUnits.length<2) return null;
+    return enemyUnits[Math.floor(enemyUnits.length/2)].hex;
+  }
+  if(key==="gonggong"){
+    // Broken Pillar: block the route of whichever enemy unit has pushed deepest
+    // into the AI's own territory (lowest row number -- rows 0-5 are the AI's half).
+    if(!enemyUnits.length) return null;
+    return enemyUnits.slice().sort((a,b)=>a.hex[1]-b.hex[1])[0].hex;
+  }
+  if(key==="erlangshen"){
+    // Third Eye's effect is global (reveal + block-hiding), not hex-targeted --
+    // any own hex works as the cast location.
+    const own=buildings.find(b=>b.side===1&&!b.dead);
+    return own? own.hexes[0] : null;
+  }
+  if(key==="xiwangmu"){
+    // Peach of Immortality targets the AI's own NEAREST unit to the cast hex --
+    // protect the hero if one is out, else the lowest-HP% unit.
+    if(!aiUnits.length) return null;
+    const hero=aiUnits.find(u=>u.def.cat==="hero");
+    return hero? hero.hex : aiUnits.slice().sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0].hex;
+  }
+  if(key==="zhurong"){
+    if(enemyUnits.length<2) return null;
+    return enemyUnits[Math.floor(enemyUnits.length/2)].hex;
+  }
+  if(key==="chang"){
+    // Moonfall is a global effect -- any own hex works as the cast location.
+    const own=buildings.find(b=>b.side===1&&!b.dead);
+    return own? own.hexes[0] : null;
+  }
+  if(key==="leigong"){
+    if(!enemyUnits.length) return null;
+    return enemyUnits[Math.floor(enemyUnits.length/2)].hex;
   }
   if(key==="horus"||key==="ra"){
     if(enemyUnits.length<2) return null;
     return enemyUnits[Math.floor(enemyUnits.length/2)].hex;
   }
   if(key==="anubis"){
-    const weak=enemyUnits.filter(u=>u.def.cat==="human"&&u.hp<u.maxhp*0.3);
-    return weak.length? weak[0].hex : null;
+    // 2026-07-23: broadened from "human below 30% HP" to "weakest enemy unit
+    // overall" -- Judgment is now a probabilistic execute on any unit, not a
+    // deterministic human-only threshold kill.
+    if(!enemyUnits.length) return null;
+    return enemyUnits.slice().sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0].hex;
   }
-  if(key==="nuwa"||key==="isis"){
+  if(key==="bastet"){
+    // 2026-07-23: Guardian's Grace targets a building, not an area of units.
+    const own=buildings.filter(b=>b.side===1&&!b.dead)
+      .sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+    return own? own.hexes[0] : null;
+  }
+  if(key==="nuwa"){
     const hurt=buildings.filter(b=>b.side===1&&!b.dead&&b.hp<b.maxhp)
       .sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
     return hurt? hurt.hexes[0] : null;
   }
+  if(key==="isis"){
+    // 2026-07-23: Secret Name targets an enemy GOD programmatically (see
+    // applyGodPower) -- any own hex works as the cast location.
+    const own=buildings.find(b=>b.side===1&&!b.dead);
+    return own? own.hexes[0] : null;
+  }
   if(key==="osiris"){
-    const avail=S.deadHumans.some(d=>d.side===1&&elapsed()-d.at<60);
+    const window=hasPassive(1,"corpseWindow")?90:60;
+    const avail=S.deadHumans.some(d=>d.side===1&&elapsed()-d.at<window);
     if(!avail) return null;
     const home=buildings.find(b=>b.side===1&&!b.dead);
     return home? home.hexes[0] : null;
-  }
-  if(key==="zhong"){
-    const myth=enemyUnits.filter(u=>u.def.cat==="myth").sort((a,b)=>b.hp-a.hp)[0];
-    return myth? myth.hex : null;
   }
   return null;
 }
 function aiCastPower(key){
   const g=activeAiGods.find(x=>x.key===key), st=S.aiGods[key];
-  if(!st.unlocked||elapsed()<st.cdUntil||S.aiFavor<g.pcost) return false;
+  if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.aiFavor<g.pcost) return false;
   const hex=pickAiPowerHex(key);
   if(!hex) return false;
   S.aiFavor-=g.pcost; st.cdUntil=elapsed()+g.cd;
   if(!wardBlocks(1,hex)) applyGodPower(1,g,hex);
+  S.chaosBuffUntil[0]=elapsed()+5; // Set's Lord of Storms: the OTHER side gets a dmg window after any cast
   return true;
 }
 
@@ -1355,11 +2602,11 @@ let aiTrainT=3, aiPowerT=8, aiHeroAt=55, aiTargetRot=0, aiHeroKeys=["nezha"]; //
    already went through — not assumed tuned just because it's wired up. */
 const AI_PROFILES={
   balanced:{
-    china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,guan:70,nuwa:110,zhong:145}, pool:["ji","ji","xbow","xbow","dao","horse","monk"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
+    china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,sunwukong:70,nuwa:110,longwang:145}, pool:["ji","ji","xbow","xbow","dao","horse","monk"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
     egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,anubis:145}, pool:["spear","spear","archer","archer","axe","chariot","priest"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
   },
   aggressive:{
-    china:{trainMin:1.8, trainRand:1.4, godSched:{guan:30,jade:75,zhong:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","horse","xbow"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
+    china:{trainMin:1.8, trainRand:1.4, godSched:{sunwukong:30,jade:75,longwang:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","horse","xbow"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
     egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,anubis:120,isis:150}, pool:["spear","spear","spear","axe","axe","chariot","archer"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
   }
 };
@@ -1371,6 +2618,12 @@ function tickAI(dt){
       S.aiFavor-=g.cost; st.unlocked=true;
       banner(`Enemy unlocked ${g.name}!`,"#ff9a7a");
       fx(bldCenter(getBld(1,"temple")),"ring","#c0392b");
+      if(g.passiveKey==="buildingHpBoost"){ // Ptah: Creator's Word passive fires once, at unlock (mirrors the player-side hook in onGodTap)
+        buildings.filter(b=>b.side===1&&!b.dead).forEach(b=>{ const r=b.hp/b.maxhp; b.maxhp*=1.15; b.hp=b.maxhp*r; });
+      }
+      if(g.passiveKey==="gardenOfImmortality"){ // Xi Wangmu: Garden of Immortality passive fires once, at unlock (mirrors the player-side hook in onGodTap)
+        S.units.filter(u=>!u.dead&&u.side===1&&u.def.cat==="hero").forEach(u=>{ const r=u.hp/u.maxhp; u.maxhp*=1.2; u.hp=u.maxhp*r; });
+      }
     }
   }
   aiPowerT-=dt;
@@ -1423,7 +2676,7 @@ function tickAI(dt){
   if(!goals||!goals.length) return;
   const p=findPath(starts[0],goals,aiUnitsTbl[key].flying);
   if(!p) return;
-  pay(aiUnitsTbl[key].cost,1);
+  pay(aiUnitsTbl[key].cost,1,aiUnitsTbl[key].cat==="human");
   queueTrain(1,key,p,src,duty);
 }
 
@@ -1599,11 +2852,17 @@ const SPRITE_KEY={spear:"spearman",ji:"spearman",archer:"archer",xbow:"archer",a
   chariot:"rider",horse:"rider",priest:"priest",monk:"priest",
   sinuhe:"hero",doomedprince:"hero",bata:"hero",nezha:"hero",houyi:"hero",liji:"hero",tepoztecatl:"hero",topiltzin:"hero",xelhua:"hero",
   falcon:"falcon",lion:"lion",mummy:"mummy",sphinx:"sphinx",
-  celestial:"celestial",dragon:"dragon",stone:"golem",demon:"demon",
+  celestial:"celestial",dragon:"dragon",stone:"golem",
+  stonemonkey:"spearman",xiangliu:"dragon",xiaotianquan:"lion",fenghuang:"falcon",huoshu:"golem",jaderabbit:"priest",kui:"demon",
   slinger:"archer",camel:"rider",khopesh:"spearman",
   phoenix:"falcon",jackal:"demon",
   macuahuitl:"spearman",atlatl:"archer",jaguar:"axeman",otomi:"rider",cihuacoatl:"priest",
-  xiuhcoatl:"falcon",jaguarspirit:"lion",featheredserpent:"dragon",raintitan:"golem"};
+  hoplite:"spearman",toxotes:"archer",peltast:"archer",companion:"rider",priestess:"priest",
+  atalanta:"hero",odysseus:"hero",heracles:"hero",
+  cerberus:"lion",satyr:"demon",calydonianboar:"lion",talos:"golem",
+  xiuhcoatl:"falcon",jaguarspirit:"lion",featheredserpent:"dragon",raintitan:"golem",
+  serpopard:"lion",apis:"golem",scorpion:"demon",apep:"dragon",ammit:"mummy",plaguebearer:"archer",sheut:"priest",ushabti:"spearman",
+  tlaltecuhtli:"demon",tzitzimitl:"demon",itzcuintli:"lion",centzonhuitznahua:"celestial",ehecatotontin:"lion",colotl:"demon"};
 /* Uploaded sprites, keyed by unit key (not SPRITE_KEY's shared vector-shape grouping —
    real art is distinctive per unit, unlike the abstract vector shapes several keys
    currently share). Empty by default: zero images means zero behavior change, every
@@ -1693,6 +2952,57 @@ IMG_SPRITES.lion    = { 0:"assets/sprites/lion_back.png",    1:"assets/sprites/l
 IMG_SPRITES.mummy   = { 0:"assets/sprites/mummy_back.png",   1:"assets/sprites/mummy_front.png" };
 IMG_SPRITES.phoenix = { 0:"assets/sprites/phoenix_back.png", 1:"assets/sprites/phoenix_front.png" };
 IMG_SPRITES.sphinx  = { 0:"assets/sprites/sphinx_back.png",  1:"assets/sprites/sphinx_front.png" };
+/* Chinese and Aztec myth-unit art (2026-07-21, direct chat request). Each myth uses
+   its own transparent front/back render; side 0 sees the back view while marching
+   upward and side 1 sees the front view while marching downward. */
+IMG_SPRITES.celestial        = { 0:"assets/sprites/celestial_back.png",        1:"assets/sprites/celestial_front.png" };
+IMG_SPRITES.dragon           = { 0:"assets/sprites/dragon_back.png",           1:"assets/sprites/dragon_front.png" };
+IMG_SPRITES.stone            = { 0:"assets/sprites/stone_back.png",            1:"assets/sprites/stone_front.png" };
+IMG_SPRITES.demon            = { 0:"assets/sprites/demon_back.png",            1:"assets/sprites/demon_front.png" };
+IMG_SPRITES.xiuhcoatl        = { 0:"assets/sprites/xiuhcoatl_back.png",        1:"assets/sprites/xiuhcoatl_front.png" };
+IMG_SPRITES.jaguarspirit     = { 0:"assets/sprites/jaguarspirit_back.png",     1:"assets/sprites/jaguarspirit_front.png" };
+IMG_SPRITES.featheredserpent = { 0:"assets/sprites/featheredserpent_back.png", 1:"assets/sprites/featheredserpent_front.png" };
+IMG_SPRITES.raintitan        = { 0:"assets/sprites/raintitan_back.png",        1:"assets/sprites/raintitan_front.png" };
+/* Myth-unit art for the 5 new Egyptian gods (set/thoth/sekhmet/nephthys/ptah, decision
+   17's redesign) — uploaded 2026-07-23, same treatment as every prior batch: resized to
+   420px on the long side, side-0-back/side-1-front, alpha preserved. Raw uploads kept in
+   Draft Materials/2026-07-23 New Egyptian Gods and Myths/. `scorpion` (Isis's original
+   myth, EG_UNITS name "Scorpion Guard") had never had art either despite predating this
+   batch — its uploaded file was named scorpionguard_*, mapped onto the real unit key. */
+IMG_SPRITES.apep         = { 0:"assets/sprites/apep_back.png",         1:"assets/sprites/apep_front.png" };
+IMG_SPRITES.ammit        = { 0:"assets/sprites/ammit_back.png",        1:"assets/sprites/ammit_front.png" };
+IMG_SPRITES.plaguebearer = { 0:"assets/sprites/plaguebearer_back.png", 1:"assets/sprites/plaguebearer_front.png" };
+IMG_SPRITES.sheut        = { 0:"assets/sprites/sheut_back.png",        1:"assets/sprites/sheut_front.png" };
+IMG_SPRITES.ushabti      = { 0:"assets/sprites/ushabti_back.png",      1:"assets/sprites/ushabti_front.png" };
+IMG_SPRITES.scorpion     = { 0:"assets/sprites/scorpion_back.png",     1:"assets/sprites/scorpion_front.png" };
+IMG_SPRITES.serpopard    = { 0:"assets/sprites/serpopard_back.png",    1:"assets/sprites/serpopard_front.png" };
+/* Myth-unit art for the 6 new Aztec gods (xipetotec/coatlicue/mictlantecuhtli/
+   coyolxauhqui/ehecatl/itzpapalotl, decision 19's redesign) — uploaded 2026-07-23,
+   same treatment as every prior batch: resized to 420px on the long side,
+   side-0-back/side-1-front, alpha preserved. Raw uploads kept in
+   Draft Materials/2026-07-23 New Aztec Gods and Myths/. */
+IMG_SPRITES.tlaltecuhtli       = { 0:"assets/sprites/tlaltecuhtli_back.png",       1:"assets/sprites/tlaltecuhtli_front.png" };
+IMG_SPRITES.tzitzimitl         = { 0:"assets/sprites/tzitzimitl_back.png",         1:"assets/sprites/tzitzimitl_front.png" };
+IMG_SPRITES.itzcuintli         = { 0:"assets/sprites/itzcuintli_back.png",         1:"assets/sprites/itzcuintli_front.png" };
+IMG_SPRITES.centzonhuitznahua  = { 0:"assets/sprites/centzonhuitznahua_back.png",  1:"assets/sprites/centzonhuitznahua_front.png" };
+IMG_SPRITES.ehecatotontin      = { 0:"assets/sprites/ehecatotontin_back.png",      1:"assets/sprites/ehecatotontin_front.png" };
+IMG_SPRITES.colotl             = { 0:"assets/sprites/colotl_back.png",             1:"assets/sprites/colotl_front.png" };
+/* Myth-unit art for 7 new Chinese gods' myths (stonemonkey/xiangliu/xiaotianquan/
+   fenghuang/huoshu/jaderabbit/kui, decision 21's redesign) — uploaded 2026-07-23,
+   same treatment as every prior batch. `celestial`/`stone`/`dragon` (Jade Emperor's
+   Qilin, Nu Wa's Hundun, Long Wang's Eastern Dragon) kept their existing IMG_SPRITES
+   entries above unchanged — only the underlying files at celestial_back.png,
+   stone_back.png, dragon_back.png (etc.) were replaced in place with new art
+   matching each unit's actual in-game name, since the uploaded filenames (qilin,
+   hundun, easterndragon) matched the new names, not the old shared/reused keys.
+   Raw uploads kept in Draft Materials/2026-07-23 New Chinese Gods and Myths/. */
+IMG_SPRITES.stonemonkey  = { 0:"assets/sprites/stonemonkey_back.png",  1:"assets/sprites/stonemonkey_front.png" };
+IMG_SPRITES.xiangliu     = { 0:"assets/sprites/xiangliu_back.png",     1:"assets/sprites/xiangliu_front.png" };
+IMG_SPRITES.xiaotianquan = { 0:"assets/sprites/xiaotianquan_back.png", 1:"assets/sprites/xiaotianquan_front.png" };
+IMG_SPRITES.fenghuang    = { 0:"assets/sprites/fenghuang_back.png",    1:"assets/sprites/fenghuang_front.png" };
+IMG_SPRITES.huoshu       = { 0:"assets/sprites/huoshu_back.png",       1:"assets/sprites/huoshu_front.png" };
+IMG_SPRITES.jaderabbit   = { 0:"assets/sprites/jaderabbit_back.png",   1:"assets/sprites/jaderabbit_front.png" };
+IMG_SPRITES.kui          = { 0:"assets/sprites/kui_back.png",          1:"assets/sprites/kui_front.png" };
 /* Hero art, all 9 at once, across all 3 factions (2026-07-20, direct chat request —
    "please incorporate the hero sprites"). Same treatment as every prior unit batch:
    verified already-transparent (corner A=0), resized to 420px on the long side,
@@ -1842,8 +3152,9 @@ function chromaKeyed(img,cacheKey){
   IMG_PROCESSED[cacheKey]=c;
   return c;
 }
+function spriteScale(big){ return (HEX/24)*(big?1.2:0.95)*1.56; } // 2026-07-16: +30% (direct chat request); 2026-07-18: further +20% on top, cumulative x1.56 -- shared with draw()'s HP-bar head-offset math so the two can't drift apart
 function drawUnitSprite(u){
-  const big=u.size>1, s=(HEX/24)*(big?1.2:0.95)*1.56; // 2026-07-16: +30% (direct chat request); 2026-07-18: further +20% on top, cumulative x1.56
+  const big=u.size>1, s=spriteScale(big);
   ctx.save();
   const p=toScreen(u.pos.x,u.pos.y); // camera tilt: project the anchor only, sprite art itself stays undistorted
   ctx.translate(p.x,p.y+HEX*0.42);
@@ -2083,6 +3394,14 @@ function drawSpecialTile(g,T,cx,cy){
       g.quadraticCurveTo(cx+HEX*.13,cy+HEX*(dy+.16),cx+HEX*.38,cy+HEX*dy); g.stroke(); }
   }
 }
+function arenaMidSeam(bgLeft,bgRight){
+  const points=[];
+  for(let c=0;c<COLS;c++){
+    const upper=hexCenter(c,HALF_ROWS-1),lower=hexCenter(c,HALF_ROWS);
+    points.push([upper.x,(upper.y+lower.y)/2]);
+  }
+  return [[bgLeft,points[0][1]],...points,[bgRight,points[points.length-1][1]]];
+}
 function renderBG(){
   const g=bg.getContext("2d");
   g.setTransform(DPR,0,0,DPR,0,0);
@@ -2112,9 +3431,20 @@ function renderBG(){
     // local half-board: entirely the player's own territory, one backdrop, no split
     drawArenaBgRect(g,factionForSide(0),bgLeft,bgTop,bgRight-bgLeft,bgBot-bgTop);
   } else {
-    const midY=(hexCenter(0,5).y+hexCenter(0,6).y)/2;
-    drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,midY-bgTop);   // AI half (top)
-    drawArenaBgRect(g,factionForSide(0),bgLeft,midY,bgRight-bgLeft,bgBot-midY);    // player half (bottom)
+    const seam=arenaMidSeam(bgLeft,bgRight), seamY=seam.map(p=>p[1]);
+    // Clip each cohesive faction scene to its true half-board footprint. The seam
+    // follows the odd-q column offsets, so every center hex is shared evenly by the
+    // two scenes instead of odd columns inheriting a split calculated from column 0.
+    g.save();g.beginPath();g.moveTo(bgLeft,bgTop);g.lineTo(bgRight,bgTop);
+    for(let i=seam.length-1;i>=0;i--)g.lineTo(seam[i][0],seam[i][1]);
+    g.closePath();g.clip();
+    drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,Math.max(...seamY)-bgTop);
+    g.restore();
+    g.save();g.beginPath();g.moveTo(seam[0][0],seam[0][1]);
+    for(let i=1;i<seam.length;i++)g.lineTo(seam[i][0],seam[i][1]);
+    g.lineTo(bgRight,bgBot);g.lineTo(bgLeft,bgBot);g.closePath();g.clip();
+    drawArenaBgRect(g,factionForSide(0),bgLeft,Math.min(...seamY),bgRight-bgLeft,bgBot-Math.min(...seamY));
+    g.restore();
   }
   for(let r=0;r<TMAP.length;r++)for(let c=0;c<COLS;c++){
     const ct=hexCenter(c,r);
@@ -2125,9 +3455,11 @@ function renderBG(){
     drawSpecialTile(g,terrain(c,r),ct.x,ct.y);
   }
   if(S.setupStep!=="terrain"){
-    const y=(hexCenter(0,5).y+hexCenter(0,6).y)/2;
+    const seam=arenaMidSeam(bgLeft,bgRight);
     g.strokeStyle="rgba(255,255,255,.12)"; g.setLineDash([6,6]);
-    g.beginPath(); g.moveTo(0,y); g.lineTo(bg.width/DPR,y); g.stroke(); g.setLineDash([]);
+    g.beginPath();g.moveTo(seam[0][0],seam[0][1]);
+    for(let i=1;i<seam.length;i++)g.lineTo(seam[i][0],seam[i][1]);
+    g.stroke();g.setLineDash([]);
   }
   g.restore(); // back to the plain DPR transform -- the vignette below is a lens effect, not part of the tilted ground
   const VW=bg.width/DPR, VH=bg.height/DPR;
@@ -2140,12 +3472,15 @@ function rrect(g,x,y,w,h,r){
   g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
   g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
 }
-function hpBar(x,y,w,frac,color){
-  rrect(ctx,x-w/2-1,y-1.2,w+2,5.6,2.6);
+function hpBar(x,y,w,frac,color,thick){
+  // thick (default 1): unit HP bars pass 0.7 -- "30% thinner" (2026-07-23 direct
+  // chat request) -- building HP bars are untouched, still full thickness.
+  const t=thick||1, boxH=5.6*t, fillH=3.2*t, pad=1.2*t, r=2.6*t;
+  rrect(ctx,x-w/2-1,y-pad,w+2,boxH,r);
   ctx.fillStyle="rgba(5,6,9,.88)"; ctx.fill();
   ctx.strokeStyle="rgba(0,0,0,.9)"; ctx.lineWidth=1; ctx.stroke();
   ctx.fillStyle=color;
-  ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,frac)),3.2);
+  ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,frac)),fillH);
 }
 function draw(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -2205,7 +3540,15 @@ function draw(){
     ctx.beginPath(); ctx.ellipse(p.x,p.y+HEX*0.34*TILT_SQUASH,HEX*(big?0.55:0.38),HEX*0.17*TILT_SQUASH,0,0,7);
     ctx.fillStyle=u.side?"rgba(192,57,43,.5)":"rgba(46,111,208,.5)"; ctx.fill();
     drawUnitSprite(u);
-    hpBar(p.x,p.y-HEX*(big?1.05:0.78),HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff");
+    // 2026-07-23 direct chat request: only show an injured unit's HP bar (was always
+    // visible, even at full health), and sit it just above the sprite's actual head
+    // rather than a fixed offset that predates the sprite-scale bumps in spriteScale()
+    // -- the old fixed offsets (HEX*0.78/1.05) landed around mid-torso once real image
+    // art (much taller than the original vector sprites) became the default renderer.
+    if(u.hp<u.maxhp){
+      const headY=p.y+HEX*0.42-32*spriteScale(big)-HEX*0.15;
+      hpBar(p.x,headY,HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff",0.7);
+    }
     ctx.font=`${HEX*0.45}px serif`;
     if(u.hold) ctx.fillText("⚓",p.x+HEX*0.6,p.y-HEX*0.5);
     if(now<u.stunUntil) ctx.fillText("💫",p.x,p.y-HEX*1.05);
@@ -2309,11 +3652,28 @@ function applyFactionUI(){
   $("subtitle").textContent=`${FACTIONS[S.playerFaction].name} vs ${FACTIONS[S.aiFaction].name} AI`;
 }
 function renderFactionPicker(){
+  $("menupanel").dataset.faction=S.playerFaction;
   $("factionbtn-egypt").classList.toggle("selected", S.playerFaction==="egypt");
   $("factionbtn-china").classList.toggle("selected", S.playerFaction==="china");
   $("factionbtn-aztec").classList.toggle("selected", S.playerFaction==="aztec");
+  renderDeckSlots();
 }
-/* Setup is a three-step wizard, each its own full page ("faction" split out 2026-07-18,
+function renderDeckSlots(){
+  for(const slot of [0,1]){
+    const preset=normalizeDeckPreset(deckPresets[slot]);
+    $("deckslot-"+slot).classList.toggle("selected",S.deckEditing&&S.deckSlot===slot);
+    $("deckselect-"+slot).disabled=!preset;
+    $("deckname-"+slot).textContent=preset?`DECK ${slot?"B":"A"} — ${FACTIONS[preset.faction].name}`:`DECK ${slot?"B":"A"}`;
+    if(!preset){$("decksummary-"+slot).textContent="";continue;}
+    const f=FACTIONS[preset.faction], names=keys=>keys.map(k=>f.units[k].name).join(", ");
+    const godNames=preset.gods.map(k=>f.allGods.find(g=>g.key===k).name).join(", ");
+    const counts={F:0,M:0,W:0};preset.terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
+    $("decksummary-"+slot).textContent=`Gods: ${godNames}\nHeroes: ${names(preset.heroes)}\nUnits: ${names(preset.loadout)}\nTerrain: ${counts.F} Forest · ${counts.M} Mountain · ${counts.W} Water`;
+  }
+}
+/* Setup is a six-step wizard, each its own full page (the deck chooser precedes the
+   existing faction/gods/heroes/units/terrain builder; Play skips the latter five).
+   "faction" split out 2026-07-18,
    direct chat request — was folded into "units"; picking a faction first, before the
    loadout/hero/god pickers that faction drives, reads more naturally as its own step).
    Steps "faction" and "units" are both true full-screen pages — #menupanel goes opaque
@@ -2323,19 +3683,55 @@ function renderFactionPicker(){
    full arena. Leaving "terrain" composes playerHalf back into the live absolute TMAP/
    buildings the rest of the game already expects. */
 function renderSetupStep(){
+  const onHome = S.setupStep==="home";
+  const onDecks = S.setupStep==="decks";
   const onFaction = S.setupStep==="faction";
   const onTerrain = S.setupStep==="terrain";
-  const onUnits = !onFaction && !onTerrain;
+  // 2026-07-23 bug fix (found while moving the home hub's buttons to the bottom of
+  // the screen): #stephome's own CSS is display:flex;flex-direction:column so its
+  // button group can be pinned to the bottom via flex-end -- but this inline style
+  // was forcing "block" whenever the step was visible, which (inline styles always
+  // beat stylesheet rules) silently defeated that layout every time, stacking
+  // everything at the top instead. stepgods/stepheroes/stepunits below already get
+  // this right ("flex", matching their own CSS); stephome just never did.
+  $("stephome").style.display = onHome? "flex":"none";
+  $("stepdecks").style.display = onDecks? "block":"none";
   $("stepfaction").style.display = onFaction? "block":"none";
-  $("stepunits").style.display = onUnits? "block":"none";
+  $("stepgods").style.display = S.setupStep==="gods"? "flex":"none";
+  $("stepheroes").style.display = S.setupStep==="heroes"? "flex":"none";
+  $("stepunits").style.display = S.setupStep==="units"? "flex":"none";
   $("stepterrain").style.display = onTerrain? "block":"none";
   $("menupanel").classList.toggle("fullpage", !onTerrain);
+  $("menupanel").classList.toggle("home-active", onHome);
+  $("menupanel").dataset.faction=S.playerFaction;
   if(onTerrain){ TMAP = playerHalf.terrain; }
   else { TMAP = composeAbsoluteTMAP(); composeAbsoluteBuildings(); }
   computeCamera();
 }
+function goToDeckStep(){
+  if(S.deckEditing)saveActiveDeck();
+  S.deckEditing=false;S.setupStep="decks";renderDeckSlots();renderSetupStep();
+}
+function goToHomeStep(){
+  S.setupStep="home"; renderDeckSlots(); renderSetupStep();
+}
 function goToFactionStep(){ S.setupStep="faction"; renderSetupStep(); }
-function goToUnitsStep(){ S.setupStep="units"; renderSetupStep(); }
+function beginGodSelection(){
+  if(S.selectionFaction!==S.playerFaction){
+    S.loadout=[]; S.heroPick=[]; S.godPick=[]; S.selectionFaction=S.playerFaction;
+    renderLoadout(); renderHeroPicker(); renderGodPicker();
+  }
+  goToGodsStep();
+}
+function goToGodsStep(){ S.setupStep="gods"; renderSetupStep(); }
+function goToHeroesStep(){
+  if(S.godPick.length!==4){ hint("Pick exactly 4 gods before continuing."); return; }
+  S.setupStep="heroes"; renderSetupStep();
+}
+function goToUnitsStep(){
+  if(S.setupStep==="heroes" && S.heroPick.length!==2){ hint("Pick exactly 2 heroes before continuing."); return; }
+  S.setupStep="units"; renderSetupStep();
+}
 function goToTerrainStep(){
   if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before continuing."); return; }
   S.setupStep="terrain"; renderSetupStep();
@@ -2348,9 +3744,13 @@ function setPlayerFaction(faction){
   if(faction==="egypt") S.aiFaction="china";
   else if(faction==="china") S.aiFaction="egypt";
   else S.aiFaction = Math.random()<0.5 ? "egypt" : "china";
+  // Keep valid defaults internally until the player enters the first selection page;
+  // beginGodSelection() clears all three trays together so the visible choice flow
+  // always starts empty without breaking non-UI match/simulation setup.
   S.loadout=[...FACTIONS[faction].defaultLoadout];
   S.heroPick=[...FACTIONS[faction].defaultHeroes];
   S.godPick=[...FACTIONS[faction].defaultGodPick];
+  S.selectionFaction=null;
   S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
   startMatch(false);
 }
@@ -2363,7 +3763,6 @@ function startMatch(keepTerrain){
   HUMAN_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="human");
   HERO_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="hero");
   S.heroPick = S.heroPick.filter(k=>HERO_KEYS.includes(k));
-  if(S.heroPick.length!==2) S.heroPick=[...FACTIONS[S.playerFaction].defaultHeroes];
   const allAiHeroKeys = Object.keys(FACTIONS[S.aiFaction].units).filter(k=>FACTIONS[S.aiFaction].units[k].cat==="hero");
   aiHeroKeys = allAiHeroKeys.sort(()=>Math.random()-0.5).slice(0,2);
   activeGods = FACTIONS[S.playerFaction].allGods.filter(g=>S.godPick.includes(g.key));
@@ -2383,9 +3782,14 @@ function startMatch(keepTerrain){
   const profileStyle=profileStyles[Math.floor(Math.random()*profileStyles.length)];
   aiProfile=AI_PROFILES[profileStyle][S.aiFaction];
   $("ainame").textContent=`${FACTIONS[S.aiFaction].label} — ${profileStyle[0].toUpperCase()}${profileStyle.slice(1)}`;
-  if(!keepTerrain){ playerHalf.terrain=freshPlayerHalfTerrain(); S.painted={F:0,M:0,W:0}; S.paintMap={}; }
+  if(!keepTerrain){
+    playerHalf.terrain=freshPlayerHalfTerrain();
+    aiHalfTerrain=freshAiHalfTerrain();
+    S.painted={F:0,M:0,W:0}; S.paintMap={};
+  }
   $("endscreen").style.display="none";
   S.setupStep="faction";
+  S.selectionFaction=null;
   renderCards();
   refreshUI();
   renderFactionPicker();
@@ -2403,6 +3807,9 @@ function loop(now){
     S.t-=dt;
     tickEconomy(dt);
     tickTraining();
+    tickGodEffects(dt);
+    tickFloods(dt);
+    tickThundersWarning();
     tickFortresses(dt);
     tickAI(dt);
     for(const u of S.units) updateUnit(u,dt);
@@ -2415,14 +3822,59 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
+/* ---------------- SPRITE GALLERY (debug view, ?gallery) ---------------- */
+// Added roadmap H.2, depends on H.1. One-shot static render of every unit sprite
+// (all FACTIONS, all cats -- human/hero/myth) plus each faction's 3 buildings, laid
+// out in a plain grid on the real board canvas via the SAME drawUnitSprite/drawBuilding
+// functions the live game uses. No timers, no AI, no input handlers wired -- exists so
+// H.3/H.4's sprite consolidation work can be eyeballed in ten seconds by opening
+// godsbound_beta.html?gallery instead of hunting each unit down inside a live match.
+function renderSpriteGallery(){
+  const W=board.width/DPR, H=board.height/DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle="#12100c"; ctx.fillRect(0,0,W,H);
+  const cell=Math.max(56,HEX*3.2);
+  const cols=Math.max(1,Math.floor(W/cell));
+  let col=0,row=0;
+  function nextCell(){
+    const x=cell*(col+0.5), y=cell*(row+0.5);
+    col++; if(col>=cols){ col=0; row++; }
+    return {x,y};
+  }
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="9px sans-serif";
+  const savedPlayerFaction=S.playerFaction;
+  for(const faction in FACTIONS){
+    for(const key in FACTIONS[faction].units){
+      const def=FACTIONS[faction].units[key];
+      const p=nextCell();
+      const u={key, side:0, size:def.size||1, pos:{x:p.x,y:p.y}};
+      try{ drawUnitSprite(u); }catch(e){}
+      ctx.fillStyle="#e8d9b8"; ctx.fillText(key, p.x, p.y+cell*0.4);
+    }
+    S.playerFaction=faction; // drawBuilding resolves its art via factionForSide(0)===S.playerFaction
+    for(const type of ["city","temple","fortress"]){
+      const p=nextCell();
+      try{ drawBuilding({side:0,type,dead:false},p); }catch(e){}
+      ctx.fillStyle="#e8d9b8"; ctx.fillText(faction+" "+type, p.x, p.y+cell*0.4);
+    }
+  }
+  S.playerFaction=savedPlayerFaction;
+}
+
 /* ---------------- INIT ---------------- */
 renderCards();
 window.addEventListener("resize",resize);
 if(typeof ResizeObserver!=="undefined") new ResizeObserver(()=>resize()).observe($("boardwrap"));
 resize();
-startMatch();
+initDeckPresets();
+startMatch(true);
+S.setupStep="home";S.selectionFaction=S.playerFaction;renderDeckSlots();renderSetupStep();
 warmSpriteCache();
-requestAnimationFrame(loop);
+if(typeof location!=="undefined" && location.search && location.search.includes("gallery")){
+  renderSpriteGallery();
+} else {
+  requestAnimationFrame(loop);
+}
 </script>
 </body>
 </html>
