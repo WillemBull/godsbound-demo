@@ -57,16 +57,16 @@
   #menupanel.home-active #stephome h1{margin:0;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;font-size:clamp(20px,6vw,30px);letter-spacing:3px;color:#f4d99b;text-shadow:0 2px 2px #000,0 0 14px rgba(213,171,88,.45);}
   #menuscreen h1{font-size:28px;margin-bottom:8px;color:var(--egypt-gold);letter-spacing:2px;}
   #menuscreen p{font-size:14px;color:#bbb;margin-bottom:18px;}
-  #menuscreen button{font-size:16px;padding:10px 26px;border-radius:8px;border:1px solid var(--egypt-gold);background:#2a2413;color:var(--egypt-gold);font-weight:700;cursor:pointer;}
+  #menuscreen button:not(.tilebtn){font-size:16px;padding:10px 26px;border-radius:8px;border:1px solid var(--egypt-gold);background:#2a2413;color:var(--egypt-gold);font-weight:700;cursor:pointer;}
   /* Pantheon Passage: one material system, three silhouette grammars. */
-  #menupanel button:not(.paintbtn),.factionbtn{--frame-accent:#d5ab58;--frame-jewel:#2e6fd0;position:relative;border:2px solid var(--frame-accent);border-radius:0;color:#f2dfb2;background:linear-gradient(180deg,rgba(18,42,43,.98),rgba(7,16,19,.98));box-shadow:inset 0 0 0 2px rgba(4,8,10,.9),inset 0 0 0 3px rgba(213,171,88,.28),0 4px 12px rgba(0,0,0,.55);text-shadow:0 1px 2px #000;transition:filter .12s,transform .08s,box-shadow .12s;}
-  #menupanel button:not(.paintbtn):active,.factionbtn:active{transform:translateY(1px);filter:brightness(1.12);}
-  #menupanel[data-faction="egypt"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="egypt"]{--frame-jewel:#315eaa;clip-path:polygon(3% 0,97% 0,100% 14%,96% 50%,100% 86%,97% 100%,3% 100%,0 86%,4% 50%,0 14%);}
-  #menupanel[data-faction="china"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="china"]{--frame-jewel:#31705e;clip-path:polygon(4% 0,96% 0,96% 8%,100% 8%,100% 92%,96% 92%,96% 100%,4% 100%,4% 92%,0 92%,0 8%,4% 8%);}
-  #menupanel[data-faction="aztec"] button:not(.paintbtn),#factionpicker .factionbtn[data-faction="aztec"]{--frame-jewel:#209a9a;clip-path:polygon(7% 0,93% 0,93% 8%,97% 8%,97% 18%,100% 18%,100% 82%,97% 82%,97% 92%,93% 92%,93% 100%,7% 100%,7% 92%,3% 92%,3% 82%,0 82%,0 18%,3% 18%,3% 8%,7% 8%);}
-  #menupanel button:not(.paintbtn)::after,.factionbtn::after{content:"";position:absolute;inset:5px;pointer-events:none;border:1px solid color-mix(in srgb,var(--frame-accent) 62%,transparent);box-shadow:inset 0 0 8px rgba(0,0,0,.55);}
-  #menupanel button:not(.paintbtn)::before,.factionbtn::before{content:"";position:absolute;left:8px;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);background:var(--frame-jewel);border:1px solid #d5ab58;}
-  #menupanel button.selected:not(.paintbtn),#menupanel .modebtn:not(:disabled):hover,.factionbtn.selected{color:#fff1c8;background:linear-gradient(180deg,#12615e,#082f32);box-shadow:inset 0 0 0 2px rgba(4,8,10,.85),inset 0 0 0 3px rgba(239,194,94,.55),0 0 13px rgba(37,151,145,.34),0 4px 12px rgba(0,0,0,.6);}
+  #menupanel button:not(.paintbtn):not(.tilebtn),.factionbtn{--frame-accent:#d5ab58;--frame-jewel:#2e6fd0;position:relative;border:2px solid var(--frame-accent);border-radius:0;color:#f2dfb2;background:linear-gradient(180deg,rgba(18,42,43,.98),rgba(7,16,19,.98));box-shadow:inset 0 0 0 2px rgba(4,8,10,.9),inset 0 0 0 3px rgba(213,171,88,.28),0 4px 12px rgba(0,0,0,.55);text-shadow:0 1px 2px #000;transition:filter .12s,transform .08s,box-shadow .12s;}
+  #menupanel button:not(.paintbtn):not(.tilebtn):active,.factionbtn:active{transform:translateY(1px);filter:brightness(1.12);}
+  #menupanel[data-faction="egypt"] button:not(.paintbtn):not(.tilebtn),#factionpicker .factionbtn[data-faction="egypt"]{--frame-jewel:#315eaa;clip-path:polygon(3% 0,97% 0,100% 14%,96% 50%,100% 86%,97% 100%,3% 100%,0 86%,4% 50%,0 14%);}
+  #menupanel[data-faction="china"] button:not(.paintbtn):not(.tilebtn),#factionpicker .factionbtn[data-faction="china"]{--frame-jewel:#31705e;clip-path:polygon(4% 0,96% 0,96% 8%,100% 8%,100% 92%,96% 92%,96% 100%,4% 100%,4% 92%,0 92%,0 8%,4% 8%);}
+  #menupanel[data-faction="aztec"] button:not(.paintbtn):not(.tilebtn),#factionpicker .factionbtn[data-faction="aztec"]{--frame-jewel:#209a9a;clip-path:polygon(7% 0,93% 0,93% 8%,97% 8%,97% 18%,100% 18%,100% 82%,97% 82%,97% 92%,93% 92%,93% 100%,7% 100%,7% 92%,3% 92%,3% 82%,0 82%,0 18%,3% 18%,3% 8%,7% 8%);}
+  #menupanel button:not(.paintbtn):not(.tilebtn)::after,.factionbtn::after{content:"";position:absolute;inset:5px;pointer-events:none;border:1px solid color-mix(in srgb,var(--frame-accent) 62%,transparent);box-shadow:inset 0 0 8px rgba(0,0,0,.55);}
+  #menupanel button:not(.paintbtn):not(.tilebtn)::before,.factionbtn::before{content:"";position:absolute;left:8px;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);background:var(--frame-jewel);border:1px solid #d5ab58;}
+  #menupanel button.selected:not(.paintbtn):not(.tilebtn),#menupanel .modebtn:not(:disabled):hover,.factionbtn.selected{color:#fff1c8;background:linear-gradient(180deg,#12615e,#082f32);box-shadow:inset 0 0 0 2px rgba(4,8,10,.85),inset 0 0 0 3px rgba(239,194,94,.55),0 0 13px rgba(37,151,145,.34),0 4px 12px rgba(0,0,0,.6);}
   #factionpicker{display:flex;gap:6px;justify-content:center;margin:0 0 14px;flex-wrap:wrap;}
   #terrainpalette{display:flex;flex-direction:column;gap:3px;width:min(92%,480px);margin:0 auto 4px;}
   .setupnav,#stepterrainbtns{display:flex;gap:8px;justify-content:center;flex:0 0 auto;padding:8px 0 2px;}
@@ -107,12 +107,43 @@
      than sharing #loadoutcards/#herocards's list layout) since only the god step
      changed shape; loadout/hero pickers are untouched. */
   #godpickcards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow-y:auto;min-height:0;padding:2px 3px 8px;align-content:start;}
-  .godtile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 8px;border-radius:10px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:center;cursor:pointer;}
-  .godtile .uport{width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;}
+  /* 2026-07-24 follow-up direct chat request ("enlarge the pictures of the gods to
+     fill their button width wise but keep aspect"): dropped .godtile's horizontal
+     padding (was 4px each side) so .uport (already width:100%) now bleeds edge to
+     edge with the tile's own border, instead of sitting inset from it -- "keep
+     aspect" is unaffected, still the same 3/4 box with object-fit:cover (crops to
+     fill, never stretches/distorts the source image). Same-session follow-up
+     ("there is extra space at the top and bottom of the god selection tiles above
+     the picture, please remove it"): dropped the remaining top/bottom padding too
+     (was 6px top, 8px bottom) so .uport now bleeds flush on all 4 sides -- the
+     .gtilename label below still gets its own breathing room from .godtile's
+     existing gap:3px, not from padding on the tile itself. */
+  .godtile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;border-radius:10px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:center;cursor:pointer;min-width:0;}
+  .godtile .uport{position:relative;width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;}
   .godtile .uport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
-  .godtile .gtilename{font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:#f0dca7;font-weight:800;}
+  /* width:100%+min-width:0 required here -- .godtile uses align-items:center (not
+     stretch), so without an explicit width .gtilename sizes to its own unconstrained
+     content width and can render past the tile's edges instead of wrapping (found
+     live: "Huitzilopochtli" measured ~85px wide inside a ~67px tile, escaping both
+     edges by ~9px each side, undetectable from a screenshot alone since nothing
+     visually "clips" -- it just overlaps neighboring tiles). overflow-wrap covers
+     the case where a single long word (no spaces to break at, e.g.
+     "Mictlantecuhtli") still can't fit even wrapped onto its own line. */
+  .godtile .gtilename{width:100%;min-width:0;font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:#f0dca7;font-weight:800;padding:0 4px;overflow-wrap:break-word;}
+  .godtile .gtilename.long{font-size:8px;letter-spacing:.2px;}
   .godtile.selected{border-color:var(--egypt-gold);background:#3a2a14;box-shadow:0 0 6px rgba(232,184,75,.5);}
   .godtile.selected .gtilename{color:var(--egypt-gold);}
+  /* 2026-07-24 direct chat request: Select/Info overlay directly on the god's
+     picture (was a separate row below it, cramped and pushing the tile taller)
+     -- stacked vertically, not side-by-side, so each button gets the tile's full
+     ~65px width instead of splitting it in half; that's what let the font size
+     come back up to something readable instead of shrinking to fit two labels
+     side by side in ~30px each. */
+  .godtile .godtileactions{display:none;position:absolute;inset:0;flex-direction:column;justify-content:center;align-items:stretch;gap:4px;padding:6px;background:rgba(8,8,14,.8);}
+  .godtile.active .godtileactions{display:flex;}
+  .godtile .godtileactions button{width:100%;min-width:0;font-size:8px;padding:4px 2px;border-radius:5px;border:1px solid #6b5426;background:#1a130c;color:#d8c8a8;font-weight:800;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .godtile .godtileactions button[data-godtileaction="select"]{border-color:var(--egypt-gold);color:var(--egypt-gold);}
+  .godtile.selected .godtileactions button[data-godtileaction="select"]{border-color:#ff6b5b;color:#ff6b5b;}
   .goddetail{position:absolute;inset:0;z-index:6;background:rgba(8,8,14,.97);display:flex;flex-direction:column;padding:12px 0 8px;}
   #goddetailcard{margin:0 auto;width:min(94%,520px);flex:1;min-height:0;overflow-y:auto;}
   .goddetailnav{display:flex;gap:8px;justify-content:center;flex:0 0 auto;padding:8px 0 2px;}
@@ -143,6 +174,21 @@
   .trayitem{width:42px;min-width:42px;text-align:center;color:#d8c8a8;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .trayitem img,.trayemoji{display:block;width:32px;height:32px;margin:0 auto 2px;border-radius:5px;object-fit:cover;background:#211a12;}
   .trayemoji{font-size:20px;line-height:32px;}
+  /* 2026-07-24 direct chat request: the Legend text (GOD_LEGEND, sourced from
+     mythology_game_design_v2.xlsx's "Legend & Mythological Background" column)
+     moved from its own standalone section below the grid into the per-god Info
+     detail overlay itself, right alongside that god's power/myth/stats -- see
+     .legenddetail inside #goddetailcard's template (renderGodDetail). 2026-07-24
+     follow-up direct chat request ("let the legends and myth section fill the
+     width of the screen under the pictures"): pulled out from inside .pickdetails
+     (the narrow flex:1 column beside the 78px-wide portraits) to be a sibling of
+     .godpickcard instead, so it spans #goddetailcard's full width below the
+     portraits+stats row rather than being squeezed into that row's remaining
+     space. Gained its own card chrome (border/background/radius) to match
+     .godpickcard's look, since it's no longer visually nested inside that card. */
+  .legenddetail{margin-top:8px;padding:8px 10px;border-radius:10px;border:1px solid #6b5426;background:#241a12;}
+  .legendlabel{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--egypt-gold);margin-bottom:3px;}
+  .legendtext{font-size:9.5px;line-height:1.35;color:#aeb6c6;}
   .trayempty{font-size:10px;color:#6f7786;align-self:center;}
   #btnbattle.disabled,.setupnext.disabled{opacity:.42;cursor:not-allowed;}
   .pickstep{height:100%;display:flex;flex-direction:column;min-height:0;padding:12px 0 8px;position:relative;}
@@ -395,7 +441,7 @@ const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
 
 /* ---------------- UNIT DATA ---------------- */
 const EG_UNITS = {
-  spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
   archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
   axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
   chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2},
@@ -407,9 +453,9 @@ const EG_UNITS = {
   lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
   mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
   sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"bastet", strongerNearBuildings:true}, // 2026-07-23: reassigned from Isis to Bastet per mythology_game_design.xlsx
-  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1},
-  camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2},
-  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2},
+  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1, spriteScaleMult:1.7},
+  camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2, spriteScaleMult:1.7},
+  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2, spriteScaleMult:1.7},
   phoenix:{name:"Bennu Bird",  emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra", revivesOnce:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "phoenix" -- same art/stats, now revives once on death)
   jackal: {name:"Anubite",     emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis", fearImmune:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "jackal")
   // ---- New Egyptian myths added 2026-07-23 to match mythology_game_design.xlsx
@@ -425,11 +471,15 @@ const EG_UNITS = {
   ushabti:  {name:"Ushabti",   emoji:"🗿", cost:{v:30}, cat:"myth", armor:"light", dtype:"melee",  hp:70,  dmg:8,  as:1.0, range:1, speed:0.860625, size:1, train:2, god:"ptah", spawnCount:3}
 };
 const CN_UNITS = {
-  ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
-  xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
-  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
-  horse:  {name:"Horse Archer",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2},
-  monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  // 2026-07-24 direct chat request ("align sizes between the [Chinese] human
+  // sprites and make them 20% bigger"): spriteScaleMult:1.2 is purely cosmetic
+  // (read only by drawUnitSprite/the HP-bar head-offset calc via unitSpriteScale())
+  // -- hp/dmg/speed/hex-capacity/every other gameplay stat below is untouched.
+  ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
+  xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
+  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
+  horse:  {name:"Horse Archer",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:10, as:1.1, range:2, speed:1.03275, size:1, train:2, spriteScaleMult:1.2},
+  monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:1.2},
   nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:16, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true},
   liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
@@ -582,6 +632,47 @@ const GOD_PORTRAITS = {
 const godPortrait=g=>GOD_PORTRAITS[g.key]
   ? `<img src="${GOD_PORTRAITS[g.key]}" alt="" draggable="false">`
   : `<div class="gportemoji">${g.emoji}</div>`; // every god now has real portrait art
+
+/* 2026-07-24 direct chat request: "add a legend section... that is the legends/myth
+   column from the attached file" -- full "Legend & Mythological Background" text for
+   all 31 currently-playable gods (11 Egyptian + 10 Aztec + 10 Chinese), transcribed
+   verbatim from mythology_game_design_v2.xlsx's per-pantheon sheets (column H) via a
+   one-off extraction script, not retyped by hand. Greek gods (GR_GODS above) aren't
+   wired into FACTIONS yet, so they have no entry here either -- add one if/when that
+   pantheon ships. Keyed the same flat, cross-faction way GOD_PORTRAITS already is. */
+const GOD_LEGEND={
+  ra:"Ra is the supreme solar deity. Each night he travels through the underworld in his solar barque, battling Apep the chaos serpent to ensure the sun rises again. Without his nightly victory, the world would remain in darkness. The Pharaoh was considered his literal son on earth, making Ra the divine source of all political authority. The Solar Barque power recreates this nightly journey, sweeping through darkness and destroying what opposes the sun. The Bennu Bird is the Egyptian phoenix — the original, from which all other phoenix myths derive — and it embodies the solar cycle of death and rebirth that Ra enacts every single night.",
+  osiris:"Osiris was killed and dismembered by his jealous brother Set, his pieces scattered across Egypt. His wife Isis gathered them, reassembled him, and resurrected him long enough to conceive their son Horus. He then became the lord of the dead and the afterlife. He also taught humanity agriculture, connecting death to the fertility of the Nile flood — his body feeding the earth just as the flood deposits silt. The Field of Reeds is the Egyptian paradise, Osiris's domain for the righteous dead. The Apis Bull was his most sacred animal, believed to be his living incarnation — a divine presence generating blessing simply by existing.",
+  isis:"Isis is the supreme magician of the Egyptian pantheon. In one of the most famous myths, she crafted a serpent from Ra's own saliva and poisoned him, then offered the cure only in exchange for his secret true name — giving her power over the king of the gods himself. Knowledge of a god's secret name was the ultimate source of power over them. She also commanded seven scorpions to protect baby Horus from Set during his vulnerable infancy. The Secret Name power directly channels this mythological moment: using knowledge to override divine power. The Scorpion Guard embodies those seven protective servants.",
+  set:"Set is the god of chaos, storms, the desert, and foreigners — the ultimate outsider among the gods. He murdered Osiris out of jealousy, scattered his pieces, and fought Horus for 80 years. But crucially, despite his role as the villain of the Osiris myth, Ra needed Set on the prow of the solar barque to fight Apep each night — making him simultaneously destructive and necessary. He is chaos that can be wielded, not merely chaos to be defeated. Having Apep as Set's myth unit captures this tension: Set has unleashed the very chaos serpent he normally contains, turning the deepest weapon of darkness into his own instrument at terrible risk.",
+  horus:"Horus spent 80 years in brutal, shape-shifting combat with Set to claim Egypt's rightful throne after his father Osiris's murder. He is the god of the living king, the sky, and righteous warfare — every Pharaoh was considered the living Horus. He lost his eye during the battle with Set; the Eye of Horus was restored by Thoth and became the most powerful protective symbol in all of Egyptian mythology. Falcon's Wrath reflects his manifestation as a giant solar falcon in divine combat — his most fearsome and awe-inspiring form. The Serpopard is a creature from predynastic Egypt that predates the formal pantheon, representing the primal royal power that Horus embodies.",
+  anubis:"Anubis is the god of embalming, mummification, and the judgment of the dead. He presides over the Weighing of the Heart ceremony — the deceased's heart is placed on scales against the feather of Ma'at, the principle of cosmic justice. If the heart is heavy with sin, Ammit devours it and the soul ceases to exist. If light, the soul passes to the Field of Reeds. The Judgment power directly recreates this ceremony in gameplay: a unit's chance of surviving is equal to how much of its health remains — a pure, heavy heart at full health has a strong chance, a weakened sinful heart nearly none. Anubites are the jackal-headed divine guardians who patrol the underworld's boundaries.",
+  thoth:"Thoth is the ibis-headed god of writing, magic, wisdom, and the moon. He recorded the verdict at the Weighing of the Heart and in several myths mediated between warring gods. Most significantly, he invented language and writing itself — in Egyptian cosmology, words are the mechanism of creation and divine power. Knowing and writing something gives you power over it. The Rewrite power channels this directly: Thoth can change what is written, reversing fate for a unit mid-battle. Ammit — the devourer — is the natural complement to Thoth's judgment role. Thoth is the scribe who records the verdict; Ammit is the consequence when the verdict is damning. Together they tell the complete story of divine justice.",
+  sekhmet:"Ra sent Sekhmet to punish humanity for their rebellion against the gods. She became so consumed by slaughter that she couldn't stop even when Ra wanted her to — he had to flood the fields with red beer disguised as blood to make her drink herself into unconsciousness. She is pure, uncontrollable destructive force. Sekhmet also controls the Seven Arrows — disease demons she dispatches at the start of each year to spread plague among humanity. The Eye Unleashed captures her defining characteristic: power so absolute it cannot be directed, only unleashed. The Plague Bearer represents one of her Seven Arrows made manifest — a sent agent of pestilence rather than Sekhmet herself.",
+  bastet:"Bastet began as a fierce lioness goddess similar to Sekhmet, but softened over centuries into a protective cat goddess of home, music, fertility, and women. Her festival at the city of Bubastis was the most widely attended festival in all of Egypt — hundreds of thousands of Egyptians made pilgrimage to honor her. Sacred cats were mummified in her honor, and killing a cat — even accidentally — carried the death penalty under Egyptian law. Her entire divine identity is protection of the home and sacred space. Guardian's Grace and her protective passive reflect this completely, while the Sphinx as her myth unit guards the thresholds of sacred places as she protected the domestic threshold.",
+  nephthys:"Nephthys is Set's wife, but she secretly helped Isis find and reassemble Osiris's body — betraying her husband for the sake of cosmic justice. She is the goddess of mourning, twilight, the liminal space between life and death, and the threshold between worlds. She helped guide the dead safely to the afterlife alongside Anubis. The Sheut is one of the five components of the Egyptian soul — the shadow self, which in Egyptian theology had real existence and power. Nephthys's domain over twilight and passage makes her the natural mistress of hidden, shadow-realm power. The Lady of the House passive reflects her role watching over what is precious and converting loss into strength.",
+  ptah:"Ptah is the god of creation, crafts, and architects, worshipped especially at Memphis where he was the supreme deity. He created the world through thought and the spoken word alone — in Egyptian cosmology, Ptah conceived of creation in his heart and then spoke it into existence, making language the fundamental creative force. He was patron of all craftsmen, builders, and artists. Creator's Word channels his primary mythological act: the instant creative utterance that brings something into being. The Ushabti are among the most ubiquitous objects in Egyptian archaeology — funerary figurines created specifically to serve the deceased in the afterlife, answering on their behalf when called upon. They are the ultimate expression of Ptah's craft: created things that serve a purpose beyond their maker's immediate presence.",
+  huitzilopochtli:"Huitzilopochtli is the Aztec god of the sun and war, born fully armored from his mother Coatlicue after she was miraculously impregnated by a ball of feathers. He immediately slaughtered his sister Coyolxauhqui and 400 brothers who were trying to kill their mother. The sun rises each day because Huitzilopochtli defeats the moon and stars in nightly combat — and without continuous blood sacrifice, he will eventually lose that battle and the world will end in darkness. The Aztecs understood themselves as the people tasked with keeping the sun alive through war and sacrifice. Solar War captures this cosmic bargain: immense power that comes at direct cost in blood. The Xiuhcoatl was the actual fire serpent weapon he used to dismember Coyolxauhqui — the instrument of his divine victory.",
+  quetzalcoatl:"Quetzalcoatl — the Feathered Serpent — is one of the most significant deities in all of Mesoamerican mythology, worshipped across multiple cultures for thousands of years. He created humanity by descending to Mictlan, retrieving the bones of the dead, and mixing them with his own blood. He is the god of wind, learning, and the morning star (Venus). His great rival Tezcatlipoca tricked him into drunkenness and shameful acts, causing him to leave his people in disgrace — but he promised to return from the east, a prophecy the Aztecs believed was fulfilled when Cortés arrived. Wind Serpent channels his dominion over air and disruption. Morning Star reflects his role as Venus, the planet that heralds the dawn.",
+  tezcatlipoca:"Tezcatlipoca — the Smoking Mirror — is god of night, sorcery, jaguars, and conflict. He carries an obsidian mirror that reveals everything happening in the world, and he used it to destroy Quetzalcoatl: showing him his own reflection until shame over his true nature drove him into exile. He and Quetzalcoatl are eternal cosmic rivals whose battles created and destroyed multiple versions of the world. The Smoking Mirror power recreates the mirror's defining function: turning a creature's own strength against itself, destroying through reflection. The Nagual is Tezcatlipoca's shapeshifting spirit form — a jaguar that can take any appearance, making it a perfect infiltrator disguised among your own forces.",
+  tlaloc:"Tlaloc is one of the oldest and most important Aztec deities, the god of rain, water, and agricultural fertility. His cult required child sacrifice specifically — and the more the children cried during the ceremony, the better, because their tears literally represented rain falling. He rules Tlalocan, a paradise reserved specifically for those who drowned, were struck by lightning, or died of water-related causes. He and Huitzilopochtli shared the Templo Mayor's two shrines — war and rain, blood and water, the two pillars keeping Aztec civilization alive. The Ahuizotl is a legendary Aztec water creature described as having the hand of a human on the tip of its tail, which it used to drag victims underwater. The creature lent its name to the eighth Aztec emperor.",
+  xipetotec:"Xipe Totec — Our Lord the Flayed One — is the god of agriculture, seasons, disease, and rebirth. Priests honoring him wore the flayed skins of sacrificial victims for twenty days, representing the earth shedding its old skin to reveal new growth beneath. In the creation myth, Xipe Totec willingly flayed himself to feed humanity, his removed skin becoming the new vegetation covering the earth. He embodies the Aztec understanding that renewal always requires the violent removal of what came before. The Flaying strips the entire enemy force of enhancements — revealing the bare unit beneath all its power. Tlaltecuhtli, the earth monster from which the world itself was made, devours everything around her indiscriminately — the earth consuming without preference.",
+  coatlicue:"Coatlicue is the earth goddess and mother of Huitzilopochtli, one of the most fearsome figures in Aztec mythology. She was decapitated by her children (led by Coyolxauhqui) and her head was replaced by two facing serpents. She wears a skirt of writhing snakes and a necklace made of human hearts and severed hands. She is simultaneously the creator and destroyer — she gave birth to the sun god in the same moment her body was destroyed. The Tzitzimitl are skeletal female demons that descend during solar eclipses when Huitzilopochtli is weakened, threatening to devour humanity. As Coatlicue's power — representing her destructive, devouring aspect — they grow stronger precisely as your own position deteriorates, thriving in the moment of crisis.",
+  mictlantecuhtli:"Mictlantecuhtli is the lord of Mictlan, the nine-level Aztec underworld that the dead must journey through for four years before reaching final rest. In the Aztec creation myth, when Quetzalcoatl descended to retrieve the bones of the dead to create humanity, Mictlantecuhtli agreed to release them — then immediately tried to trick Quetzalcoatl into leaving without them by sending obstacles. He is not evil so much as ancient and patient: everything eventually comes to him. The Bargain recreates his defining mythological moment — apparent cooperation concealing a trap. The Itzcuintli, the hairless dog, was the guide souls required to cross the underground rivers on their four-year journey through Mictlan's nine levels. Without the dog, a soul could not complete the passage.",
+  coyolxauhqui:"Coyolxauhqui is the moon goddess, Huitzilopochtli's elder sister. She led the 400 Centzon Huitznahua — the southern star warriors — in an attempt to kill their mother Coatlicue to prevent Huitzilopochtli's birth. But the newborn sun god emerged fully armored and immediately dismembered Coyolxauhqui, casting her severed head into the sky where it became the moon. Her great stone disc, discovered at the Templo Mayor in 1978, depicts her dismembered body arranged as a circular pattern. The Dismemberment power recreates her own fate inflicted upon an enemy. The Centzon Huitznahua — her star army — are represented as a unit that multiplies when it kills, reflecting the 400 stars filling the night sky she once commanded.",
+  ehecatl:"Ehecatl is the god of wind, often considered an aspect of Quetzalcoatl. After Nanahuatzin and Tecuciztecatl leapt into the sacred fire to become the sun and moon, both celestial bodies stood motionless in the sky. The assembled gods sacrificed themselves to give the heavenly bodies the energy to move — but it was Ehecatl's wind that physically set them in motion. Without his breath, the sun would never have crossed the sky. He clears paths and drives everything forward. First Wind directly channels this mythological function: his breath sets everything in motion. The Ehecatotontin are the tiny wind spirit beings from Aztec mythology — whirlwinds given personality, capable of carrying people away or driving them to madness through their chaotic, purposeless movement.",
+  itzpapalotl:"Itzpapalotl — the Obsidian Butterfly — is a fearsome skeletal warrior goddess ruling Tamoanchan, the paradise where the gods created humanity after Quetzalcoatl retrieved the bones of the dead. She is a predatory hunter whose wings are edged with obsidian blades in their sharpest form. She can shift between her butterfly aspect and her skeletal warrior aspect — beautiful and terrible. Her mythology emphasizes ambush and the lethality of the first strike, which the Razor Wings passive directly captures. The Colotl — scorpion warriors native to Tamoanchan — serve as her divine soldiers in the wilderness paradise she rules.",
+  jade:"The Jade Emperor rules heaven through a vast imperial bureaucracy, assigning every god a rank, role, and jurisdiction exactly as a Chinese emperor would govern a terrestrial empire. He hosts the Peach Banquet, granting immortality to gods who attend. Critically, Sun Wukong's entire celestial rampage began because the Jade Emperor failed to grant him a sufficiently prestigious title — in Chinese mythology, even bureaucratic slights carry cosmic consequences. Celestial Decree channels his supreme imperial authority to override allegiance. The Qilin appears specifically in Chinese mythology to herald the arrival of a sage ruler or herald an auspicious event — it is the divine signal of righteous authority made manifest.",
+  sunwukong:"Sun Wukong — the Monkey King — is arguably the most beloved figure in Chinese mythology, born from stone and endowed with supernatural abilities through rigorous study. He mastered 72 transformations and the cloud somersault, covering 108,000 li in a single leap. He declared himself Great Sage Equal to Heaven, proved essentially unkillable (he was tried in fire, lightning, and the furnace of Laozi without dying), and was only stopped when Buddha trapped him under Five Elements Mountain for 500 years. The 72 Transformations power is his defining mythological ability made directly into gameplay. His Stone Monkey Army comes from the famous scene where he plucks hairs from his body, blows on them, and creates entire armies of copies.",
+  nuwa:"Nu Wa is the creator goddess of Chinese mythology, who molded humanity from yellow clay and invented marriage and the social institutions that bind civilization together. When the god Gong Gong shattered the pillar holding up the sky in his rage, Nu Wa spent an enormous amount of time and effort melting down five colored stones of different hues to repair the heavens. She is depicted as half human, half serpent or dragon — the primal creative form. Five Colored Stones directly recreates her most celebrated mythological act of cosmic repair. Hundun — the primordial chaos creature from the Classic of Mountains and Seas — represents the formless, faceless state that existed before Nu Wa's creative act gave the world its shape and humanity its form.",
+  longwang:"The Dragon Kings — Long Wang — rule the four seas of Chinese cosmology, controlling all rain, floods, storms, and the creatures of the water. They function as divine bureaucrats who can be petitioned for rain by mortals and who report directly to the Jade Emperor. Nezha's famous conflict that disrupted the celestial order began specifically when he killed Long Wang's son and pulled out his tendons to make a belt for his father. The Eastern Dragon is the quintessential Chinese mythological creature — serpentine, wingless, associated with water and good fortune rather than fire and destruction as in Western traditions. It brings floods wherever it travels, fertilizing the land through inundation.",
+  gonggong:"Gong Gong is the water god of chaos who lost a battle against the fire god Zhu Rong and in his rage headbutted Mount Buzhou — one of the great pillars holding up the sky. This shattered the pillar, caused the sky to tilt toward the northwest, and is the mythological explanation for why China's rivers all flow eastward toward the sea. The catastrophe forced Nu Wa to repair the heavens. His minister was Xiangliu, a nine-headed serpent so poisonous that wherever any of its heads touched the earth, the ground became uninhabitable marsh that even the gods couldn't cultivate. Broken Pillar recreates Gong Gong's defining act of cosmic destruction through frustrated rage.",
+  erlangshen:"Erlang Shen — the Three-Eyed God — is the nephew of the Jade Emperor and the only deity who successfully defeated Sun Wukong in direct combat, matching him transformation for transformation in one of the most famous battles in Chinese mythology. His third eye, set vertically in his forehead, sees through all illusions, disguises, and deceptions — nothing can be hidden from it. Third Eye directly channels this mythological function: the god who pierces all illusion is the natural counter to every deception mechanic across all other pantheons. Xiaotian Quan, the celestial hound, is his constant hunting companion who tracked even transformed quarry that the eye had revealed.",
+  xiwangmu:"Xi Wangmu — the Queen Mother of the West — is one of the most ancient and powerful beings in all of Chinese mythology, ruling from Kunlun Mountain at the western edge of the world. She tends the Peach Garden of Immortality, where peaches ripen only every few thousand years and grant eternal life to gods who eat them. Sun Wukong's theft of her peaches triggered the celestial crisis that led to his capture and imprisonment. She is older than the Jade Emperor's bureaucratic order — a primordial cosmic power who predates the current divine hierarchy. Peach of Immortality directly channels her defining mythological domain. Her myth unit remains under discussion — both the Fenghuang (which heralds righteous rule) and the Nine-tailed Fox (native to Kunlun's region) are mythologically appropriate.",
+  zhurong:"Zhu Rong is the primordial fire god, one of the oldest deities in the Chinese pantheon — a force of nature rather than a member of the Jade Emperor's bureaucracy. He defeated Gong Gong in the battle that triggered the cosmic near-catastrophe Nu Wa had to repair. This makes him already embedded in our existing Chinese lore: his victory over Gong Gong is what set the entire chain of events in motion. He represents fire in its most ancient and elemental form. Primordial Fire captures this elemental nature — not controlled flame but consuming natural fire. The Huo Shu (divine fire tree) is a mythological tree whose burning branches illuminate the night and whose fire spreads as uncontrollably as Zhu Rong's own primordial nature.",
+  chang:"Chang'e is the moon goddess and wife of the divine archer Hou Yi. She stole his immortality elixir — accounts differ on whether from selfish desire, self-preservation from a corrupt student, or to prevent Hou Yi from becoming a tyrannical immortal ruler — and fled to the moon, where she now lives alone with the Jade Rabbit who endlessly pounds the elixir of immortality. She is simultaneously the most beautiful figure in Chinese mythology and the most isolated — transcendent and tragic in equal measure. The cold clarity of moonlight that freezes and reveals is perfectly expressed in Moonfall. The Jade Rabbit — her only companion — endlessly produces the medicine she stole, dispensing immortality to those it reaches.",
+  leigong:"Lei Gong is the god of thunder, depicted with eagle claws, blue skin, wings, and a drum he beats to create thunder. He serves a specific divine function: punishing those who commit secret sins that heaven cannot otherwise see or reach — crimes done in darkness or hidden from other gods. He works in partnership with Dian Mu, the goddess of lightning, who uses mirrors to create lightning flashes illuminating his targets. Heaven's Judgment channels his role as the punisher of hidden wrongdoing — his thunder striking what normal justice cannot reach. The Kui connection through the thunder drum is currently the best available myth creature option but is acknowledged as indirect — a decision on whether to replace Kui or reconsider Lei Gong is pending.",
+};
 
 /* ---------------- FACTIONS (which unit/god tables apply to which side) ---------------- */
 const FACTIONS = {
@@ -1158,17 +1249,42 @@ function renderHeroPicker(){
    per god (renderGodDetail/openGodDetail/closeGodDetail, showing the exact same
    god+myth portraits/description/stats the old expanded row used to show inline,
    plus a Select button that both toggles the pick AND returns to the grid). */
+/* 2026-07-24 direct chat request: "tapping on the gods should bring up two buttons
+   right below the picture, saying select and info. select should be selecting that
+   god and info should take them to the description page." Tapping a tile no longer
+   jumps straight to the full-screen goddetail overlay -- it now shows a small
+   Select/Info action row inline, right under that tile's portrait, tracked by
+   activeGodTile (module-level, mirrors godDetailKey's existing pattern). Select
+   toggles the pick in place; Info opens the exact same goddetail overlay the old
+   direct-tap behavior used to, unchanged. Tapping a DIFFERENT tile swaps which one
+   shows its actions; tapping the SAME tile again closes them. */
+let activeGodTile=null;
 function renderGodPicker(){
   $("godpickcards").innerHTML = FACTIONS[S.playerFaction].allGods.map(g=>{
     const sel=S.godPick.includes(g.key);
-    return `<div class="godtile${sel?" selected":""}" data-god="${g.key}" title="${g.name}">
-      <div class="uport">${godPortrait(g)}</div>
-      <div class="gtilename">${g.name}</div></div>`;
+    const active=activeGodTile===g.key;
+    const longName=g.name.length>8; // several Aztec (Huitzilopochtli, Mictlantecuhtli, Coyolxauhqui, Quetzalcoatl, Tezcatlipoca...) and a few Chinese names don't fit the 10px default at this tile width
+    return `<div class="godtile${sel?" selected":""}${active?" active":""}" data-god="${g.key}" title="${g.name}">
+      <div class="uport">${godPortrait(g)}
+      <div class="godtileactions"><button class="tilebtn" data-godtileaction="select" data-god="${g.key}">${sel?"Deselect":"Select"}</button><button class="tilebtn" data-godtileaction="info" data-god="${g.key}">Info</button></div>
+      </div>
+      <div class="gtilename${longName?" long":""}">${g.name}</div></div>`;
   }).join("");
   $("godpickcount").textContent = S.godPick.length+"/4";
   renderTray("godtray",S.godPick,true);
   updateBattleDisabled();
   closeGodDetail(); // a fresh grid render always starts from the grid, never mid-detail
+  // activeGodTile is intentionally NOT reset here -- the tile-tap handler below needs
+  // to read its PRE-render value to tell "tap the same tile again" (close) apart from
+  // "tap a different tile" (switch). Callers that want a genuinely fresh grid (the
+  // inline Select button, a faction change) set it to null themselves before calling
+  // this function; a stale key from a different faction's roster just never matches
+  // any g.key above, so it's harmless even if left set across a faction switch.
+}
+function toggleGodPick(key){
+  const idx=S.godPick.indexOf(key);
+  if(idx>=0) S.godPick.splice(idx,1);
+  else if(S.godPick.length<4) S.godPick.push(key);
 }
 let godDetailKey=null;
 function renderGodDetail(key){
@@ -1182,7 +1298,9 @@ function renderGodDetail(key){
     <div class="pickstats">Unlock ${g.cost} Favor · Power ${g.pcost} Favor · Cooldown ${g.cd}s</div>
     <div class="mythdetail"><div class="mythcopy">
     <div class="mythdesc">${unitDescription(myth)}</div>
-    <div class="mythstats">${unitStats(myth)}</div></div></div></div></div>`;
+    <div class="mythstats">${unitStats(myth)}</div></div></div>
+    </div></div>
+    <div class="legenddetail"><div class="legendlabel">Legend</div><div class="legendtext">${GOD_LEGEND[g.key]||""}</div></div>`;
   const btn=$("btngoddetailselect");
   btn.textContent = sel? "Deselect" : "Select";
   btn.classList.toggle("selected", sel);
@@ -1198,9 +1316,7 @@ function closeGodDetail(){
 }
 function toggleGodDetailPick(){
   if(!godDetailKey) return;
-  const idx=S.godPick.indexOf(godDetailKey);
-  if(idx>=0) S.godPick.splice(idx,1);
-  else if(S.godPick.length<4) S.godPick.push(godDetailKey);
+  toggleGodPick(godDetailKey);
   renderGodPicker(); // refreshing the grid also closes the detail overlay (see above)
 }
 function onBattleTap(){
@@ -1327,8 +1443,20 @@ document.addEventListener("pointerdown",e=>{
     renderHeroPicker();
     return;
   }
+  const godTileAction=e.target.closest("[data-godtileaction]");
+  if(godTileAction){
+    const key=godTileAction.dataset.god;
+    if(godTileAction.dataset.godtileaction==="select"){ toggleGodPick(key); activeGodTile=null; renderGodPicker(); } // close the actions row after selecting
+    else openGodDetail(key); // "Info" -- unchanged full-screen description page
+    return;
+  }
   const godTile=e.target.closest(".godtile");
-  if(godTile){ openGodDetail(godTile.dataset.god); return; }
+  if(godTile){
+    const key=godTile.dataset.god;
+    activeGodTile = activeGodTile===key ? null : key; // tap again to close; tap another tile to switch
+    renderGodPicker();
+    return;
+  }
   const godAction=e.target.closest("[data-godaction]");
   if(godAction){
     if(godAction.dataset.godaction==="select") toggleGodDetailPick();
@@ -2882,7 +3010,7 @@ const IMG_SPRITES = {};
    transparent PNGs -- chromaKeyed() detects existing transparency and leaves it
    untouched (it only cleans up a flat, fully-opaque backdrop, e.g. from a JPEG). */
 IMG_SPRITES.spear = {
-  0: "assets/sprites/spear_back.png",
+  0: "assets/sprites/spear_back_mobile.png",
   1: "assets/sprites/spear_front.png"
 };
 /* Egyptian roster art (2026-07-20, direct chat request — "there are new sprites saved
@@ -2890,17 +3018,17 @@ IMG_SPRITES.spear = {
    side 0 (player) gets the back render, side 1 (AI) gets the front render. All 7 came in
    as already-transparent PNGs (verified: corner pixels sampled at alpha 0, no chroma-key
    cleanup needed — chromaKeyed() confirms this itself at draw time and leaves them
-   untouched) and were resized from ~1-1.5MB/~1000-1500px sources down to 420px on the
-   long side before landing here, matching decision 16b's established convention; the
-   uncropped originals live in Draft Materials/Egypt Sprite Sources/ as backups, not
-   shipped. */
+   untouched). Four side-0 replacements (spear/axe/khopesh/slinger) intentionally keep
+   their larger mobile-readable source resolution after chroma removal; the remaining
+   originals were resized to 420px on the long side. Uncropped/chroma-source backups
+   live in Draft Materials/Egypt Sprite Sources/, not shipped. */
 IMG_SPRITES.archer  = { 0:"assets/sprites/archer_back.png",  1:"assets/sprites/archer_front.png" };
-IMG_SPRITES.axe     = { 0:"assets/sprites/axe_back.png",     1:"assets/sprites/axe_front.png" };
+IMG_SPRITES.axe     = { 0:"assets/sprites/axe_back_mobile.png", 1:"assets/sprites/axe_front.png" };
 IMG_SPRITES.camel   = { 0:"assets/sprites/camel_back.png",   1:"assets/sprites/camel_front.png" };
 IMG_SPRITES.chariot = { 0:"assets/sprites/chariot_back.png", 1:"assets/sprites/chariot_front.png" };
-IMG_SPRITES.khopesh = { 0:"assets/sprites/khopesh_back.png", 1:"assets/sprites/khopesh_front.png" };
+IMG_SPRITES.khopesh = { 0:"assets/sprites/khopesh_back_mobile.png", 1:"assets/sprites/khopesh_front.png" };
 IMG_SPRITES.priest  = { 0:"assets/sprites/priest_back.png",  1:"assets/sprites/priest_front.png" };
-IMG_SPRITES.slinger = { 0:"assets/sprites/slinger_back.png", 1:"assets/sprites/slinger_front.png" };
+IMG_SPRITES.slinger = { 0:"assets/sprites/slinger_back_mobile.png", 1:"assets/sprites/slinger_front.png" };
 /* Aztec roster art (2026-07-20, direct chat request — "please incorporate the aztec
    sprites"). Same treatment as the Egyptian batch above: verified already-transparent
    (corner alpha 0), resized from ~1-1.3MB/~1000-1500px sources to 420px on the long
@@ -3153,8 +3281,17 @@ function chromaKeyed(img,cacheKey){
   return c;
 }
 function spriteScale(big){ return (HEX/24)*(big?1.2:0.95)*1.56; } // 2026-07-16: +30% (direct chat request); 2026-07-18: further +20% on top, cumulative x1.56 -- shared with draw()'s HP-bar head-offset math so the two can't drift apart
+// 2026-07-24 direct chat request ("align sizes between the [Chinese] human sprites
+// and make them 20% bigger"): per-unit multiplier on top of spriteScale(), read from
+// an optional def.spriteScaleMult (CN_UNITS' ji/xbow/dao/horse/monk carry 1.2 and
+// EG_UNITS.spear carries 1.75, and slinger/camel/khopesh carry 1.7; every other unit
+// is unset, i.e. 1 -- unaffected). Centralized here (not
+// inlined separately in drawUnitSprite and the HP-bar head-offset calc) for the same
+// reason spriteScale() itself was extracted: two independent copies of this formula
+// already drifted apart once this session (decision 27's HP-bar fix).
+function unitSpriteScale(u){ return spriteScale(u.size>1)*(u.def.spriteScaleMult||1); }
 function drawUnitSprite(u){
-  const big=u.size>1, s=spriteScale(big);
+  const s=unitSpriteScale(u);
   ctx.save();
   const p=toScreen(u.pos.x,u.pos.y); // camera tilt: project the anchor only, sprite art itself stays undistorted
   ctx.translate(p.x,p.y+HEX*0.42);
@@ -3546,7 +3683,7 @@ function draw(){
     // -- the old fixed offsets (HEX*0.78/1.05) landed around mid-torso once real image
     // art (much taller than the original vector sprites) became the default renderer.
     if(u.hp<u.maxhp){
-      const headY=p.y+HEX*0.42-32*spriteScale(big)-HEX*0.15;
+      const headY=p.y+HEX*0.42-32*unitSpriteScale(u)-HEX*0.15;
       hpBar(p.x,headY,HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff",0.7);
     }
     ctx.font=`${HEX*0.45}px serif`;
