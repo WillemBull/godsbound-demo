@@ -151,6 +151,10 @@
   .loadoutcard,.herocard,.godpickcard{display:flex;flex:0 0 auto;align-items:stretch;min-height:82px;padding:5px;border-radius:10px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;text-align:left;cursor:pointer;overflow:hidden;}
   .loadoutcard .uport,.herocard .uport,.godpickcard .uport{width:78px;min-width:78px;height:78px;border-radius:7px;overflow:hidden;background:#120d09;display:flex;align-items:center;justify-content:center;font-size:28px;}
   .loadoutcard .uport img,.herocard .uport img,.godpickcard .uport img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .herovisuals{width:78px;min-width:78px;display:flex;flex-direction:column;gap:4px;}
+  .herocard .herolegendbtn{width:100%;min-width:0;padding:4px 2px;border-radius:5px;border:1px solid #6b5426;background:#1a130c;color:var(--egypt-gold);font-size:8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;}
+  #herodetailcard{margin:0 auto;width:min(94%,520px);flex:1;min-height:0;overflow-y:auto;}
+  #herodetailcard .herocard{cursor:default;}
   .unitportrait{object-fit:contain!important;object-position:center top;}
   .pickdetails{flex:1;min-width:0;padding:2px 8px;}
   .loadoutcard .uname,.herocard .uname,.godpickcard .uname{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:#f0dca7;font-weight:800;margin-bottom:4px;}
@@ -317,6 +321,10 @@
             <div class="selectiontray"><div class="traylabel">SELECTED HEROES</div><div id="herotray" class="trayitems"></div></div>
           </div>
           <div class="setupnav"><button class="setupback" onclick="goToGodsStep()">← Back</button><button id="btnnextheroes" class="setupnext" onclick="goToUnitsStep()">Next: Units →</button></div>
+          <div id="herodetail" class="goddetail" style="display:none;">
+            <div id="herodetailcard"></div>
+            <div class="goddetailnav"><button class="setupback" data-heroaction="close">← Heroes</button></div>
+          </div>
         </div>
         <div id="stepunits" class="pickstep" style="display:none;">
           <div id="loadoutpicker">
@@ -331,7 +339,7 @@
           <div id="terrainpalette">
             <button class="paintbtn" id="paintbtn-F" data-paint="F"><img class="terrainhex" src="assets/sprites/terrain_shared_forest.png" alt="Forest hex"><span class="terraincopy"><span class="terrainname">Forest <span class="pcount" id="paintbtn-F-count"></span></span><span class="terraindesc">Slows movement by 25%. Units inside take 25% less ranged damage.</span></span></button>
             <button class="paintbtn" id="paintbtn-M" data-paint="M"><img class="terrainhex" src="assets/sprites/terrain_shared_mountain.png" alt="Mountain hex"><span class="terraincopy"><span class="terrainname">Mountain <span class="pcount" id="paintbtn-M-count"></span></span><span class="terraindesc">Impassable to ground units and blocks ranged line of sight.</span></span></button>
-            <button class="paintbtn" id="paintbtn-W" data-paint="W"><img class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname">Water <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc">Slows movement by 50%.</span></span></button>
+            <button class="paintbtn" id="paintbtn-W" data-paint="W"><img class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname">Water <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc">Slows movement by 50%. Units inside take 25% more damage.</span></span></button>
           </div>
           <div id="stepterrainbtns">
             <button id="btnback" class="setupback" onclick="goToUnitsStep()">← Back</button>
@@ -468,7 +476,7 @@ const EG_UNITS = {
   ammit:    {name:"Ammit",     emoji:"🐊", cost:{v:60}, cat:"myth", armor:"light", dtype:"melee",  hp:220, dmg:20, as:1.0, range:1, speed:0.860625, size:1, train:2, god:"thoth", executesBelow:0.3},
   plaguebearer:{name:"Plague Bearer",emoji:"🏹",cost:{v:65}, cat:"myth", armor:"light", dtype:"ranged",hp:150,dmg:12, as:0.9, range:2, speed:0.7,    size:1, train:2, god:"sekhmet", multiTarget:3, weakens:true},
   sheut:    {name:"Sheut",     emoji:"👤", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",  hp:170, dmg:6,  as:1.0, range:1, speed:0.9,      size:1, train:2, god:"nephthys", drainsFavor:6},
-  ushabti:  {name:"Ushabti",   emoji:"🗿", cost:{v:30}, cat:"myth", armor:"light", dtype:"melee",  hp:70,  dmg:8,  as:1.0, range:1, speed:0.860625, size:1, train:2, god:"ptah", spawnCount:3}
+  ushabti:  {name:"Ushabti",   emoji:"🗿", cost:{v:30}, cat:"myth", armor:"light", dtype:"melee",  hp:70,  dmg:8,  as:1.0, range:1, speed:0.860625, size:1, train:2, god:"ptah"}
 };
 const CN_UNITS = {
   // 2026-07-24 direct chat request ("align sizes between the [Chinese] human
@@ -497,7 +505,7 @@ const CN_UNITS = {
   celestial:{name:"Qilin",       emoji:"⚡", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885, size:2, train:2, god:"jade"},
   stone:    {name:"Hundun",      emoji:"🗿",  cost:{v:75}, cat:"myth", armor:"heavy", dtype:"crushing",hp:400, dmg:28, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"nuwa"},
   dragon:   {name:"Eastern Dragon",emoji:"🐉",cost:{v:80}, cat:"myth", armor:"light", dtype:"melee",   hp:300, dmg:26, as:1.0, range:1, speed:1.03275, size:2, train:2, god:"longwang", fastInWater:true}, // "moves at extraordinary speed along water tiles"
-  stonemonkey:{name:"Stone Monkey Army",emoji:"🐒",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee", hp:80, dmg:9, as:1.2, range:1, speed:1.0, size:1, train:2, god:"sunwukong", spawnCount:3}, // "individually weak but numerous" -- reuses Ushabti's exact spawnCount mechanic
+  stonemonkey:{name:"Stone Monkey Army",emoji:"🐒",cost:{v:70}, cat:"myth", armor:"light", dtype:"melee", hp:80, dmg:9, as:1.2, range:1, speed:1.0, size:1, train:2, god:"sunwukong"}, // 2026-07-28: spawnCount removed (direct chat request) -- now trains a single unit like every other myth
   xiangliu: {name:"Xiangliu",    emoji:"🐍",  cost:{v:80}, cat:"myth", armor:"heavy", dtype:"melee",   hp:350, dmg:24, as:0.9, range:1, speed:0.6885, size:2, train:2, god:"gonggong", slows:true}, // "wherever his heads touched became marsh" simplified to a slow-on-hit (reuses att.def.slows), not persistent terrain
   xiaotianquan:{name:"Xiaotian Quan",emoji:"🐕",cost:{v:50}, cat:"myth", armor:"light", dtype:"melee",  hp:200, dmg:20, as:1.3, range:1, speed:1.2, size:1, train:2, god:"erlangshen", bonusVsHero:1.6}, // "hunts specifically hero units, dealing massive bonus damage"
   fenghuang:{name:"Fenghuang",   emoji:"🐦",  cost:{v:65}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:22, as:1.0, range:1, speed:1.03275, size:2, train:2, flying:true, god:"xiwangmu"}, // Chinese phoenix -- flying, same "already ignores all terrain" precedent as other flying myths
@@ -569,7 +577,7 @@ const CN_GODS = [
   // 2026-07-23 (direct chat request, mythology_game_design.xlsx): realigned from 4
   // gods to the sheet's 10. Guan Yu and Zhong Kui are gone (not on the sheet at all --
   // see HANDOFF.md decision 21 for why they were dropped rather than kept as extras).
-  {key:"jade", name:"Jade Emperor", emoji:"☯️", cost:80,  power:"Celestial Decree", pcost:80, cd:20, myth:"celestial", desc:"Temporarily conscripts one enemy unit to fight for you for 8s, then it returns to its own side", passiveKey:"mandateOfHeaven", passive:"While all three of your buildings stand, resource generation is boosted; losing one weakens the mandate"},
+  {key:"jade", name:"Jade Emperor", emoji:"☯️", cost:80,  power:"Celestial Decree", pcost:100, cd:20, myth:"celestial", desc:"Temporarily conscripts one enemy unit to fight for you for 8s, then it returns to its own side", passiveKey:"mandateOfHeaven", passive:"While all three of your buildings stand, resource generation is boosted; losing one weakens the mandate"},
   {key:"sunwukong", name:"Sun Wukong", emoji:"🐒", cost:120, power:"72 Transformations", pcost:100, cd:20, myth:"stonemonkey", desc:"Transforms into a fighting copy of the enemy's strongest myth unit currently on the board", passiveKey:"cloudSomersault", passive:"Your hero units ignore all terrain movement penalties"},
   {key:"nuwa", name:"Nu Wa", emoji:"🐍", cost:150, power:"Five Colored Stones", pcost:50, cd:25, myth:"stone", desc:"Instantly repairs your most damaged building to full health", passiveKey:"motherOfHumanity", passive:"Human units cost 10% less food to train"},
   {key:"longwang", name:"Long Wang", emoji:"🐉", cost:150, power:"Dragon Rain", pcost:50, cd:25, myth:"dragon", desc:"Floods a large zone into water for 8s, dealing 40 dmg to every unit caught in the deluge", passiveKey:"lordOfFourSeas", passive:"Water tiles on your half generate extra favor; your units move faster in or adjacent to water"},
@@ -674,6 +682,20 @@ const GOD_LEGEND={
   leigong:"Lei Gong is the god of thunder, depicted with eagle claws, blue skin, wings, and a drum he beats to create thunder. He serves a specific divine function: punishing those who commit secret sins that heaven cannot otherwise see or reach — crimes done in darkness or hidden from other gods. He works in partnership with Dian Mu, the goddess of lightning, who uses mirrors to create lightning flashes illuminating his targets. Heaven's Judgment channels his role as the punisher of hidden wrongdoing — his thunder striking what normal justice cannot reach. The Kui connection through the thunder drum is currently the best available myth creature option but is acknowledged as indirect — a decision on whether to replace Kui or reconsider Lei Gong is pending.",
 };
 
+/* Player-facing stories for the nine playable heroes. These deliberately present
+   the legends directly, without scholarly discussion of historicity or sourcing. */
+const HERO_LEGEND={
+  houyi:"Hou Yi is China's supreme mythological archer. Ten solar birds—children of a heavenly ruler—were supposed to cross the sky one at a time. One day, all ten appeared together. Their combined heat scorched the earth, dried the rivers, destroyed crops, and threatened humanity with extinction. Yi climbed to a high vantage point and shot nine suns from the sky, leaving one to illuminate and warm the world. In some tellings, the final arrow was taken from him so that his anger would not plunge creation into darkness. Yi subsequently travelled across the suffering world, destroying creatures that preyed upon humanity. His enemies included a giant serpent, a monstrous boar, a many-headed water beast, and other horrors infesting the wilderness. Wherever ordinary weapons and warriors failed, Yi's supernatural archery restored safety. Although he saved humanity, shooting the celestial ruler's children brought consequences. Yi and his wife Chang'e lost their place in Heaven and became mortal. Hoping to reverse their fate, Yi acquired an elixir of immortality. Chang'e ultimately consumed it and ascended alone to the moon, leaving Yi behind. Hou Yi's legend is defined by an extraordinary act of defiance: when the powers of Heaven endangered the mortal world, he raised his bow against them and restored balance beneath a single sun.",
+  nezha:"Nezha is a miraculous child warrior. His mother carried him for an unnaturally long pregnancy before giving birth to a ball of flesh. When his father cut it open, Nezha emerged as a fully formed child. A divine master recognized his power and armed him with magical weapons, especially the Universe Ring and Armillary Sash. While still young, Nezha fought beings associated with the Eastern Sea. After killing Ao Bing, a son of the Dragon King, he brought the Dragon Kings' anger upon his family and community. To end their threatened retaliation, Nezha took responsibility in the most extreme way: he surrendered his flesh and bones to repay the life his parents had given him and killed himself. His spirit survived, however. His teacher eventually constructed a new body for him from lotus roots and leaves, resurrecting Nezha in a stronger supernatural form. The reborn Nezha gained a fire-tipped spear and Wind-Fire Wheels that allowed him to race through the sky. He became a formidable divine warrior, fighting demons, dragons, and sometimes his own father before they were reconciled. Nezha's story concerns responsibility, rebellion against authority, voluntary death, and the creation of a new identity independent of his original body.",
+  liji:"Li Ji lived near a mountain cave inhabited by a gigantic serpent. The creature repeatedly demanded that nearby communities sacrifice young girls to it. Officials and ritual specialists failed to destroy the monster, so families were bribed into surrendering unwanted daughters. Nine girls had already been devoured when another sacrifice was demanded. Li Ji, the youngest daughter of a large and impoverished family, volunteered despite her parents' objections. She requested a sharp sword and a skilled hunting dog, then prepared rice cakes sweetened with malt. At the serpent's cave, she placed the cakes outside as bait. When the creature emerged and became distracted by the food, Li Ji released the dog to attack it. She followed with her sword, striking repeatedly until the giant serpent was dead. Entering its cave, Li Ji discovered the remains of the nine previous victims. Rather than celebrating herself, she lamented that they had died because they lacked the means to resist. Her victory ended the sacrifices and liberated the surrounding region. The local ruler rewarded Li Ji and elevated her family. Unlike many champions, Li Ji possesses no divine ancestry, immortality, or magical weapon. She triumphs through preparation, courage, clever bait, an ordinary blade, and cooperation with her dog.",
+  xelhua:"Xelhua was one of the giants who inhabited an earlier age of the world. When a catastrophic flood swept across the land, he and six of his kind escaped destruction by climbing a mountain sacred to the rain god Tlaloc. From its summit, they watched the waters cover the old world and erase nearly everything that had existed below. When the flood finally receded, Xelhua descended and travelled to Cholula. To commemorate the mountain that had saved him, he began constructing an enormous artificial hill from adobe bricks. The monument rose steadily above the plain as workers passed bricks from hand to hand. It became the great pyramid associated with Cholula, one of the largest sacred monuments ever raised in Mesoamerica. Some stories say Xelhua intended his pyramid to reach the heavens. Angered by this intrusion into their realm, the gods hurled fire or lightning from the sky. Builders were killed, the work was scattered, and the upper portion of the monument remained unfinished. Nevertheless, its immense foundations endured. Xelhua was also credited with establishing cities and settlements throughout the surrounding regions. He is remembered not primarily as a warrior, but as a survivor, architect, and founder. After witnessing the destruction of one world, Xelhua used his enormous strength to begin another—raising communities and sacred monuments wherever he travelled.",
+  tepoztecatl:"Tepoztécatl was born after a maiden encountered a supernatural bird or the invisible power of the wind. Because of this miraculous conception, he was regarded as a son or protégé of Ehécatl-Quetzalcoatl, lord of the wind. Rejected or endangered during infancy, Tepoztécatl survived through supernatural protection and was eventually raised by an elderly couple. He matured quickly, demonstrating unusual strength, intelligence, and fearlessness. The surrounding communities lived under the terror of a monster, commonly described as a great serpent dwelling near Xochicalco. The creature regularly demanded human victims. When Tepoztécatl's elderly guardian was selected for sacrifice, the young hero volunteered to take his place. Before departing, he collected sharp pieces of obsidian and concealed them upon his body. Tepoztécatl allowed the serpent to swallow him. Once inside its stomach, he used the obsidian blades to cut through its organs and tear open its body. He emerged alive, freed the people from the sacrifices, and returned home carrying signs of his victory. Other adventures credit him with acquiring a sacred musical instrument and bringing pulque, abundance, or ritual knowledge to his community. Tepoztécatl ultimately became the divine protector of Tepoztlán, associated with pulque, fertility, wind, and the sacred mountain overlooking the town.",
+  topiltzin:"Ce Acatl Topiltzin Quetzalcoatl was the priest-king of Tollan, the glorious capital of the Toltecs. His name combined One Reed, the calendar sign of his birth, with Our Prince and the sacred name of the Feathered Serpent. He was celebrated as a wise ruler, religious teacher, and guardian of knowledge. During Topiltzin's reign, Tollan became a city of extraordinary abundance and craftsmanship. Its people mastered metalwork, stonecutting, featherwork, agriculture, and the sacred arts. Topiltzin devoted himself to prayer, fasting, and penitential bloodletting. He offered butterflies, serpents, birds, and other precious things to the gods. Tezcatlipoca, his divine rival, sought to destroy both Topiltzin and the order he represented. Appearing in disguise, the trickster showed the aging ruler his reflection and persuaded him to drink intoxicating pulque. Topiltzin broke his sacred discipline and awoke overwhelmed by shame. Believing himself unworthy to continue ruling, he abandoned Tollan and journeyed eastward with his followers. Topiltzin performed wonders and established sacred places throughout his exile. At the journey's end, he either departed across the eastern sea or burned himself upon a funeral pyre. From the flames, his heart rose into the heavens and became the Morning Star. His promised return made him an enduring symbol of lost wisdom, sacred kingship, and renewal.",
+  bata:"Bata lived and worked with his elder brother Anpu until Anpu's wife attempted to seduce him. When Bata rejected her, she falsely accused him of attacking her. Anpu pursued Bata with murderous intent, but divine intervention separated the brothers and allowed Bata to reveal the truth. Bata then departed for the Valley of the Pine, placing his heart outside his body atop a tree's blossom. The gods created a beautiful wife for Bata, but through a series of supernatural events she was taken to Egypt and became pharaoh's wife. She revealed the secret of Bata's heart, causing the tree to be cut down and Bata to die. Anpu searched for the heart, restored it in water, and resurrected his brother. Bata then transformed into a magnificent bull and travelled to the royal court. His former wife recognized him and arranged for the bull's death. Drops of its blood produced two great trees. When she ordered those cut down, a splinter flew into her mouth and impregnated her. She later gave birth to Bata in a new human body. He grew into a prince, exposed the queen's actions, inherited the throne, and eventually appointed Anpu as his successor. Bata overcame betrayal and repeated murder through transformation, brotherhood, and rebirth.",
+  sinuhe:"Sinuhe served at the Egyptian court and accompanied a royal expedition abroad. When news arrived that Pharaoh Amenemhat had died, Sinuhe overheard a secret conversation and panicked. Without being accused or formally exiled, he fled Egypt, crossed the frontier, and nearly died of thirst in the wilderness. Eventually Sinuhe reached the lands of Syria-Palestine. A regional ruler named Amunenshi welcomed him, gave him land, and arranged his marriage to his eldest daughter. Sinuhe prospered, raised a family, commanded troops, protected his host's territory, and became renowned for his courage. His greatest martial exploit came when a powerful local champion challenged him to single combat. Sinuhe evaded the man's weapons, shot him with an arrow, and finished him with the challenger's own axe. He claimed the defeated warrior's possessions according to local custom. Despite his success abroad, Sinuhe remained homesick and feared dying without an Egyptian burial. Pharaoh Senusret invited him to return, assuring him that he had committed no deliberate offense. Sinuhe abandoned his foreign wealth to his children, returned to court, and received a house, royal favor, and a proper tomb. Sinuhe became powerful in foreign lands but considered his life complete only after reconciliation with Egypt.",
+  doomedprince:"At the Doomed Prince's birth, the Seven Hathors—goddesses who pronounced a child's destiny—declared that he would die through a crocodile, snake, or dog. His frightened father built an isolated house in the desert to protect him from the world. As the prince grew older, however, he saw a dog outside and asked to have it. Eventually he rejected confinement altogether, declaring that he must be allowed to confront the destiny decreed for him. Travelling abroad in disguise, the prince encountered numerous young nobles competing for a princess confined in a high tower. Her father would marry her to whichever suitor could reach her window. The Egyptian prince accomplished the seemingly impossible leap and won her love. Although her father initially rejected the unknown foreigner, the princess insisted upon marrying him. The prince eventually told his wife about his three possible deaths. She protected him from a snake by intoxicating and killing it while he slept. The prince refused to kill his beloved dog, even after it appeared to reveal its destined role. He later encountered the crocodile, which had become locked in conflict with a water spirit. The surviving story ends before his ultimate fate is revealed, leaving the prince forever suspended between courage, love, and the three deaths awaiting him."
+};
+
 /* ---------------- FACTIONS (which unit/god tables apply to which side) ---------------- */
 const FACTIONS = {
   egypt: { units:EG_UNITS, allGods:EG_GODS, name:"Egyptians", label:"☥ Egyptian",
@@ -753,14 +775,24 @@ let aiHalfTerrain = TMAP_INITIAL.slice(0,HALF_ROWS).map(row=>row.split("")); // 
 function freshPlayerHalfTerrain(){
   return deriveTMAP().slice(HALF_ROWS).map(row=>[...row]);
 }
-/* AI setup uses the same 4F/3M/3W allowance as the player. The fixed, asymmetric
-   pattern avoids all three AI buildings and leaves open routes from each building
-   to the center boundary; Phase 8.7 can later randomize this without changing the
+/* AI setup uses the same 5F/6M/5W allowance as the player (2026-07-28: raised again
+   from 4F/4M/4W, direct chat request -- extra [0,1] forest, [3,1]/[6,1] mountain, and
+   [7,1] water hexes added below, same discipline as the earlier 3->4 raise
+   (2026-07-27): verified via a standalone probe script against every combination of
+   open, non-building, non-existing-feature hexes that every AI building still keeps a
+   real findPath route to the center boundary [4,5]. Row 0 was deliberately excluded
+   from the candidate search -- test_newgods.js hardcodes a real mountain-chokepoint
+   probe at [0,0]/[1,0]/[2,0] and test_factions.js reads [4,0] as a known-unpainted
+   filler hex, and the FIRST candidate placement found (before this one) happened to
+   land right on top of both and broke them; row 0 is now off-limits for any future
+   AI_TERRAIN_LAYOUT addition too, not just this one). The fixed, asymmetric pattern
+   avoids all three AI buildings and leaves open routes from each building to the
+   center boundary; Phase 8.7 can later randomize this without changing the
    separate-half storage/composition established here. */
 const AI_TERRAIN_LAYOUT={
-  F:[[0,0],[8,0],[0,3],[8,5]],
-  M:[[3,2],[5,3],[3,4]],
-  W:[[0,5],[8,2],[5,5]]
+  F:[[0,0],[8,0],[0,3],[8,5],[0,1]],
+  M:[[3,2],[5,3],[3,4],[2,4],[3,1],[6,1]],
+  W:[[0,5],[8,2],[5,5],[6,2],[7,1]]
 };
 function freshAiHalfTerrain(){
   const half=deriveTMAP().slice(0,HALF_ROWS).map(row=>[...row]);
@@ -807,7 +839,7 @@ const routeOK = (c,r,flying)=> inBounds(c,r) && passable(c,r,flying) && !bldAt(c
 const elapsed = ()=>180-S.t;
 const S = {
   t:180, over:false, started:performance.now(),
-  food:60, favor:40, aiFood:60, aiFavor:40,
+  food:0, favor:0, aiFood:0, aiFavor:0,
   FOOD_CAP:120, FAVOR_CAP:250,
   units:[], effects:[], wards:[], deadHumans:[], training:[],
   bldDmg:[0,0],
@@ -993,6 +1025,7 @@ function waterTileBonus(side){
   for(const r of rows){ if(!TMAP[r]) continue; for(let c=0;c<COLS;c++) if(TMAP[r][c]==="W") count++; }
   return count*0.05;
 }
+const FOOD_RATE_MULT=0.9; // 2026-07-27 direct chat request: slow food production by 10%
 function tickEconomy(dt){
   const pCity=!getBld(0,"city").dead,  pTemple=!getBld(0,"temple").dead;
   const aCity=!getBld(1,"city").dead,  aTemple=!getBld(1,"temple").dead;
@@ -1003,9 +1036,9 @@ function tickEconomy(dt){
   // Quetzalcoatl: Morning Star -- food starts accelerated (+60% at t=0), fading linearly to +0% by 60s elapsed.
   const pMorning = hasPassive(0,"morningStar") ? Math.max(0,1-elapsed()/60)*0.6 : 0;
   const aMorning = hasPassive(1,"morningStar") ? Math.max(0,1-elapsed()/60)*0.6 : 0;
-  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*(1+pMorning)*(1+mandateBoost(0)));
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*(1+pMorning)*(1+mandateBoost(0)));
   S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*((pTemple?3.4:2.2)*(1+mandateBoost(0)) + waterTileBonus(0)));
-  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*(1+aMorning)*(1+mandateBoost(1)));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*(1+aMorning)*(1+mandateBoost(1)));
   S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*((aTemple?3:2)*(1+mandateBoost(1)) + waterTileBonus(1)));
 }
 
@@ -1057,7 +1090,7 @@ function bldAdjacent(b, flying){
 }
 
 /* ---------------- TERRAIN PAINTING (setup phase) ---------------- */
-const TERRAIN_BUDGET={F:4,M:3,W:3};
+const TERRAIN_BUDGET={F:5,M:6,W:5};
 function playerBldsReachGate(){
   return playerHalf.buildings
     .every(b=>bldAdjacent(b,false).some(h=>findPath(h,[[4,0]],false)!==null));
@@ -1237,12 +1270,33 @@ function renderHeroPicker(){
   $("herocards").innerHTML = HERO_KEYS.map(key=>{
     const u=FACTIONS[S.playerFaction].units[key], sel=S.heroPick.includes(key);
     return `<div class="herocard${sel?" selected":""}" data-hero="${key}" title="${unitTip(u)}">
-      <div class="uport">${unitPortrait(key,u,true)}</div><div class="pickdetails"><div class="uname">${u.name}</div>
+      <div class="herovisuals"><div class="uport">${unitPortrait(key,u,true)}</div>
+      <button class="tilebtn herolegendbtn" data-herolegend="${key}">Legend</button></div>
+      <div class="pickdetails"><div class="uname">${u.name}</div>
       <div class="pickdesc">${unitDescription(u)}</div><div class="pickstats">${unitStats(u)}</div></div></div>`;
   }).join("");
   $("herocount").textContent = S.heroPick.length+"/2";
   renderTray("herotray",S.heroPick,false);
   updateBattleDisabled();
+  closeHeroDetail();
+}
+let heroDetailKey=null;
+function renderHeroDetail(key){
+  const u=FACTIONS[S.playerFaction].units[key];
+  $("herodetailcard").innerHTML = `<div class="herocard" title="${unitTip(u)}">
+    <div class="herovisuals"><div class="uport">${unitPortrait(key,u,true)}</div></div>
+    <div class="pickdetails"><div class="uname">${u.name}</div>
+    <div class="pickdesc">${unitDescription(u)}</div><div class="pickstats">${unitStats(u)}</div></div></div>
+    <div class="legenddetail"><div class="legendlabel">Legend</div><div class="legendtext">${HERO_LEGEND[key]||""}</div></div>`;
+}
+function openHeroDetail(key){
+  heroDetailKey=key;
+  renderHeroDetail(key);
+  $("herodetail").style.display="flex";
+}
+function closeHeroDetail(){
+  heroDetailKey=null;
+  $("herodetail").style.display="none";
 }
 /* 2026-07-23 (direct chat request): god picker split into a 3-across tile grid
    (renderGodPicker, portrait + name only) and a full-detail overlay you tap into
@@ -1343,6 +1397,7 @@ function makeUnit(side,key,hex,path){
     path:path||null, pathIdx:0, free:!path,
     target:null, hold:false, dead:false, sidestepped:false,
     atkT:Math.random()*0.4, waitT:0, healT:0, assistFrom:null,
+    animMoveUntil:0, animAttackUntil:0, animHitUntil:0,
     buffUntil:0, buffSpd:1, buffDmg:1, slowUntil:0, stunUntil:0,
     // 2026-07-23: fields for the new Egyptian god powers/passives (mythology_game_design.xlsx)
     poisonUntil:0, poisonDps:0, weakenUntil:0, invisible:false, frenzyUntil:0, despawnAt:0, hasRevived:false,
@@ -1369,10 +1424,14 @@ function tickTraining(){
         if(src) at=src.hexes.slice().sort((a,b)=>hexDist(a,h)-hexDist(b,h))[0];
         else { t.readyAt+=0.4; continue; }
       }
-      // Ptah's Ushabti (def.spawnCount:3, added 2026-07-23): one training slot produces
-      // a small squad instead of a single unit. The first copy gets the drawn path and
-      // marches as normal; the rest spawn alongside it with no path (free-standing,
-      // same as an emergency on-building spawn) rather than each needing its own route.
+      // Generic multi-spawn plumbing (def.spawnCount, added 2026-07-23 for Ptah's
+      // Ushabti): when set, one training slot produces a small squad instead of a
+      // single unit. The first copy gets the drawn path and marches as normal; the
+      // rest spawn alongside it with no path (free-standing, same as an emergency
+      // on-building spawn) rather than each needing its own route. No unit currently
+      // sets spawnCount (Ushabti/Stone Monkey Army both reverted to a single spawn
+      // 2026-07-28, direct chat request) -- kept as reusable plumbing, not dead code,
+      // in case a future unit wants it again.
       const spawnN=unitsFor(t.side)[t.key].spawnCount||1;
       for(let k=0;k<spawnN;k++){
         const u=makeUnit(t.side,t.key,at,k===0?t.path:null);
@@ -1432,6 +1491,16 @@ document.addEventListener("pointerdown",e=>{
     if(idx>=0) S.loadout.splice(idx,1);
     else if(S.loadout.length<4) S.loadout.push(key);
     renderLoadout();
+    return;
+  }
+  const heroLegend=e.target.closest("[data-herolegend]");
+  if(heroLegend){
+    openHeroDetail(heroLegend.dataset.herolegend);
+    return;
+  }
+  const heroAction=e.target.closest("[data-heroaction]");
+  if(heroAction){
+    closeHeroDetail();
     return;
   }
   const heroCard=e.target.closest(".herocard");
@@ -1688,6 +1757,7 @@ function calcDmg(att,tgt){
   if(DMG_STRONG[att.def.dtype]===tgt.def.armor) d*=1.35;
   else if(DMG_WEAK[att.def.dtype]===tgt.def.armor) d*=0.7;
   if(att.def.dtype==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
+  if(terrain(tgt.hex[0],tgt.hex[1])==="W") d*=1.25; // 2026-07-27 direct chat request: units standing in water take 25% more damage, any attacker/dtype
   return d;
 }
 function dealDamage(att,tgt){
@@ -1724,6 +1794,7 @@ function dealDamage(att,tgt){
     }
   } else {
     tgt.hp-=d;
+    tgt.animHitUntil=elapsed()+0.18;
     if(att.def.slows) tgt.slowUntil=elapsed()+2;
     if(att.def.poisons){ tgt.poisonUntil=elapsed()+(att.def.poisonDur||4); tgt.poisonDps=att.def.poisonDps||8; }
     if(hasPassive(att.side,"pestilence")) tgt.weakenUntil=elapsed()+3; // Sekhmet: Pestilence
@@ -1838,8 +1909,8 @@ function moveToward(u,pt,dt){
   if((hasPassive(u.side,"lordOfFourSeas")||hasPassive(u.side,"floodCurrent")) &&
      (terrain(u.hex[0],u.hex[1])==="W" || neighbors(u.hex[0],u.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) terr*=1.2; // Long Wang: Lord of the Four Seas / Gong Gong: Flood Current
   const step=sp*terr*dt;
-  if(d<=Math.max(step,3)){ u.pos.x=pt.x; u.pos.y=pt.y; return true; }
-  u.pos.x+=dx/d*step; u.pos.y+=dy/d*step; return false;
+  if(d<=Math.max(step,3)){ u.pos.x=pt.x; u.pos.y=pt.y; u.animMoveUntil=elapsed()+0.12; return true; }
+  u.pos.x+=dx/d*step; u.pos.y+=dy/d*step; u.animMoveUntil=elapsed()+0.12; return false;
 }
 function followPath(u,dt){
   if(!u.path||u.pathIdx>=u.path.length){ u.path=null; u.free=true; return; }
@@ -1954,6 +2025,7 @@ function updateUnit(u,dt){
       }
       if(u.atkT<=0 && !stunned){
         u.atkT=1/u.def.as;
+        u.animAttackUntil=elapsed()+0.28;
         if(u.def.multiTarget){
           // Sekhmet's Plague Bearer: hits up to N enemies in range simultaneously
           const targets=S.units.filter(e=>!e.dead&&e.side!==u.side&&!e.invisible&&hexDist(u.hex,e.hex)<=rng
@@ -3104,6 +3176,10 @@ IMG_SPRITES.sheut        = { 0:"assets/sprites/sheut_back.png",        1:"assets
 IMG_SPRITES.ushabti      = { 0:"assets/sprites/ushabti_back.png",      1:"assets/sprites/ushabti_front.png" };
 IMG_SPRITES.scorpion     = { 0:"assets/sprites/scorpion_back.png",     1:"assets/sprites/scorpion_front.png" };
 IMG_SPRITES.serpopard    = { 0:"assets/sprites/serpopard_back.png",    1:"assets/sprites/serpopard_front.png" };
+/* Apis Bull (Osiris): dedicated steep-overhead mobile art added 2026-07-28.
+   It follows the same directional convention: player-controlled units show their
+   backs while marching upward; AI-controlled units show their fronts. */
+IMG_SPRITES.apis         = { 0:"assets/sprites/apis_back.png",         1:"assets/sprites/apis_front.png" };
 /* Myth-unit art for the 6 new Aztec gods (xipetotec/coatlicue/mictlantecuhtli/
    coyolxauhqui/ehecatl/itzpapalotl, decision 19's redesign) — uploaded 2026-07-23,
    same treatment as every prior batch: resized to 420px on the long side,
@@ -3290,11 +3366,33 @@ function spriteScale(big){ return (HEX/24)*(big?1.2:0.95)*1.56; } // 2026-07-16:
 // reason spriteScale() itself was extracted: two independent copies of this formula
 // already drifted apart once this session (decision 27's HP-bar fix).
 function unitSpriteScale(u){ return spriteScale(u.size>1)*(u.def.spriteScaleMult||1); }
+/* The Egyptian Spearman uses one bitmap rather than a frame sheet. Short elapsed-time
+   stamps drive visual-only canvas transforms; simulation position, attack timing,
+   hitboxes, and hex occupancy are never changed. */
+function spearmanAnim(u){
+  if(u.key!=="spear") return {x:0,y:0,rot:0};
+  const now=elapsed(), phase=now*10.5+u.id*0.73;
+  const moving=now<(u.animMoveUntil||0);
+  const walk=moving?Math.sin(phase):Math.sin(now*2.2+u.id)*0.18;
+  const attackLeft=Math.max(0,(u.animAttackUntil||0)-now);
+  const attack=attackLeft?Math.sin((1-attackLeft/0.28)*Math.PI):0;
+  const hitLeft=Math.max(0,(u.animHitUntil||0)-now);
+  const hit=hitLeft?Math.sin((1-hitLeft/0.18)*Math.PI*2):0;
+  const dir=u.side===0?-1:1;
+  const s=unitSpriteScale(u);
+  return {
+    x:(walk*0.45+hit*1.15)*s,
+    y:(Math.abs(walk)*-0.7+attack*dir*1.35)*s,
+    rot:walk*0.012+hit*0.018
+  };
+}
 function drawUnitSprite(u){
   const s=unitSpriteScale(u);
   ctx.save();
   const p=toScreen(u.pos.x,u.pos.y); // camera tilt: project the anchor only, sprite art itself stays undistorted
-  ctx.translate(p.x,p.y+HEX*0.42);
+  const anim=spearmanAnim(u);
+  ctx.translate(p.x+anim.x,p.y+HEX*0.42+anim.y);
+  ctx.rotate(anim.rot);
   const entry=IMG_SPRITES[u.key];
   const perSide=entry && typeof entry==="object";
   if(u.side===1 && !perSide) ctx.scale(-1,1); // per-side art is already correctly oriented; the legacy mirror is only for one shared image
@@ -3683,7 +3781,7 @@ function draw(){
     // -- the old fixed offsets (HEX*0.78/1.05) landed around mid-torso once real image
     // art (much taller than the original vector sprites) became the default renderer.
     if(u.hp<u.maxhp){
-      const headY=p.y+HEX*0.42-32*unitSpriteScale(u)-HEX*0.15;
+      const headY=p.y+HEX*0.42+spearmanAnim(u).y-32*unitSpriteScale(u)-HEX*0.15;
       hpBar(p.x,headY,HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff",0.7);
     }
     ctx.font=`${HEX*0.45}px serif`;
@@ -3894,7 +3992,7 @@ function setPlayerFaction(faction){
 function startMatch(keepTerrain){
   applyFactionUI();
   S.t=180; S.over=false;
-  S.food=60; S.favor=40; S.aiFood=60; S.aiFavor=40;
+  S.food=0; S.favor=0; S.aiFood=0; S.aiFavor=0;
   S.units.length=0; S.effects.length=0; S.wards.length=0; S.deadHumans.length=0; S.training.length=0;
   S.bldDmg=[0,0];
   HUMAN_KEYS = Object.keys(FACTIONS[S.playerFaction].units).filter(k=>FACTIONS[S.playerFaction].units[k].cat==="human");
