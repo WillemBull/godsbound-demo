@@ -4230,22 +4230,67 @@ function squashedHexPoly(g,cx,cy,s){
    centered, cropped to fill) into the given rect and clipped to it so it never bleeds
    into the other half. No chromaKeyed() -- see the IMG_SPRITES.arena_bg_* comment for
    why these opaque photos deliberately skip that step. */
-function drawArenaBgRect(g,faction,x,y,w,h){
+/* Where a faction's arena art lands inside a given box, cover-fitted. Split out of
+   drawArenaBgRect (2026-07-29) so the neutral-band cross-fade can draw the SAME placement
+   repeatedly through different clips -- calling drawArenaBgRect per strip would re-fit the
+   image to each strip's own tiny box and tear the scene apart. Returns null when the art
+   hasn't decoded yet, which is the caller's cue to use the flat fallback colour. */
+function arenaBgPlacement(faction,x,y,w,h){
   const img=getSpriteImage("arena_bg_"+faction);
+  if(!(img && img.complete && img.naturalWidth>0)) return null;
+  const boxAspect=w/h, imgAspect=img.naturalWidth/img.naturalHeight;
+  let dw,dh;
+  if(imgAspect>boxAspect){ dh=h; dw=dh*imgAspect; } else { dw=w; dh=dw/imgAspect; }
+  return {img, dx:x+w/2-dw/2, dy:y+h/2-dh/2, dw, dh};
+}
+const ARENA_BG_FALLBACK = faction => faction==="egypt" ? "#c7a15c" : "#6f8a41";
+function drawArenaBgRect(g,faction,x,y,w,h){
+  const pl=arenaBgPlacement(faction,x,y,w,h);
   g.save();
   g.beginPath(); g.rect(x,y,w,h); g.clip();
-  if(img && img.complete && img.naturalWidth>0){
-    const boxAspect=w/h, imgAspect=img.naturalWidth/img.naturalHeight;
-    let dw,dh;
-    if(imgAspect>boxAspect){ dh=h; dw=dh*imgAspect; } else { dw=w; dh=dw/imgAspect; }
-    g.drawImage(img,x+w/2-dw/2,y+h/2-dh/2,dw,dh);
+  if(pl){
+    g.drawImage(pl.img,pl.dx,pl.dy,pl.dw,pl.dh);
   } else {
     // still decoding (or missing) -- flat color matching that faction's old base
     // terrain look, so there's no blank/black flash while the real art loads in
-    g.fillStyle = faction==="egypt" ? "#c7a15c" : "#6f8a41";
+    g.fillStyle = ARENA_BG_FALLBACK(faction);
     g.fillRect(x,y,w,h);
   }
   g.restore();
+}
+/* Vertical extent of the neutral band, taken across BOTH column parities: odd columns sit
+   half a row lower under the odd-q offset, so bounds from one column alone would clip the
+   fade short. Returns null when there is no band (NEUTRAL_ROWS===0), which is the caller's
+   cue to fall back to the original hard seam. */
+function neutralBandSpan(){
+  if(NEUTRAL_ROWS<1) return null;
+  const half=HEX*SQ3/2, tops=[], bots=[];
+  for(let c=0;c<COLS;c++){
+    tops.push(hexCenter(c,AI_ROWS).y-half);
+    bots.push(hexCenter(c,PLAYER_ROW0-1).y+half);
+  }
+  return {top:Math.min(...tops), bot:Math.max(...bots)};
+}
+/* Cross-fade the far faction's arena art into the near one across the neutral band
+   (2026-07-29, direct request: "make the middle hexes fade from one background into the
+   other"). Drawn as ~1px horizontal strips of increasing alpha rather than a canvas
+   gradient mask, because a gradient can only fill a shape -- it cannot mask an already
+   drawn image -- and the offscreen-canvas alternative would have to re-apply the tilt
+   transform by hand. renderBG only runs on resize and terrain changes, not per frame, so
+   the strip count is free. */
+function drawArenaBgFade(g,faction,x,y,w,h,fadeTop,fadeBot){
+  const pl=arenaBgPlacement(faction,x,y,w,h);
+  const span=Math.max(1,fadeBot-fadeTop);
+  const steps=Math.max(8,Math.ceil(span));
+  for(let i=0;i<steps;i++){
+    const y0=fadeTop+span*(i/steps), y1=fadeTop+span*((i+1)/steps);
+    g.save();
+    g.globalAlpha=(i+0.5)/steps;
+    g.beginPath(); g.rect(x,y0,w,(y1-y0)+0.5); g.clip(); // +0.5 overlap so strips never leave hairline seams
+    if(pl) g.drawImage(pl.img,pl.dx,pl.dy,pl.dw,pl.dh);
+    else { g.fillStyle=ARENA_BG_FALLBACK(faction); g.fillRect(x,y0,w,(y1-y0)+0.5); }
+    g.restore();
+  }
 }
 /* Special terrain tiles (forest/mountain/water) are "simply placed on top" of the
    transparent hex grid -- a compact icon sized to sit within the hex, not a full-hex
@@ -4355,20 +4400,42 @@ function renderBG(){
     // local half-board: entirely the player's own territory, one backdrop, no split
     drawArenaBgRect(g,factionForSide(0),bgLeft,bgTop,bgRight-bgLeft,bgBot-bgTop);
   } else {
-    const seam=arenaMidSeam(bgLeft,bgRight), seamY=seam.map(p=>p[1]);
-    // Clip each cohesive faction scene to its true half-board footprint. The seam
-    // follows the odd-q column offsets, so every center hex is shared evenly by the
-    // two scenes instead of odd columns inheriting a split calculated from column 0.
-    g.save();g.beginPath();g.moveTo(bgLeft,bgTop);g.lineTo(bgRight,bgTop);
-    for(let i=seam.length-1;i>=0;i--)g.lineTo(seam[i][0],seam[i][1]);
-    g.closePath();g.clip();
-    drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,Math.max(...seamY)-bgTop);
-    g.restore();
-    g.save();g.beginPath();g.moveTo(seam[0][0],seam[0][1]);
-    for(let i=1;i<seam.length;i++)g.lineTo(seam[i][0],seam[i][1]);
-    g.lineTo(bgRight,bgBot);g.lineTo(bgLeft,bgBot);g.closePath();g.clip();
-    drawArenaBgRect(g,factionForSide(0),bgLeft,Math.min(...seamY),bgRight-bgLeft,bgBot-Math.min(...seamY));
-    g.restore();
+    const band=neutralBandSpan();
+    if(band){
+      /* With a neutral band, the two scenes CROSS-FADE through it instead of butting
+         against a hard seam: the AI's art is laid down continuously as far as the band's
+         bottom edge, then the player's art is painted over it ramping 0 -> 1 alpha across
+         the band and solid below. The band is no-man's land, so neither faction's ground
+         should own it outright -- it reads as one scene turning into the other. */
+      const bgW=bgRight-bgLeft;
+      g.save();
+      g.beginPath(); g.rect(bgLeft,bgTop,bgW,band.bot-bgTop); g.clip();
+      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgW,band.bot-bgTop);
+      g.restore();
+      // the player's half, cover-fitted to its own full footprint so the faded part and
+      // the solid part below are one continuous image, not two differently-scaled copies
+      const nearY=band.top, nearH=bgBot-band.top;
+      g.save();
+      g.beginPath(); g.rect(bgLeft,band.bot,bgW,bgBot-band.bot); g.clip();
+      drawArenaBgRect(g,factionForSide(0),bgLeft,nearY,bgW,nearH);
+      g.restore();
+      drawArenaBgFade(g,factionForSide(0),bgLeft,nearY,bgW,nearH,band.top,band.bot);
+    } else {
+      const seam=arenaMidSeam(bgLeft,bgRight), seamY=seam.map(p=>p[1]);
+      // No band: the original hard split, clipped to each half's true footprint. The seam
+      // follows the odd-q column offsets, so every center hex is shared evenly by the
+      // two scenes instead of odd columns inheriting a split calculated from column 0.
+      g.save();g.beginPath();g.moveTo(bgLeft,bgTop);g.lineTo(bgRight,bgTop);
+      for(let i=seam.length-1;i>=0;i--)g.lineTo(seam[i][0],seam[i][1]);
+      g.closePath();g.clip();
+      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,Math.max(...seamY)-bgTop);
+      g.restore();
+      g.save();g.beginPath();g.moveTo(seam[0][0],seam[0][1]);
+      for(let i=1;i<seam.length;i++)g.lineTo(seam[i][0],seam[i][1]);
+      g.lineTo(bgRight,bgBot);g.lineTo(bgLeft,bgBot);g.closePath();g.clip();
+      drawArenaBgRect(g,factionForSide(0),bgLeft,Math.min(...seamY),bgRight-bgLeft,bgBot-Math.min(...seamY));
+      g.restore();
+    }
   }
   for(let r=0;r<TMAP.length;r++)for(let c=0;c<COLS;c++){
     const ct=hexCenter(c,r);
