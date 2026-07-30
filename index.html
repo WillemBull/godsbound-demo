@@ -498,7 +498,7 @@ const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
 const EG_UNITS = {
   spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.75,1:1.75}},
   archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:22, as:0.5, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2425,1:1.6913}},
-  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:14, as:0.675,range:1, speed:0.516375, size:1, train:1, splash:0.8, spriteScaleMult:{0:1.1660,1:1.6134}},
+  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:14, as:0.8,  range:1, speed:0.516375, size:1, train:1, splash:0.8, spriteScaleMult:{0:1.1660,1:1.6134}},
   chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2}, // 2026-07-28 direct chat request: dmg 10->12 (balance pass -- was costing more than Axemen for less dps AND less hp)
   priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.1197,1:1.3663}},
   sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
@@ -539,8 +539,12 @@ const CN_UNITS = {
   // -- hp/dmg/speed/hex-capacity/every other gameplay stat below is untouched.
   ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1473,1:1.4949}},
   xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:0.9535,1:1.4197}},
-  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:0.9586,1:1.4661}},
+  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:14, as:0.8,  range:1, splash:0.8, speed:0.516375, size:1, train:1, spriteScaleMult:{0:0.9586,1:1.4661}},
   horse:  {name:"Horse Archer",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2, spriteScaleMult:1.2}, // 2026-07-28 direct chat request: dmg 10->12, see spear/chariot's matching note
+  /* Siege Ram (roadmap R4) -- China's building-only unit. Identical stat block to Egypt's
+     Elephant Rider and Aztec's Tlequauitl Bearer, varying only name and art, so R5's faction
+     win-rate comparison cannot be confounded by the new units. */
+  ram:    {name:"Siege Ram",   emoji:"🪵", cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:0.9489,1:1.2338}},
   nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
@@ -570,8 +574,14 @@ const CN_UNITS = {
 const AZ_UNITS = {
   macuahuitl: {name:"Macuahuitl Warrior",emoji:"🗡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2957,1:1.6484}},
   atlatl:     {name:"Atlatl Thrower",    emoji:"🎯",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1973,1:1.4582}},
-  jaguar:     {name:"Jaguar Warrior",    emoji:"🐆",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.0608,1:1.4582}},
+  jaguar:     {name:"Jaguar Warrior",    emoji:"🐆",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:14, as:0.8,  range:1, splash:0.8, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.0608,1:1.4582}},
   otomi:      {name:"Otomi Skirmisher", emoji:"🏃",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2, spriteScaleMult:{0:1.3145,1:1.7634}}, // 2026-07-28 direct chat request: dmg 10->12, see chariot's matching note
+  /* Tlequauitl Bearer (roadmap R4) -- the Aztec building-only unit, named for the sacred
+     fire-drill used to kindle the New Fire. Aztec conquest WAS temple-burning: the city was
+     left standing and only the temple razed, which is why this unit walks past your army --
+     your soldiers were never its objective. Named after its implement, matching the roster's
+     existing convention (Macuahuitl Warrior, Atlatl Thrower). Same stat block as the Ram. */
+  tlequauitl: {name:"Tlequauitl Bearer", emoji:"🔥",  cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   cihuacoatl: {name:"Cihuacoatl Priest", emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.0395,1:1.2816}},
   tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
@@ -600,6 +610,12 @@ const GR_UNITS = {
   toxotes:   {name:"Toxotes",            emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
   peltast:   {name:"Peltast",            emoji:"🎯",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"ranged", hp:105, dmg:16, as:0.9, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
   companion: {name:"Companion Cavalry", emoji:"🐎",  cost:{f:35}, cat:"human", armor:"heavy",    dtype:"melee",  hp:90,  dmg:12, as:1.1, range:1, speed:1.03275, size:1, train:2}, // 2026-07-28: dmg 10->12, kept in sync with Horse Archer's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
+  /* Krios Ram (roadmap R4) -- the dormant Greek roster kept in sync. NOTE: Greek has NO
+     splash unit, deliberately. Its 30f heavy tier is the Peltast, which is RANGED -- giving
+     it the melee splash block would make Greek's splash a ranged unit and break the mirror,
+     and the only heavy melee (Companion Cavalry) is off-tier at 35f. Assign it when Greek is
+     actually woken up and someone can make that call deliberately. */
+  krios:     {name:"Krios Ram",          emoji:"🪵",  cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   priestess: {name:"Priestess",          emoji:"🏺",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:1.75},
   atalanta:  {name:"Atalanta",           emoji:"⚔️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee",   hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   odysseus:  {name:"Odysseus",           emoji:"🏹", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged",  hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28: dmg 16->20, kept in sync with the ranged hero archetype's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
@@ -3389,12 +3405,12 @@ let aiWave=null, lastLane=null;
    already went through — not assumed tuned just because it's wired up. */
 const AI_PROFILES={
   balanced:{
-    china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,sunwukong:70,nuwa:110,longwang:145}, pool:["ji","ji","xbow","xbow","dao","horse","monk"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
-    egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,osiris:145}, pool:["spear","spear","archer","archer","axe","chariot","priest"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
+    china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,sunwukong:70,nuwa:110,longwang:145}, pool:["ji","ji","xbow","xbow","dao","horse","monk","ram"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
+    egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,osiris:145}, pool:["spear","spear","archer","archer","axe","chariot","priest","elephant"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
   },
   aggressive:{
-    china:{trainMin:1.8, trainRand:1.4, godSched:{sunwukong:30,jade:75,longwang:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","horse","xbow"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
-    egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,osiris:120,isis:150}, pool:["spear","spear","spear","axe","axe","chariot","archer"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
+    china:{trainMin:1.8, trainRand:1.4, godSched:{sunwukong:30,jade:75,longwang:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","horse","xbow","ram"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
+    egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,osiris:120,isis:150}, pool:["spear","spear","spear","axe","axe","chariot","archer","elephant"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
   }
 };
 let aiProfile=AI_PROFILES.balanced.china;
@@ -3764,7 +3780,7 @@ const SPRITE_KEY={spear:"spearman",ji:"spearman",archer:"archer",xbow:"archer",a
   falcon:"falcon",lion:"lion",mummy:"mummy",sphinx:"sphinx",
   celestial:"celestial",dragon:"dragon",stone:"golem",
   stonemonkey:"spearman",xiangliu:"dragon",xiaotianquan:"lion",fenghuang:"falcon",huoshu:"golem",jaderabbit:"priest",kui:"demon",
-  slinger:"archer",camel:"rider",khopesh:"spearman",elephant:"rider", // elephant: placeholder vector shape until real art exists -- "rider" is the mounted silhouette (as camel), and size:2 renders it large
+  slinger:"archer",camel:"rider",khopesh:"spearman",elephant:"rider",ram:"golem",krios:"golem",tlequauitl:"priest", // elephant: placeholder vector shape until real art exists -- "rider" is the mounted silhouette (as camel), and size:2 renders it large
   phoenix:"falcon",jackal:"demon",
   macuahuitl:"spearman",atlatl:"archer",jaguar:"axeman",otomi:"rider",cihuacoatl:"priest",
   hoplite:"spearman",toxotes:"archer",peltast:"archer",companion:"rider",priestess:"priest",
