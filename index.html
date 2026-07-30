@@ -497,8 +497,8 @@ const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
 /* ---------------- UNIT DATA ---------------- */
 const EG_UNITS = {
   spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.75,1:1.75}},
-  archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2425,1:1.6913}},
-  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1660,1:1.6134}},
+  archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:22, as:0.5, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2425,1:1.6913}},
+  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:14, as:0.675,range:1, speed:0.516375, size:1, train:1, splash:0.8, spriteScaleMult:{0:1.1660,1:1.6134}},
   chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2}, // 2026-07-28 direct chat request: dmg 10->12 (balance pass -- was costing more than Axemen for less dps AND less hp)
   priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.1197,1:1.3663}},
   sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
@@ -508,9 +508,17 @@ const EG_UNITS = {
   lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
   mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
   sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"bastet", strongerNearBuildings:true}, // 2026-07-23: reassigned from Isis to Bastet per mythology_game_design.xlsx
-  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1, spriteScaleMult:{0:1.3557,1:1.8723}},
+  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:7,  as:1.4, range:2, speed:0.57375,  size:1, train:1, spriteScaleMult:{0:1.3557,1:1.8723}},
   camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2, spriteScaleMult:1.7},
-  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2, spriteScaleMult:{0:1.4678,1:2.7912}},
+  /* Elephant Rider (roadmap R3, 2026-07-29) -- the FIRST human unit in the game able to
+     threaten a building. Until now `siege`/`dtype:"crushing"` existed only on heroes and
+     myths, so the units a player actually spams could not advance the win condition at all.
+     dtype "crushing" (x1.2 vs buildings) + siege (x1.6) at 20 dmg / 0.6 as = ~23 dmg/sec to
+     a building: a 900 HP city in ~40s of UNINTERRUPTED contact, which is the point -- it is
+     slower than every other human and never fights back, so it only pays off if escorted.
+     size:2 renders it large (see draw()'s `u.size>1` branch). */
+  elephant:{name:"Elephant Rider",emoji:"\u{1F418}", cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
+  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:30, as:0.6, range:1, speed:0.4876875,size:1, train:2, spriteScaleMult:{0:1.4678,1:2.7912}},
   phoenix:{name:"Bennu Bird",  emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra", revivesOnce:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "phoenix" -- same art/stats, now revives once on death)
   jackal: {name:"Anubite",     emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis", fearImmune:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "jackal")
   // ---- New Egyptian myths added 2026-07-23 to match mythology_game_design.xlsx
@@ -2144,6 +2152,32 @@ function dealDamage(att,tgt){
       if(tgt.def.cat==="human") S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
       grantInevitable(tgt.side);
     }
+    /* Ordinary SPLASH (roadmap R1, 2026-07-29): a fraction of this hit's damage to every
+       other unit within 1 hex of the primary target, on the DEFENDING side only.
+
+       Deliberately a separate field from chaosSplash below, not a reuse of it. chaosSplash
+       is Set's/Xipe Totec's chaos flavour and hits everything nearby including the
+       attacker's own allies; a splash weapon in a player's hand must never friendly-fire,
+       or picking it becomes a trap rather than a choice. The kill handling is a deliberate
+       mirror of chaosSplash's — dead flag, boom fx, S.deadHumans for humans (so Osiris can
+       still revive them), grantInevitable — because a unit killed by splash is a real kill
+       and must feed every on-death system identically.
+
+       Only reached when the primary target is a unit: dealDamage's isBldg(tgt) branch
+       returns long before this, so splash never radiates off a building. */
+    if(att.def.splash){
+      for(const u of S.units){
+        if(u.dead||u===tgt||u===att) continue;
+        if(u.side!==tgt.side) continue; // defending side only -- never the attacker's own
+        if(hexDist(u.hex,tgt.hex)>1) continue;
+        u.hp-=d*att.def.splash;
+        if(u.hp<=0 && !u.dead){
+          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
+          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+          grantInevitable(u.side);
+        }
+      }
+    }
     // Set's Apep: chaos incarnate -- splashes a fraction of this hit's damage to every OTHER unit
     // (any side, including the attacker's own allies) within 1 hex of the primary target.
     if(att.def.chaosSplash){
@@ -2226,6 +2260,16 @@ function hiddenFrom(e,observer){
   return typeof observer==="number" ? false : tgt!==observer;
 }
 function scanEncounter(u){
+  /* Building-only units (roadmap R2, 2026-07-29) never acquire a unit target at all.
+     Returning null here covers BOTH of updateUnit's callers in one place: the
+     "defenders in range interrupt a siege" branch finds no foe so the building target
+     survives, and the acquire branch falls straight through to the march-to-closest-
+     building logic. They remain perfectly targetABLE -- every other unit's own
+     scanEncounter still sees them as an ordinary enemy, which is the whole tension:
+     you must spend something to stop one, and it will never stop to fight you back.
+     Note this also means a frenzy (Sekhmet's Eye Unleashed) cannot make one attack
+     units; building-only is treated as absolute rather than as a preference. */
+  if(u.def.targetsBuildings) return null;
   const rng=Math.max(u.def.range,1);
   const frenzied=elapsed()<u.frenzyUntil; // Sekhmet's Eye Unleashed: attack the nearest unit regardless of side
   let best=null,bs=-1e9;
@@ -2293,7 +2337,14 @@ function followPath(u,dt){
     // their fight instead of blindly waiting/sidestepping.
     const blocker=S.units.find(o=>!o.dead&&o!==u&&o.hex[0]===nh[0]&&o.hex[1]===nh[1]
       &&o.side===u.side&&!!o.flying===!!u.flying);
-    if(blocker && blocker.target && !blocker.target.dead){
+    /* R2: a building-only unit must not be pulled into a UNIT fight by the join-the-fight
+       assist either -- that path sets u.target directly and so bypasses scanEncounter's
+       guard entirely. It may still join a blocker who is attacking a BUILDING, which is
+       exactly where it wanted to go anyway. (This branch is not named in R2's step; it was
+       added out-of-sequence after the step was written, and leaving it unguarded would have
+       silently broken the rule the step exists to establish.) */
+    if(blocker && blocker.target && !blocker.target.dead
+       && !(u.def.targetsBuildings && !isBldg(blocker.target))){
       const jt=blocker.target, rng=Math.max(u.def.range,1);
       if(unitDist(u,jt)<=rng){ u.target=jt; u.waitT=0; u.assistFrom=null; return; } // already in range -- just attack, no detour needed
       const goalHexes=isBldg(jt)?jt.hexes:[jt.hex];
@@ -3713,7 +3764,7 @@ const SPRITE_KEY={spear:"spearman",ji:"spearman",archer:"archer",xbow:"archer",a
   falcon:"falcon",lion:"lion",mummy:"mummy",sphinx:"sphinx",
   celestial:"celestial",dragon:"dragon",stone:"golem",
   stonemonkey:"spearman",xiangliu:"dragon",xiaotianquan:"lion",fenghuang:"falcon",huoshu:"golem",jaderabbit:"priest",kui:"demon",
-  slinger:"archer",camel:"rider",khopesh:"spearman",
+  slinger:"archer",camel:"rider",khopesh:"spearman",elephant:"rider", // elephant: placeholder vector shape until real art exists -- "rider" is the mounted silhouette (as camel), and size:2 renders it large
   phoenix:"falcon",jackal:"demon",
   macuahuitl:"spearman",atlatl:"archer",jaguar:"axeman",otomi:"rider",cihuacoatl:"priest",
   hoplite:"spearman",toxotes:"archer",peltast:"archer",companion:"rider",priestess:"priest",
