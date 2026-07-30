@@ -4408,9 +4408,28 @@ function renderBG(){
   // currently the player's hexes on the bottom are only half filled"). Padding bumped
   // to a full HEX beyond that true bound as well, so the art visibly overhangs past
   // the arena's top/bottom edges instead of just barely reaching them.
-  const bgLeft=hexCenter(0,0).x-HEX*1.3, bgRight=hexCenter(COLS-1,0).x+HEX*1.3;
-  const bgTop=Math.min(hexCenter(0,0).y,hexCenter(1,0).y)-HEX*1.4;
-  const bgBot=Math.max(hexCenter(0,TMAP.length-1).y,hexCenter(1,TMAP.length-1).y)+HEX*1.4;
+  /* 2026-07-29: the arena art now BLEEDS to the edges of the board area instead of
+     stopping a fixed pad beyond the outermost hexes.
+
+     Why: the board is WIDTH-bound (HEX is capped by the 393px phone width), so whatever
+     vertical room is left over shows up as bare #boardwrap background -- black bands above
+     and below the arena. How much is left over depends entirely on the device's aspect
+     ratio and on how tall the two bars render, so growing the bars only ever removes the
+     black on ONE screen size; it comes straight back on any other. Willem hit exactly that:
+     the bars were tuned against a phone screenshot and the browser emulator still showed
+     bands. Painting the art out to the real canvas edges fixes it everywhere at once, with
+     no measurement and nothing to keep in sync.
+
+     The canvas edges are in SCREEN space while this code draws inside the tilt transform,
+     so they are converted back through fromScreen() -- using raw 0/H here would under-cover
+     by the TILT_SQUASH factor. Math.min/max keeps the old padding as a floor, so the art
+     still overhangs the hexes on a screen where the canvas is tighter than that pad. */
+  const canvasW=bg.width/DPR, canvasH=bg.height/DPR;
+  const edgeTop=fromScreen(0,0).y, edgeBot=fromScreen(0,canvasH).y;
+  const bgLeft=Math.min(hexCenter(0,0).x-HEX*1.3, 0);
+  const bgRight=Math.max(hexCenter(COLS-1,0).x+HEX*1.3, canvasW);
+  const bgTop=Math.min(Math.min(hexCenter(0,0).y,hexCenter(1,0).y)-HEX*1.4, edgeTop);
+  const bgBot=Math.max(Math.max(hexCenter(0,TMAP.length-1).y,hexCenter(1,TMAP.length-1).y)+HEX*1.4, edgeBot);
   if(S.setupStep==="terrain"){
     // local half-board: entirely the player's own territory, one backdrop, no split
     drawArenaBgRect(g,factionForSide(0),bgLeft,bgTop,bgRight-bgLeft,bgBot-bgTop);
