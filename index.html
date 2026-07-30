@@ -496,11 +496,11 @@ const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
 
 /* ---------------- UNIT DATA ---------------- */
 const EG_UNITS = {
-  spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
-  archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
-  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
+  spear:  {name:"Spearmen",   emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",   hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.75,1:1.75}},
+  archer: {name:"Archers",    emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged",  hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2425,1:1.6913}},
+  axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1660,1:1.6134}},
   chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2}, // 2026-07-28 direct chat request: dmg 10->12 (balance pass -- was costing more than Axemen for less dps AND less hp)
-  priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.1197,1:1.3663}},
   sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   doomedprince:{name:"The Doomed Prince",emoji:"🐍", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20 (20 dps) -- was under half the melee hero's power score despite identical cost
   bata:{name:"Bata",         emoji:"🐂",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
@@ -508,9 +508,9 @@ const EG_UNITS = {
   lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
   mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
   sphinx: {name:"Sphinx",     emoji:"🦁",  cost:{v:90}, cat:"myth", armor:"heavy",  dtype:"crushing",hp:420, dmg:30, as:0.8, range:1, speed:0.459, size:2, train:2, siege:true, god:"bastet", strongerNearBuildings:true}, // 2026-07-23: reassigned from Isis to Bastet per mythology_game_design.xlsx
-  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1, spriteScaleMult:1.7},
+  slinger:{name:"Slingers",    emoji:"🪨", cost:{f:15}, cat:"human", armor:"light",    dtype:"ranged",  hp:60,  dmg:9,  as:1.1, range:2, speed:0.57375,  size:1, train:1, spriteScaleMult:{0:1.3557,1:1.8723}},
   camel:  {name:"Camel Raider",emoji:"🐪", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:115, dmg:14, as:1.0, range:1, speed:0.918,   size:1, train:2, spriteScaleMult:1.7},
-  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2, spriteScaleMult:1.7},
+  khopesh:{name:"Khopesh Elite",emoji:"⚔️",cost:{f:40}, cat:"human", armor:"shielded", dtype:"melee",   hp:150, dmg:18, as:0.9, range:1, speed:0.4876875,size:1, train:2, spriteScaleMult:{0:1.4678,1:2.7912}},
   phoenix:{name:"Bennu Bird",  emoji:"🔥", cost:{v:70}, cat:"myth", armor:"light",   dtype:"melee",   hp:230, dmg:24, as:1.0, range:1, speed:1.03275,  size:2, train:2, flying:true, god:"ra", revivesOnce:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "phoenix" -- same art/stats, now revives once on death)
   jackal: {name:"Anubite",     emoji:"🐺",cost:{v:50}, cat:"myth", armor:"light",   dtype:"melee",   hp:180, dmg:20, as:1.2, range:1, speed:0.860625, size:1, train:2, god:"anubis", fearImmune:true}, // 2026-07-23: renamed per mythology_game_design.xlsx (key kept as "jackal")
   // ---- New Egyptian myths added 2026-07-23 to match mythology_game_design.xlsx
@@ -526,15 +526,14 @@ const EG_UNITS = {
   ushabti:  {name:"Ushabti",   emoji:"🗿", cost:{v:30}, cat:"myth", armor:"light", dtype:"melee",  hp:100, dmg:8,  as:1.0, range:1, speed:0.860625, size:1, train:2, god:"ptah"} // 2026-07-28 direct chat request: hp 70->100 (balance pass -- already the cheapest myth, so a survivability buff rather than a further cost cut)
 };
 const CN_UNITS = {
-  // 2026-07-24 direct chat request ("align sizes between the [Chinese] human
-  // sprites and make them 20% bigger"): spriteScaleMult:1.2 is purely cosmetic
+  // Foot-unit spriteScaleMult values are purely cosmetic
   // (read only by drawUnitSprite/the HP-bar head-offset calc via unitSpriteScale())
   // -- hp/dmg/speed/hex-capacity/every other gameplay stat below is untouched.
-  ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
-  xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
-  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.2},
+  ji:     {name:"Ji Infantry", emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1473,1:1.4949}},
+  xbow:   {name:"Crossbowmen", emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:0.9535,1:1.4197}},
+  dao:    {name:"Dao Swords.", emoji:"⚔️", cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:0.9586,1:1.4661}},
   horse:  {name:"Horse Archer",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2, spriteScaleMult:1.2}, // 2026-07-28 direct chat request: dmg 10->12, see spear/chariot's matching note
-  monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:1.2},
+  monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:0.9489,1:1.2338}},
   nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
   liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
@@ -561,11 +560,11 @@ const CN_UNITS = {
   kui:      {name:"Kui",         emoji:"🐂",  cost:{v:85}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:30, as:0.85,range:1, speed:0.5, size:2, train:2, siege:true, god:"leigong"} // one-legged ox-like thunder creature
 };
 const AZ_UNITS = {
-  macuahuitl: {name:"Macuahuitl Warrior",emoji:"🗡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
-  atlatl:     {name:"Atlatl Thrower",    emoji:"🎯",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
-  jaguar:     {name:"Jaguar Warrior",    emoji:"🐆",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1},
-  otomi:      {name:"Otomi Skirmisher", emoji:"🏃",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2}, // 2026-07-28 direct chat request: dmg 10->12, see chariot's matching note
-  cihuacoatl: {name:"Cihuacoatl Priest", emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  macuahuitl: {name:"Macuahuitl Warrior",emoji:"🗡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.2957,1:1.6484}},
+  atlatl:     {name:"Atlatl Thrower",    emoji:"🎯",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.1973,1:1.4582}},
+  jaguar:     {name:"Jaguar Warrior",    emoji:"🐆",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",  hp:105, dmg:16, as:0.9, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:{0:1.0608,1:1.4582}},
+  otomi:      {name:"Otomi Skirmisher", emoji:"🏃",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged", hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2, spriteScaleMult:{0:1.3145,1:1.7634}}, // 2026-07-28 direct chat request: dmg 10->12, see chariot's matching note
+  cihuacoatl: {name:"Cihuacoatl Priest", emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.0395,1:1.2816}},
   tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
   xelhua:     {name:"Xelhua",            emoji:"🗿",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
@@ -589,11 +588,11 @@ const AZ_UNITS = {
    in FACTIONS or the picker yet. Peltast converts the Dao profile to ranged, and
    Companion Cavalry converts the Horse Archer profile to heavy melee. */
 const GR_UNITS = {
-  hoplite:   {name:"Hoplite",            emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1},
-  toxotes:   {name:"Toxotes",            emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1},
-  peltast:   {name:"Peltast",            emoji:"🎯",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"ranged", hp:105, dmg:16, as:0.9, range:2, speed:0.516375, size:1, train:1},
+  hoplite:   {name:"Hoplite",            emoji:"🛡️", cost:{f:20}, cat:"human", armor:"shielded", dtype:"melee",  hp:120, dmg:12, as:1.0, range:1, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
+  toxotes:   {name:"Toxotes",            emoji:"🏹",  cost:{f:25}, cat:"human", armor:"light",    dtype:"ranged", hp:70,  dmg:11, as:1.0, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
+  peltast:   {name:"Peltast",            emoji:"🎯",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"ranged", hp:105, dmg:16, as:0.9, range:2, speed:0.516375, size:1, train:1, spriteScaleMult:1.75},
   companion: {name:"Companion Cavalry", emoji:"🐎",  cost:{f:35}, cat:"human", armor:"heavy",    dtype:"melee",  hp:90,  dmg:12, as:1.1, range:1, speed:1.03275, size:1, train:2}, // 2026-07-28: dmg 10->12, kept in sync with Horse Archer's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
-  priestess: {name:"Priestess",          emoji:"🏺",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6},
+  priestess: {name:"Priestess",          emoji:"🏺",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:1.75},
   atalanta:  {name:"Atalanta",           emoji:"⚔️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee",   hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
   odysseus:  {name:"Odysseus",           emoji:"🏹", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged",  hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28: dmg 16->20, kept in sync with the ranged hero archetype's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
   heracles:  {name:"Heracles",           emoji:"🦁", cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
@@ -1307,6 +1306,14 @@ function bldAdjacent(b, flying){
   }
   return out;
 }
+/* Aztec water is Lake Texcoco. An Aztec unit receives its home-water benefits only
+   while its current water hex is directly adjacent to one of its own standing
+   buildings; water anywhere else stays mechanically ordinary. */
+function onLakeTexcoco(u){
+  if(factionForSide(u.side)!=="aztec" || terrain(u.hex[0],u.hex[1])!=="W") return false;
+  return buildings.some(b=>b.side===u.side && !b.dead &&
+    b.hexes.some(h=>hexDist(u.hex,h)===1));
+}
 
 /* ---------------- TERRAIN PAINTING (setup phase) ---------------- */
 const TERRAIN_BUDGET={F:5,M:6,W:5};
@@ -1472,11 +1479,13 @@ function renderPalette(){
   // moveToward/calcDmg) only while playing Egypt; every other faction keeps the plain
   // "Water" name/description. Text only -- the tile's own art/mechanics for non-Egypt
   // players are completely unchanged.
-  const nile=S.playerFaction==="egypt";
-  $("paintbtn-W-name").textContent=nile?"The Nile":"Water";
+  const nile=S.playerFaction==="egypt", texcoco=S.playerFaction==="aztec";
+  $("paintbtn-W-name").textContent=nile?"The Nile":texcoco?"Lake Texcoco":"Water";
   $("paintbtn-W-desc").textContent=nile
     ?"Egyptian units experience no speed decrease or damage taken increase while in the Nile. Also placeable only as a single contiguous, one-hex-wide line."
-    :"Slows movement by 50%. Units inside take 25% more damage.";
+    :texcoco
+      ?"Next to your standing buildings, Aztec units ignore the water speed penalty and take 20% less damage. Elsewhere it behaves as normal water."
+      :"Slows movement by 50%. Units inside take 25% more damage.";
   // 2026-07-29 direct chat request: China's forest is "Bamboo" -- same tile, same budget,
   // same movement/cover numbers, plus concealment (see hiddenFrom()). Renamed/re-arted
   // only while playing China; every other faction's Forest button is unchanged. The
@@ -2047,7 +2056,8 @@ function calcDmg(att,tgt){
     else if(DMG_WEAK[att.def.dtype]===tgt.def.armor) d*=0.7;
   }
   if(att.def.dtype==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
-  if(terrain(tgt.hex[0],tgt.hex[1])==="W" && factionForSide(tgt.side)!=="egypt") d*=1.25; // 2026-07-27 direct chat request: units standing in water take 25% more damage, any attacker/dtype -- 2026-07-28 follow-up: Egyptian units are immune on their own faction's water (the Nile), see moveToward's matching speed exemption
+  if(onLakeTexcoco(tgt)) d*=0.8; // Lake Texcoco beside a standing Aztec building: no water penalty, plus 20% defense
+  else if(terrain(tgt.hex[0],tgt.hex[1])==="W" && factionForSide(tgt.side)!=="egypt") d*=1.25; // ordinary water: +25% damage; Egypt's Nile is exempt
   return d;
 }
 function dealDamage(att,tgt){
@@ -2252,7 +2262,7 @@ function moveToward(u,pt,dt){
   // (their own faction's water tiles) -- checked alongside the pre-existing full-speed
   // exemptions (flying, Clearing Wind, Cloud Somersault) rather than as a separate branch.
   const onNile=terrain(u.hex[0],u.hex[1])==="W" && factionForSide(u.side)==="egypt";
-  let terr=(u.flying||onNile||hasPassive(u.side,"clearingWind")||(u.def.cat==="hero"&&hasPassive(u.side,"cloudSomersault")))?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1; // Ehecatl: Clearing Wind / Sun Wukong: Cloud Somersault (heroes only)
+  let terr=(u.flying||onNile||onLakeTexcoco(u)||hasPassive(u.side,"clearingWind")||(u.def.cat==="hero"&&hasPassive(u.side,"cloudSomersault")))?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1; // faction water exemptions / Ehecatl: Clearing Wind / Sun Wukong: Cloud Somersault
   if(u.def.fastInWater && terrain(u.hex[0],u.hex[1])==="W") terr=1.5; // Long Wang's Eastern Dragon: extraordinary speed specifically on water
   if((hasPassive(u.side,"lordOfFourSeas")||hasPassive(u.side,"floodCurrent")) &&
      (terrain(u.hex[0],u.hex[1])==="W" || neighbors(u.hex[0],u.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) terr*=1.2; // Long Wang: Lord of the Four Seas / Gong Gong: Flood Current
@@ -4010,15 +4020,16 @@ function chromaKeyed(img,cacheKey){
   return c;
 }
 function spriteScale(big){ return (HEX/24)*(big?1.2:0.95)*1.56; } // 2026-07-16: +30% (direct chat request); 2026-07-18: further +20% on top, cumulative x1.56 -- shared with draw()'s HP-bar head-offset math so the two can't drift apart
-// 2026-07-24 direct chat request ("align sizes between the [Chinese] human sprites
-// and make them 20% bigger"): per-unit multiplier on top of spriteScale(), read from
-// an optional def.spriteScaleMult (CN_UNITS' ji/xbow/dao/horse/monk carry 1.2 and
-// EG_UNITS.spear carries 1.75, and slinger/camel/khopesh carry 1.7; every other unit
-// is unset, i.e. 1 -- unaffected). Centralized here (not
+// Per-unit visual multiplier on top of spriteScale(), read from an optional
+// def.spriteScaleMult. All human foot units use 1.75 to match the Egyptian Spearman;
+// mounted humans keep their independently approved scale. Centralized here (not
 // inlined separately in drawUnitSprite and the HP-bar head-offset calc) for the same
 // reason spriteScale() itself was extracted: two independent copies of this formula
 // already drifted apart once this session (decision 27's HP-bar fix).
-function unitSpriteScale(u){ return spriteScale(u.size>1)*(u.def.spriteScaleMult||1); }
+function unitSpriteScale(u){
+  const mult=u.def.spriteScaleMult;
+  return spriteScale(u.size>1)*(typeof mult==="object"?(mult[u.side]||1):(mult||1));
+}
 /* The Egyptian Spearman uses one bitmap rather than a frame sheet. Short elapsed-time
    stamps drive visual-only canvas transforms; simulation position, attack timing,
    hitboxes, and hex occupancy are never changed. */
