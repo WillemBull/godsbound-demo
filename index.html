@@ -415,6 +415,10 @@ const PLAYER_ROWS = 6;                        // the player's half, this many ro
 const PLAYER_ROW0 = AI_ROWS + NEUTRAL_ROWS;   // absolute row where the player's half starts
 const ROWS = AI_ROWS + NEUTRAL_ROWS + PLAYER_ROWS;
 const isNeutralRow = r => r >= AI_ROWS && r < PLAYER_ROW0;
+/* Shading for the no-man's-land row (see renderBG's hex loop). Near-black at low alpha so
+   it reads as shadow over whichever faction's ground the cross-fade put underneath,
+   rather than tinting it toward a colour. Tune the alpha here, nowhere else. */
+const NEUTRAL_ROW_SHADE = "rgba(6,8,14,.30)";
 const SQ3 = Math.sqrt(3);
 let HEX = 24, OX = 0, OY = 0;              // hex size + board offsets (set on resize)
 
@@ -4439,6 +4443,17 @@ function renderBG(){
   }
   for(let r=0;r<TMAP.length;r++)for(let c=0;c<COLS;c++){
     const ct=hexCenter(c,r);
+    /* 2026-07-29 direct request: shade the no-man's-land row so the middle of the board
+       stays instantly readable. The background now cross-fades across the band, which is
+       what removed the old hard visual divide -- this puts the divide back as a soft
+       band rather than a line. Drawn BEFORE the grid strokes so the hex outlines stay
+       crisp on top of it, and it darkens whatever the fade left underneath rather than
+       painting a colour of its own. Neutral rows never carry special terrain, so there is
+       nothing for it to muddy. */
+    if(isNeutralRow(r)){
+      hexPoly(g,ct.x,ct.y,HEX-0.6);
+      g.fillStyle=NEUTRAL_ROW_SHADE; g.fill();
+    }
     hexPoly(g,ct.x,ct.y,HEX-0.6);
     g.strokeStyle="rgba(0,0,0,.32)"; g.lineWidth=2.4; g.stroke(); // dark base pass, keeps the line legible over light background areas
     hexPoly(g,ct.x,ct.y,HEX-0.6);
