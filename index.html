@@ -501,9 +501,9 @@ const EG_UNITS = {
   axe:    {name:"Axemen",     emoji:"🪓",  cost:{f:30}, cat:"human", armor:"heavy",    dtype:"melee",   hp:105, dmg:14, as:0.8,  range:1, speed:0.516375, size:1, train:1, splash:0.8, spriteScaleMult:{0:1.1660,1:1.6134}},
   chariot:{name:"War Chariot",emoji:"🐎",  cost:{f:35}, cat:"human", armor:"light",    dtype:"ranged",  hp:90,  dmg:12, as:1.1, range:2, speed:1.03275, size:1, train:2}, // 2026-07-28 direct chat request: dmg 10->12 (balance pass -- was costing more than Axemen for less dps AND less hp)
   priest: {name:"Priest",     emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged",  hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.1197,1:1.3663}},
-  sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
-  doomedprince:{name:"The Doomed Prince",emoji:"🐍", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20 (20 dps) -- was under half the melee hero's power score despite identical cost
-  bata:{name:"Bata",         emoji:"🐂",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  sinuhe:{name:"Sinuhe",      emoji:"🗡️", cost:{f:40,v:10}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  doomedprince:{name:"The Doomed Prince",emoji:"🐍", cost:{f:40,v:10}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20 (20 dps) -- was under half the melee hero's power score despite identical cost
+  bata:{name:"Bata",         emoji:"🐂",  cost:{f:40,v:10}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
   falcon: {name:"Falcon Grd.",emoji:"🦅",  cost:{v:55}, cat:"myth", armor:"light",  dtype:"melee",   hp:210, dmg:22, as:1.1, range:1, speed:1.1475, size:2, train:2, flying:true, god:"horus"},
   lion:   {name:"Lion Grd.",  emoji:"🦁",  cost:{v:65}, cat:"myth", armor:"heavy",  dtype:"melee",   hp:300, dmg:28, as:1.0, range:1, speed:0.860625, size:2, train:2, god:"bastet"},
   mummy:  {name:"Mummy",      emoji:"🧟",  cost:{v:45}, cat:"myth", armor:"light",  dtype:"melee",   hp:160, dmg:12, as:1.0, range:1, speed:0.459, size:1, train:2, slows:true, god:"osiris"},
@@ -546,9 +546,9 @@ const CN_UNITS = {
      win-rate comparison cannot be confounded by the new units. */
   ram:    {name:"Siege Ram",   emoji:"🪵", cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   monk:   {name:"War Monk",    emoji:"🙏",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:0.9489,1:1.2338}},
-  nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
-  houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
-  liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  nezha:{name:"Nezha",         emoji:"🔥",  cost:{f:40,v:10}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  houyi:{name:"Hou Yi",        emoji:"☀️",  cost:{f:40,v:10}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
+  liji:{name:"Li Ji",          emoji:"🔨",  cost:{f:40,v:10}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
   // 2026-07-23 (direct chat request, mythology_game_design.xlsx): Chinese pantheon
   // realigned from 4 gods to the sheet's 10 (Jade Emperor, Sun Wukong, Nu Wa, Long
   // Wang, Gong Gong, Erlang Shen, Xi Wangmu, Zhu Rong, Chang'e, Lei Gong). Guan Yu
@@ -583,9 +583,9 @@ const AZ_UNITS = {
      existing convention (Macuahuitl Warrior, Atlatl Thrower). Same stat block as the Ram. */
   tlequauitl: {name:"Tlequauitl Bearer", emoji:"🔥",  cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   cihuacoatl: {name:"Cihuacoatl Priest", emoji:"📿",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:{0:1.0395,1:1.2816}},
-  tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
-  topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
-  xelhua:     {name:"Xelhua",            emoji:"🗿",  cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  tepoztecatl:{name:"Tepoztecatl",       emoji:"🪓",  cost:{f:40,v:10}, cat:"hero", armor:"shielded", dtype:"melee", hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  topiltzin:{name:"Ce Acatl Topiltzin",   emoji:"🪶",  cost:{f:40,v:10}, cat:"hero", armor:"light",    dtype:"ranged", hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28 direct chat request: dmg 16->20, see doomedprince's matching note
+  xelhua:     {name:"Xelhua",            emoji:"🗿",  cost:{f:40,v:10}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
   // 2026-07-23 (direct chat request, mythology_game_design.xlsx): xiuhcoatl/jaguarspirit/
   // raintitan gained new mechanical flags (kept their keys/base stats -- same rename-in-place
   // pattern used for Egypt's Bennu Bird/Anubite); jaguarspirit is redisplayed as "Nagual"
@@ -617,9 +617,9 @@ const GR_UNITS = {
      actually woken up and someone can make that call deliberately. */
   krios:     {name:"Krios Ram",          emoji:"🪵",  cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing", hp:300, dmg:20, as:0.6, range:1, speed:0.40, size:2, train:2, siege:true, targetsBuildings:true},
   priestess: {name:"Priestess",          emoji:"🏺",  cost:{f:45}, cat:"human", armor:"light",    dtype:"ranged", hp:65,  dmg:8,  as:0.9, range:2, speed:0.459, size:1, train:1, heal:4, antimyth:1.6, spriteScaleMult:1.75},
-  atalanta:  {name:"Atalanta",           emoji:"⚔️", cost:{f:80,v:20}, cat:"hero", armor:"shielded", dtype:"melee",   hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
-  odysseus:  {name:"Odysseus",           emoji:"🏹", cost:{f:80,v:20}, cat:"hero", armor:"light",    dtype:"ranged",  hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28: dmg 16->20, kept in sync with the ranged hero archetype's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
-  heracles:  {name:"Heracles",           emoji:"🦁", cost:{f:80,v:20}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
+  atalanta:  {name:"Atalanta",           emoji:"⚔️", cost:{f:40,v:10}, cat:"hero", armor:"shielded", dtype:"melee",   hp:270, dmg:24, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true},
+  odysseus:  {name:"Odysseus",           emoji:"🏹", cost:{f:40,v:10}, cat:"hero", armor:"light",    dtype:"ranged",  hp:200, dmg:20, as:1.0, range:2, speed:0.57375, size:1, train:2, hero:true}, // 2026-07-28: dmg 16->20, kept in sync with the ranged hero archetype's balance-pass buff (this dormant roster mirrors China's stats by design, see HANDOFF decision 3a)
+  heracles:  {name:"Heracles",           emoji:"🦁", cost:{f:40,v:10}, cat:"hero", armor:"heavy",    dtype:"crushing",hp:320, dmg:22, as:0.85,range:1, speed:0.459,   size:1, train:2, siege:true, hero:true},
   cerberus:  {name:"Cerberus",           emoji:"🐕", cost:{v:55}, cat:"myth", armor:"heavy", dtype:"melee",   hp:250, dmg:24, as:1.0, range:1, speed:0.6885,   size:2, train:2, god:"hades"},
   satyr:     {name:"Satyr",              emoji:"🐐", cost:{v:65}, cat:"myth", armor:"light", dtype:"melee",   hp:280, dmg:28, as:1.1, range:1, speed:0.860625, size:2, train:2, god:"dionysus"},
   calydonianboar:{name:"Calydonian Boar",emoji:"🐗",cost:{v:60}, cat:"myth", armor:"light", dtype:"melee",   hp:220, dmg:24, as:1.2, range:1, speed:0.918,    size:1, train:2, god:"artemis"},
@@ -3341,6 +3341,7 @@ const AI_POWER_CLASS={
   isis:"situational", anubis:"situational", xiwangmu:"situational"
 };
 const AI_CAST_GAP=2; // seconds; one global guard shared by every god
+const AI_SAVE_MAX=25; // seconds the AI will hold out banking for a siege unit before giving up (roadmap R6)
 
 /* Enemies this power would actually land on, by footprint shape. Horus's Falcon's
    Wrath and Ra's Solar Barque sweep the target's whole ROW (see applyGodPower), so
@@ -3393,7 +3394,7 @@ function aiCastPower(key){
 /* ================================================================
    ENEMY AI
    ================================================================ */
-let aiTrainT=3, aiPowerT=8, aiHeroAt=55, aiTargetRot=0, aiLastCastAt=-99, aiHeroKeys=["nezha"]; // placeholder only -- startMatch() always repopulates this from the live AI faction before it's ever read
+let aiTrainT=3, aiPowerT=8, aiHeroAt=55, aiTargetRot=0, aiLastCastAt=-99, aiSaveStart=null, aiHeroKeys=["nezha"]; // placeholder only -- startMatch() always repopulates this from the live AI faction before it's ever read
 const LANES=[1,4,7];
 let aiWave=null, lastLane=null;
 /* Egyptian entries are a mechanical relabel of the Chinese pacing numbers (same
@@ -3522,6 +3523,37 @@ function pickAiUnit(){
   if(foe.length>=4 && foe.filter(u=>u.def.range>1).length/foe.length>=0.6){
     const shielded=aiPoolPick(d=>d.armor==="shielded");
     if(shielded) return shielded;
+  }
+
+  /* (4) SIEGE BANKING (roadmap R6, 2026-07-29). Without this the AI can never field a
+         siege unit at all: it trains the instant anything is affordable, so it peaked at 36
+         banked food across a whole match and spent ZERO frames at the 55 a siege unit costs
+         -- with `ram` sitting in both Chinese pools, 0 were built across 25 matches. Putting
+         a unit in the pool is necessary but nowhere near sufficient.
+
+         The rule: if the AI has no siege unit alive or training, and nothing of the enemy's
+         is inside its own half, it stops spending and banks until it can afford one. This is
+         the same decision a human makes by simply not tapping a card for ~16 seconds.
+
+         Returning null here means tickAI trains NOTHING this tick, which is a deliberate
+         pause, not a stall. It is bounded three ways so it can never become a deadlock (see
+         CLAUDE.md's "training must never stall" rule): it gives up the moment an enemy
+         enters its half, it gives up after AI_SAVE_MAX seconds regardless, and it never
+         starts at all once a siege unit exists. */
+  const siegeKey=aiProfile.pool.find(k=>tbl[k]&&tbl[k].targetsBuildings);
+  if(siegeKey){
+    const haveSiege=S.units.some(u=>!u.dead&&u.side===1&&u.key===siegeKey)
+                  || S.training.some(t=>t.side===1&&t.key===siegeKey);
+    if(haveSiege) aiSaveStart=null;
+    else if(canAfford(tbl[siegeKey].cost,1)){ aiSaveStart=null; return siegeKey; }
+    else {
+      const invaded=S.units.some(u=>!u.dead&&u.side===0&&u.hex[1]<AI_ROWS);
+      if(!invaded){
+        if(aiSaveStart===null) aiSaveStart=elapsed();
+        if(elapsed()-aiSaveStart<AI_SAVE_MAX) return null; // bank this tick
+      }
+      aiSaveStart=null; // pressured, or held out long enough -- go back to training normally
+    }
   }
 
   /* --- unchanged pre-8.5 behaviour from here down --- */
@@ -4908,7 +4940,7 @@ function startMatch(keepTerrain){
   buildings.forEach(b=>{ b.hp=b.maxhp; b.dead=false; b.atkTimer=0; });
   DECK_INITIAL = [...S.loadout, ...S.heroPick];
   DECK.length=0; DECK.push(...DECK_INITIAL);
-  aiTrainT=3; aiPowerT=8; aiHeroAt=55; aiTargetRot=0; aiLastCastAt=-99; aiWave=null; lastLane=null;
+  aiTrainT=3; aiPowerT=8; aiHeroAt=55; aiTargetRot=0; aiLastCastAt=-99; aiSaveStart=null; aiWave=null; lastLane=null;
   const profileStyles=Object.keys(AI_PROFILES);
   const profileStyle=profileStyles[Math.floor(Math.random()*profileStyles.length)];
   aiProfile=AI_PROFILES[profileStyle][S.aiFaction];
