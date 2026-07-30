@@ -398,7 +398,23 @@
    ================================================================ */
 
 /* ---------------- HEX GRID (flat-top, odd-q offset) ---------------- */
-const COLS = 9, ROWS = 12;
+/* Board shape. Split into explicit named bands (2026-07-29) instead of the old
+   `HALF_ROWS = ROWS/2`, which silently conflated three different questions: how deep is a
+   half, where does the player's half start, and which side owns a row. Those stop being
+   the same number the moment a neutral band exists between the halves, and ROWS/2 stops
+   being an integer on an odd board. Absolute row layout, top to bottom:
+       rows 0 .. AI_ROWS-1                the AI's half
+       rows AI_ROWS .. PLAYER_ROW0-1      no-man's land (NEUTRAL_ROWS deep, may be 0)
+       rows PLAYER_ROW0 .. ROWS-1         the player's half
+   Each half stays PLAYER_ROWS/AI_ROWS deep whatever the band does, so playerHalf's local
+   6-row terrain array and saved deck presets are unaffected by widening it. */
+const COLS = 9;
+const AI_ROWS = 6;                            // the AI's half, absolute rows 0..AI_ROWS-1
+const NEUTRAL_ROWS = 1;                       // open no-man's land between the halves (2026-07-29: 0 -> 1)
+const PLAYER_ROWS = 6;                        // the player's half, this many rows deep
+const PLAYER_ROW0 = AI_ROWS + NEUTRAL_ROWS;   // absolute row where the player's half starts
+const ROWS = AI_ROWS + NEUTRAL_ROWS + PLAYER_ROWS;
+const isNeutralRow = r => r >= AI_ROWS && r < PLAYER_ROW0;
 const SQ3 = Math.sqrt(3);
 let HEX = 24, OX = 0, OY = 0;              // hex size + board offsets (set on resize)
 
@@ -447,6 +463,7 @@ function fromScreen(x,y){ const p=boardPivotY(); return {x, y:p+(y-p)/TILT_SQUAS
 /* ---------------- TERRAIN ----------------
    P plain(china side) D desert F forest M mountain W water R road H high ground */
 const TMAP_INITIAL = [
+ "PPPPPPPPP",
  "PPPPPPPPP",
  "PPPPPPPPP",
  "PPPPPPPPP",
@@ -747,7 +764,9 @@ function factionForSide(side){ return side ? S.aiFaction : S.playerFaction; }
    desert/plains board), but the pass-through still matters for anything a player
    paints in via paintTerrain() during setup. */
 function origTerrain(c,r){
-  const base = factionForSide(r<6?1:0)==="egypt" ? "D" : "P";
+  // No-man's land belongs to neither faction, so it never takes a faction filler.
+  if(isNeutralRow(r)) return "P";
+  const base = factionForSide(r<AI_ROWS?1:0)==="egypt" ? "D" : "P";
   const ch = TMAP_INITIAL[r][c];
   return (ch==="P"||ch==="D") ? base : ch;
 }
@@ -788,18 +807,17 @@ function bldAt(c,r){
    eventual multiplayer mode where each player brings their own half (not built here — only
    the local single-player data separation). AI's half is not editable and stays exactly as it
    always has: a fixed template inside TMAP_INITIAL/buildings, composed in unchanged. */
-const HALF_ROWS = ROWS/2; // 6
 let playerHalf = {
-  terrain: TMAP_INITIAL.slice(HALF_ROWS).map(row=>row.split("")), // placeholder; corrected by the first startMatch() once FACTIONS/S exist, same pattern TMAP's own init already uses
+  terrain: TMAP_INITIAL.slice(PLAYER_ROW0).map(row=>row.split("")), // placeholder; corrected by the first startMatch() once FACTIONS/S exist, same pattern TMAP's own init already uses
   buildings: [
     mkBld(0,"fortress","Fortress","🏰",[[6,2],[7,2]],1100),
     mkBld(0,"city","City","🏛️",[[4,4],[5,4]],900),
     mkBld(0,"temple","Temple","🛕",[[1,4],[2,4]],800),
-  ] // local coords = today's absolute positions minus HALF_ROWS
+  ] // local coords = absolute positions minus PLAYER_ROW0
 };
-let aiHalfTerrain = TMAP_INITIAL.slice(0,HALF_ROWS).map(row=>row.split("")); // placeholder; faction-corrected by first startMatch(), like playerHalf above
+let aiHalfTerrain = TMAP_INITIAL.slice(0,AI_ROWS).map(row=>row.split("")); // placeholder; faction-corrected by first startMatch(), like playerHalf above
 function freshPlayerHalfTerrain(){
-  return deriveTMAP().slice(HALF_ROWS).map(row=>[...row]);
+  return deriveTMAP().slice(PLAYER_ROW0).map(row=>[...row]);
 }
 /* AI setup uses the same 5F/6M/5W allowance as the player (2026-07-28: raised again
    from 4F/4M/4W, direct chat request -- extra [0,1] forest, [3,1]/[6,1] mountain, and
@@ -823,7 +841,7 @@ function freshPlayerHalfTerrain(){
 
    NOTE on the step's "rows 0-8": that bound is from the 9x18 board, when the AI half
    really was rows 0-8. The board has been 9x12 since 2026-07-17 and the AI half is
-   rows 0-5, so validAiLayout() bounds against HALF_ROWS. All three layouts below were
+   rows 0-5, so validAiLayout() bounds against AI_ROWS. All three layouts below were
    already inside rows 0-5, so no coordinates needed changing.
 
    ORDERING IS LOAD-BEARING: the layout must be applied BEFORE freshAiHalfTerrain(),
@@ -846,7 +864,7 @@ function validAiLayout(layout){
   for(const t of types){
     const [a,b]=layout[t];
     for(const [c,r] of [a,b]){
-      if(c<0||c>=COLS||r<0||r>=HALF_ROWS) return false;      // in bounds, AI half only
+      if(c<0||c>=COLS||r<0||r>=AI_ROWS) return false;      // in bounds, AI half only
       if("MW".includes(terrain(c,r))) return false;            // never on blocking/slowing feature terrain
       const k=c+","+r;
       if(seen.has(k)) return false;                            // no two buildings share a hex
@@ -885,7 +903,7 @@ function aiTerrainBlockedHexes(){
   return blocked;
 }
 function aiLayoutHalf(layout){
-  const half=deriveTMAP().slice(0,HALF_ROWS).map(row=>[...row]);
+  const half=deriveTMAP().slice(0,AI_ROWS).map(row=>[...row]);
   for(const [type,hexes] of Object.entries(layout))
     for(const [c,r] of hexes) half[r][c]=type;
   return half;
@@ -902,12 +920,12 @@ function aiTerrainLayoutValid(layout){
   const blocked=aiTerrainBlockedHexes(), used=new Set();
   for(const type of ["F","M","W"]) for(const [c,r] of layout[type]){
     const k=c+","+r;
-    if(r===0||r<0||r>=HALF_ROWS||c<0||c>=COLS||blocked.has(k)||used.has(k)) return false;
+    if(r===0||r<0||r>=AI_ROWS||c<0||c>=COLS||blocked.has(k)||used.has(k)) return false;
     used.add(k);
   }
   return withAiLayout(layout,()=>{
     const aiBlds=buildings.filter(b=>b.side===1);
-    const aiCanExit=aiBlds.every(b=>bldAdjacent(b,false).some(h=>findPath(h,[[4,5]],false)!==null));
+    const aiCanExit=aiBlds.every(b=>bldAdjacent(b,false).some(h=>findPath(h,[[4,AI_ROWS-1]],false)!==null));
     const playerCanEnter=Array.from({length:COLS},(_,c)=>[c,5]).some(start=>
       aiBlds.some(b=>findPath(start,bldAdjacent(b,false),false)!==null));
     return aiCanExit&&playerCanEnter;
@@ -915,7 +933,7 @@ function aiTerrainLayoutValid(layout){
 }
 function generateAiTerrain(validator=aiTerrainLayoutValid){
   const blocked=aiTerrainBlockedHexes();
-  const legal=(c,r,used)=>r>0&&r<HALF_ROWS&&c>=0&&c<COLS&&!blocked.has(c+","+r)&&!used.has(c+","+r);
+  const legal=(c,r,used)=>r>0&&r<AI_ROWS&&c>=0&&c<COLS&&!blocked.has(c+","+r)&&!used.has(c+","+r);
   for(let attempt=0;attempt<25;attempt++){
     const openLane=Math.floor(Math.random()*AI_LANES.length);
     const constricted=[0,1,2].filter(i=>i!==openLane);
@@ -950,7 +968,7 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
         for(const b of buildings.filter(b=>b.side===1)){
           let best=null;
           for(const h of bldAdjacent(b,false)){
-            const p=findPath(h,[[4,5]],false);
+            const p=findPath(h,[[4,AI_ROWS-1]],false);
             if(p&&(!best||p.length<best.length)) best=p;
           }
           if(best) best.forEach(h=>keys.add(h.join(",")));
@@ -958,7 +976,7 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
         return keys;
       });
       const waterPool=[];
-      for(let r=1;r<HALF_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)&&!protectedRoutes.has(c+","+r))
+      for(let r=1;r<AI_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)&&!protectedRoutes.has(c+","+r))
         waterPool.push({h:[c,r],score:(r>=4?15:0)+(AI_LANES[openLane].includes(c)?12:0)+Math.random()*8});
       waterPool.sort((a,b)=>b.score-a.score);
       for(const {h} of waterPool.slice(0,TERRAIN_BUDGET.W)){layout.W.push(h);used.add(h.join(","));}
@@ -966,7 +984,7 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
     if(layout.W.length!==TERRAIN_BUDGET.W) continue;
 
     const forestPool=[];
-    for(let r=1;r<HALF_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)){
+    for(let r=1;r<AI_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)){
       const nearBld=buildings.filter(b=>b.side===1).some(b=>b.hexes.some(h=>hexDist([c,r],h)<=2));
       const nearM=layout.M.some(h=>hexDist([c,r],h)===1);
       const chinaFunnel=S.aiFaction==="china"&&AI_LANES[openLane].includes(c);
@@ -992,14 +1010,14 @@ function freshAiHalfTerrain(){
 }
 function composeAbsoluteTMAP(){
   const full = deriveTMAP();
-  for(let r=0;r<HALF_ROWS;r++) full[r] = [...aiHalfTerrain[r]];
-  for(let r=0;r<HALF_ROWS;r++) full[HALF_ROWS+r] = [...playerHalf.terrain[r]];
+  for(let r=0;r<AI_ROWS;r++) full[r] = [...aiHalfTerrain[r]];
+  for(let r=0;r<PLAYER_ROWS;r++) full[PLAYER_ROW0+r] = [...playerHalf.terrain[r]];
   return full;
 }
 function composeAbsoluteBuildings(){
   for(const pb of playerHalf.buildings){
     const live = buildings.find(b=>b.side===0&&b.type===pb.type);
-    live.hexes = pb.hexes.map(([c,r])=>[c,r+HALF_ROWS]);
+    live.hexes = pb.hexes.map(([c,r])=>[c,r+PLAYER_ROW0]);
   }
   rebuildBldHexMap();
 }
@@ -1074,7 +1092,7 @@ function defaultDeckPreset(faction="egypt"){
   return {
     faction:validFaction,
     loadout:[...f.defaultLoadout], heroes:[...f.defaultHeroes], gods:[...f.defaultGodPick],
-    terrain:Array.from({length:HALF_ROWS},()=>Array(COLS).fill(base)),
+    terrain:Array.from({length:PLAYER_ROWS},()=>Array(COLS).fill(base)),
     buildings:[
       {type:"fortress",hexes:[[6,2],[7,2]]},
       {type:"city",hexes:[[4,4],[5,4]]},
@@ -1092,7 +1110,7 @@ function normalizeDeckPreset(raw){
   const heroes=Object.keys(f.units).filter(k=>f.units[k].cat==="hero");
   const gods=f.allGods.map(g=>g.key);
   if(!validPick(raw.loadout,4,humans)||!validPick(raw.heroes,2,heroes)||!validPick(raw.gods,4,gods)) return null;
-  if(!Array.isArray(raw.terrain)||raw.terrain.length!==HALF_ROWS) return null;
+  if(!Array.isArray(raw.terrain)||raw.terrain.length!==PLAYER_ROWS) return null;
   const terrain=raw.terrain.map(row=>typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]);
   if(terrain.some(row=>row.length!==COLS||row.some(ch=>!["P","D","F","M","W"].includes(ch)))) return null;
   const counts={F:0,M:0,W:0};
@@ -1103,7 +1121,7 @@ function normalizeDeckPreset(raw){
   for(const b of raw.buildings){
     if(!b||!["temple","city","fortress"].includes(b.type)||types.has(b.type)||!Array.isArray(b.hexes)||b.hexes.length!==2) return null;
     const hexes=b.hexes.map(h=>Array.isArray(h)?[Number(h[0]),Number(h[1])]:[]);
-    if(hexes.some(h=>h.length!==2||!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=HALF_ROWS)) return null;
+    if(hexes.some(h=>h.length!==2||!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=PLAYER_ROWS)) return null;
     if(hexDist(hexes[0],hexes[1])!==1) return null;
     for(const h of hexes){const key=h[0]+","+h[1];if(occupied.has(key)||["M","W"].includes(terrain[h[1]][h[0]]))return null;occupied.add(key);}
     types.add(b.type); buildings.push({type:b.type,hexes});
@@ -1329,7 +1347,7 @@ function paintTerrain(c,r,type){
 
   if(type==="D"){
     if(prevType===undefined) return false; // nothing painted here to erase
-    TMAP[r][c]=origTerrain(c,r+HALF_ROWS); // paintTerrain always operates on local (0..HALF_ROWS-1) rows; origTerrain expects absolute rows into TMAP_INITIAL
+    TMAP[r][c]=origTerrain(c,r+PLAYER_ROW0); // paintTerrain always operates on local (0..PLAYER_ROWS-1) rows; origTerrain expects absolute rows into TMAP_INITIAL
     S.painted[prevType]--;
     delete S.paintMap[key];
     renderBG();
@@ -2340,7 +2358,7 @@ function updateUnit(u,dt){
   // on its current open hex inside the rally cluster instead of waiting forever.
   const waveNext=u.path&&u.pathIdx<u.path.length?u.path[u.pathIdx]:null;
   if(u.side===1&&u.duty==="attack"&&aiWave&&aiWave.units.includes(u)&&u.arrived&&!u.target
-    &&waveNext&&hexDist(u.hex,[aiWave.lane,6])<=2
+    &&waveNext&&hexDist(u.hex,[aiWave.lane,PLAYER_ROW0])<=2
     &&aiWave.units.some(o=>o!==u&&!o.dead&&o.hold&&o.hex[0]===waveNext[0]&&o.hex[1]===waveNext[1])){
     u.path=null; u.free=true; u.hold=true;
   }
@@ -3316,7 +3334,7 @@ const AI_PROFILES={
 };
 let aiProfile=AI_PROFILES.balanced.china;
 function aiRallyHexes(flying,lane){
-  const anchor=[lane,6], out=[];
+  const anchor=[lane,PLAYER_ROW0], out=[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++)
     if(routeOK(c,r,flying)) out.push([c,r]);
   return out.sort((a,b)=>hexDist(a,anchor)-hexDist(b,anchor)||Math.abs(a[0]-anchor[0])-Math.abs(b[0]-anchor[0]));
@@ -3473,7 +3491,7 @@ function tickAI(dt){
   const aiUnitsTbl=FACTIONS[S.aiFaction].units;
   const key=pickAiUnit();
   if(!key||!canAfford(aiUnitsTbl[key].cost,1)) return;
-  const invaders=S.units.filter(u=>!u.dead&&u.side===0&&u.hex[1]<6);
+  const invaders=S.units.filter(u=>!u.dead&&u.side===0&&u.hex[1]<AI_ROWS);
   let src=buildings.find(b=>b.side===1&&!b.dead
     && S.units.some(u=>!u.dead&&u.side===0&&unitDist(u,b)<=2)); // defend the attacked building directly
   if(!src){
@@ -4239,7 +4257,7 @@ function drawArenaBgRect(g,faction,x,y,w,h){
    currently live (2026-07-29). This is the ownership primitive: anything asking "is this
    hex mine?" must go through here, NOT through a faction comparison. During the terrain
    step TMAP is bound to playerHalf.terrain -- a standalone 6-row LOCAL board where every
-   row is the player's (see architecture note 4a) -- so the absolute r<HALF_ROWS split
+   row is the player's (see architecture note 4a) -- so the absolute r<AI_ROWS split
    would be wrong there and every row is side 0.
    2026-07-29 follow-up, Willem: "eventually when this is multiplayer, people will be able
    to play as the same faction, so can we change the architecture to be based on player not
@@ -4249,7 +4267,10 @@ function drawArenaBgRect(g,faction,x,y,w,h){
    halves would report the same faction, so a Chinese unit would have been concealed in the
    ENEMY's bamboo too. Ownership is a side/player question; faction is a lookup off it. */
 function sideForRow(r){
-  return S.setupStep==="terrain" ? 0 : (r<HALF_ROWS?1:0);
+  if(S.setupStep==="terrain") return 0;
+  if(r<AI_ROWS) return 1;
+  if(r>=PLAYER_ROW0) return 0;
+  return -1; // no-man's land: owned by neither side, so `sideForRow(r)===u.side` is never true there
 }
 /* Which faction controls that half -- strictly a lookup on top of sideForRow. Use this for
    PRESENTATION questions ("which art does this half's terrain use?"), never for ownership. */
@@ -4300,7 +4321,7 @@ function drawSpecialTile(g,T,cx,cy,r){
 function arenaMidSeam(bgLeft,bgRight){
   const points=[];
   for(let c=0;c<COLS;c++){
-    const upper=hexCenter(c,HALF_ROWS-1),lower=hexCenter(c,HALF_ROWS);
+    const upper=hexCenter(c,AI_ROWS-1),lower=hexCenter(c,PLAYER_ROW0); // spans the neutral band, so the seam sits at its centre
     points.push([upper.x,(upper.y+lower.y)/2]);
   }
   return [[bgLeft,points[0][1]],...points,[bgRight,points[points.length-1][1]]];
