@@ -4262,9 +4262,25 @@ function drawSpecialTile(g,T,cx,cy,r){
   const img=getSpriteImage(key);
   if(img && img.complete && img.naturalWidth>0){
     const src=chromaKeyed(img,key);
-    const size=HEX*1.5; // comfortably within the hex's own ~1.7*HEX flat-to-flat extent
-    const aspect=img.naturalWidth/img.naturalHeight;
-    const dw=aspect>=1?size:size*aspect, dh=aspect>=1?size/aspect:size;
+    /* 2026-07-29 direct request: "make the terrain tiles fill their hex."
+       Was HEX*1.5 fitted inside a square, which left a visible gap all round: a flat-top
+       hex of circumradius HEX is 2*HEX wide (point to point) and SQ3*HEX tall (flat to
+       flat), so 1.5*HEX covered only 75% of the width.
+
+       Every terrain asset is a hex drawn inscribed in its canvas, touching the left and
+       right edges, so the correct mapping is WIDTH-driven: draw the source at exactly the
+       hex's point-to-point width and let height follow from the source aspect. For the
+       square 420x420 assets that puts the art's hex edges precisely on the board hex's,
+       with the leftover vertical space (2*HEX drawn vs SQ3*HEX of actual hex) being the
+       transparent band the art already carries above and below its hexagon.
+
+       Bamboo is the deliberate exception: its foliage is painted ABOVE the hex plate, so
+       it overflows into the row above. Willem asked for exactly that ("the bamboo will
+       stick out of the top of the hex a bit and thats okay"). It composites correctly
+       because this loop runs top row first, so a hex's overflow lands on already-drawn
+       rows rather than being painted over. */
+    const dw=HEX*2;
+    const dh=dw*(img.naturalHeight/img.naturalWidth);
     g.drawImage(src,cx-dw/2,cy-dh/2,dw,dh);
     return;
   }
