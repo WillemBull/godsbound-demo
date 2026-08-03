@@ -677,6 +677,27 @@ const AZ_GODS = [
   {key:"ehecatl", name:"Ehecatl", emoji:"🌬️", cost:80, power:"First Wind", pcost:40, cd:20, myth:"ehecatotontin", desc:"Dramatically accelerates all your units' movement speed for 4s", passiveKey:"clearingWind", passive:"Your units ignore all terrain movement penalties"},
   {key:"itzpapalotl", name:"Itzpapalotl", emoji:"🦋", cost:150, power:"Obsidian Wings", pcost:50, cd:25, myth:"colotl", desc:"Deals 60 dmg and a 6s slow to every enemy unit within 2 hexes of target", passiveKey:"razorWings", passive:"Your units deal +50% damage on their first-ever attack"}
 ];
+/* Compact battle-bar copy shown while a player is aiming a power. Keep each entry
+   short enough for #hint's fixed two-line, 26px box on a phone. The full descriptions
+   remain in the god-selection list; these are targeting reminders, not replacements. */
+const POWER_HINTS = {
+  horus:"70 damage across the target row.", bastet:"Make a building invulnerable.",
+  osiris:"Revive up to 3 fallen warriors.", isis:"Lock an enemy god power.",
+  ra:"70 damage across the target row.", anubis:"Judge one enemy unit.",
+  set:"Slow all units near the target.", thoth:"Reverse one enemy unit's route.",
+  sekhmet:"Nearby allies attack anyone.", nephthys:"Make one ally invisible.",
+  ptah:"Finish your next training unit.", jade:"Steal one enemy unit briefly.",
+  sunwukong:"Copy the strongest enemy myth.", nuwa:"Fully repair a damaged building.",
+  longwang:"Flood and damage a large area.", gonggong:"Create temporary impassable rubble.",
+  erlangshen:"Reveal enemies and block hiding.", xiwangmu:"Make one ally invulnerable.",
+  zhurong:"Burn a target area.", chang:"Slow all units and reveal enemies.",
+  leigong:"Stun enemies near the target.", huitzilopochtli:"Buff allies at an HP cost.",
+  quetzalcoatl:"Reset every enemy route.", tezcatlipoca:"Clone an enemy against itself.",
+  tlaloc:"Flood open tiles near the target.", xipetotec:"Disable all enemy passive bonuses.",
+  coatlicue:"Poison every enemy unit.", mictlantecuhtli:"Trade enemy favor for an ally.",
+  coyolxauhqui:"Split an enemy into dueling copies.", ehecatl:"Greatly speed up all allies.",
+  itzpapalotl:"Damage and slow nearby enemies."
+};
 /* Identity/link records only while Greece remains unavailable. Powers and unlock
    values will be designed before Greece is added to FACTIONS. */
 const GR_GODS = [
@@ -1763,8 +1784,9 @@ function banner(msg,color){
   const b=$("banner"); b.textContent=msg; b.style.color=color||"#ffd97a"; b.style.opacity=1;
   clearTimeout(banner._t); banner._t=setTimeout(()=>b.style.opacity=0,1600);
 }
-function hint(msg){ $("hint").textContent=msg; clearTimeout(hint._t);
-  hint._t=setTimeout(()=>$("hint").textContent="Drag a card through one of your buildings, then draw a path.",2600); }
+const DEFAULT_BATTLE_HINT="Drag a card through one of your buildings, then draw a path.";
+function hint(msg,sticky=false){ $("hint").textContent=msg; clearTimeout(hint._t);
+  if(!sticky) hint._t=setTimeout(()=>$("hint").textContent=DEFAULT_BATTLE_HINT,2600); }
 
 /* ---------------- INPUT: CARD DRAG DEPLOYMENT ---------------- */
 const board=$("board"), ghost=$("ghost");
@@ -1965,7 +1987,8 @@ function onGodTap(key){
   if(elapsed()<(st.lockedUntil||0)){ hint(`${g.name}'s power is locked!`); return; }
   if(S.favor<g.pcost){ hint(`Need 🔱${g.pcost} Favor for ${g.power}.`); return; }
   S.armedPower = (S.armedPower===key)? null : key;
-  hint(S.armedPower? `${g.power}: tap a target on the battlefield.` : "Power cancelled.");
+  if(S.armedPower) hint(`${g.power}: ${POWER_HINTS[key]} Tap a target.`,true);
+  else hint("Power cancelled.");
 }
 
 /* ---------------- STOP / DEFEND ---------------- */
@@ -2182,10 +2205,36 @@ function dealDamage(att,tgt){
        Only reached when the primary target is a unit: dealDamage's isBldg(tgt) branch
        returns long before this, so splash never radiates off a building. */
     if(att.def.splash){
+      /* CLEAVE: everything hostile adjacent to the ATTACKER, not to the victim.
+         Clarified by Willem 2026-07-29: "the splash damage should be for hexes adjacent to
+         the attacker, not the victim getting attacked." That is the difference between a
+         sweeping axe (a ring around the swinger) and a blast centred on whoever was struck.
+         For a range-1 melee unit the two overlap heavily but not completely -- a unit
+         standing beside the VICTIM but two hexes from the ATTACKER is outside the swing and
+         must not be hit, which is the case the tests pin.
+
+         Selection is on RENDERED position (att.pos / u.pos), not hexDist of u.hex. u.hex
+         advances the instant a unit commits to entering the next hex (see followPath), so a
+         logical hex can be a full hex ahead of the sprite; selecting on it hit units the
+         player could see were two hexes away (2026-07-29 bug report, measured at 18.3% of
+         victims, worst case 1.81 hex-widths). Adjacent hex centres are exactly HEX*SQ3 apart
+         and the nearest hexDist-2 pairs are >=1.73x that, so 1.25 admits true neighbours with
+         slide tolerance and cannot reach a genuine two-hex gap. It scales with HEX, so the
+         radius stays one hex at any screen size.
+
+         The attacker is guaranteed to have finished its own slide before it strikes
+         (updateUnit's `arrived` gate), so att.pos is a settled hex centre -- which makes an
+         attacker-centred ring steadier than a victim-centred one.
+
+         NOTE for any future RANGED splash unit: a volley should centre on the victim, not
+         the attacker. Every splash unit today is melee (axe / dao / jaguar, range 1). */
+      const spacing=HEX*SQ3;
       for(const u of S.units){
         if(u.dead||u===tgt||u===att) continue;
         if(u.side!==tgt.side) continue; // defending side only -- never the attacker's own
-        if(hexDist(u.hex,tgt.hex)>1) continue;
+        if(spacing>0){
+          if(Math.hypot(u.pos.x-att.pos.x,u.pos.y-att.pos.y)>spacing*1.25) continue;
+        } else if(hexDist(u.hex,att.hex)>1) continue; // HEX not laid out yet (headless): fall back to hex distance
         u.hp-=d*att.def.splash;
         if(u.hp<=0 && !u.dead){
           u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
@@ -2467,36 +2516,59 @@ function updateUnit(u,dt){
   }
   if(!u.target && !stunned){
     u.target = scanEncounter(u);
-    if(!u.target && u.free && !u.hold){    // route finished: press on toward the closest enemy building
-      let best=null,bd=1e9;
-      for(const b of buildings){
-        if(b.dead||b.side===u.side) continue;
-        const dd=unitDist(u,b); if(dd<bd){bd=dd;best=b;}
-      }
-      if(best){
-        u.target=best;
-        // 2026-07-28 direct chat request ("a mass of units are all moving sideways or
-        // backwards to get to the buildings... less movement and route changing after
-        // they complete their route"): this branch re-fires every time a free unit's
-        // target clears -- most commonly after finishing off (or losing) a nearby
-        // skirmish target, NOT because the march itself needs to change. The old code
-        // unconditionally called routeToTarget() here, discarding whatever path
-        // progress already existed and asking findPath (which has its own small random
-        // tie-breaking jitter, see its own comment) for a brand new route from the
-        // unit's current position every single time -- with many units skirmishing and
-        // re-syncing at once, that reads as a mass of units all jinking sideways/
-        // backward in near-unison. unitDist is straight-line hex distance (not path
-        // distance), so "closest building" can also flip back and forth as units and
-        // buildings shift without the real best route actually changing at all. Now
-        // only recompute when it's genuinely necessary: no goal locked in yet, the
-        // locked goal is no longer the closest (a real change -- e.g. it was
-        // destroyed), or the existing path has actually run out.
-        const hasRoute=u.path&&u.pathIdx<u.path.length;
-        if(bd>Math.max(u.def.range,1) && (!hasRoute || u.marchGoal!==best)){
-          routeToTarget(u,best);
-          u.marchGoal=best;
+    if(!u.target && u.free && !u.hold){
+      /* MARCH COMMITMENT (2026-07-29, Willem: "once they finish their route, they pick the
+         shortest route to a building and stay on that path, with the same exceptions as the
+         normal path").
+
+         The previous version re-picked the closest building EVERY time this branch ran --
+         which is every time a free unit's target clears, most often just after winning a
+         skirmish. "Closest" was straight-line `unitDist`, so it could flip between two
+         buildings as units drifted, and each flip triggered a fresh findPath from the unit's
+         current position: the visible U-turn. Measured before this change: 6 goal swaps and
+         7 full re-paths across only 72 free-march transitions, with 21% of moves lateral.
+
+         Now the goal is chosen ONCE, by shortest actual ROUTE rather than straight-line
+         distance, and then committed to. It is only reconsidered when it genuinely cannot
+         stand: the building is destroyed, or the path ran out while still out of range
+         (blocked by new terrain, a sidestep, Gong Gong's Broken Pillar, etc.) -- and even
+         then the same goal is kept and only the path is recomputed.
+
+         Everything a drawn route already does still applies, per Willem's "same exceptions":
+         scanEncounter above still interrupts to fight, followPath still handles blockers and
+         the join-the-fight assist, and the route-wiping powers (Thoth's Rewrite, Wind
+         Serpent, disruptsRoute) still clear u.path and are picked up by the re-path branch. */
+      if(u.marchGoal && (u.marchGoal.dead || u.marchGoal.side===u.side)){ u.marchGoal=null; u.path=null; }
+      const rng=Math.max(u.def.range,1);
+      const hasRoute=u.path&&u.pathIdx<u.path.length;
+      if(!u.marchGoal){
+        /* Pick by SHORTEST ROUTE, not straight-line: a building that is nearer as the crow
+           flies can be much further to walk to around terrain, and that mismatch is what let
+           "closest" flip back and forth in the first place. */
+        let best=null,bestPath=null,bestLen=1e9;
+        for(const b of buildings){
+          if(b.dead||b.side===u.side) continue;
+          const p=findPath(u.hex,bldAdjacent(b,u.flying),u.flying);
+          if(p && p.length<bestLen){ bestLen=p.length; best=b; bestPath=p; }
         }
+        if(best){
+          u.marchGoal=best;
+          u.path = bestPath.length>1 ? bestPath.slice(1) : null;
+          u.pathIdx=0;
+        } else {
+          /* Nothing reachable (walled in). Fall back to the straight-line nearest so the unit
+             still commits to something and keeps pressing, rather than standing still. */
+          let near=null,nd=1e9;
+          for(const b of buildings){
+            if(b.dead||b.side===u.side) continue;
+            const dd=unitDist(u,b); if(dd<nd){nd=dd;near=b;}
+          }
+          if(near){ u.marchGoal=near; routeToTarget(u,near); }
+        }
+      } else if(!hasRoute && unitDist(u,u.marchGoal)>rng){
+        routeToTarget(u,u.marchGoal); // same goal, route was lost -- rebuild it, do not re-pick
       }
+      if(u.marchGoal) u.target=u.marchGoal;
     }
   }
   if(u.target){
@@ -2517,7 +2589,7 @@ function updateUnit(u,dt){
       }
       if(u.atkT<=0 && !stunned){
         u.atkT=1/u.def.as;
-        u.animAttackUntil=elapsed()+0.28;
+        u.animAttackUntil=elapsed()+(u.key==="axe"&&u.side===0?AXE_ATTACK_DURATION:0.28);
         if(u.def.multiTarget){
           // Sekhmet's Plague Bearer: hits up to N enemies in range simultaneously
           const targets=S.units.filter(e=>!e.dead&&e.side!==u.side&&!hiddenFrom(e,u)&&hexDist(u.hex,e.hex)<=rng
@@ -3174,10 +3246,11 @@ function applyGodPower(casterSide,g,hex){
 function castPlayerPower(key,hex){
   const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
   S.armedPower=null;
-  if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.favor<g.pcost) return;
+  if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.favor<g.pcost){ hint("Power unavailable."); return; }
   S.favor-=g.pcost; st.cdUntil=elapsed()+g.cd;
   applyGodPower(0,g,hex);
   S.chaosBuffUntil[1]=elapsed()+5; // Set's Lord of Storms: the OTHER side gets a dmg window after any cast
+  hint(`${g.power} cast.`);
   refreshUI();
 }
 /* AI-side heuristic target selection, kept separate from applyGodPower's effect
@@ -3854,11 +3927,24 @@ IMG_SPRITES.spear = {
    live in Draft Materials/Egypt Sprite Sources/, not shipped. */
 IMG_SPRITES.archer  = { 0:"assets/sprites/archer_back.png",  1:"assets/sprites/archer_front.png" };
 IMG_SPRITES.axe     = { 0:"assets/sprites/axe_back_mobile.png", 1:"assets/sprites/axe_front.png" };
+/* Player-only Egyptian Axeman attack sequence. Side 1 deliberately keeps its static
+   front sprite: Willem asked to prove the artwork animation on the player's team first. */
+const AXE_ATTACK_FRAMES = [
+  "assets/sprites/axe_attack_0.png", "assets/sprites/axe_attack_1.png",
+  "assets/sprites/axe_attack_2.png", "assets/sprites/axe_attack_3.png",
+  "assets/sprites/axe_attack_4.png", "assets/sprites/axe_attack_5.png"
+];
 IMG_SPRITES.camel   = { 0:"assets/sprites/camel_back.png",   1:"assets/sprites/camel_front.png" };
 IMG_SPRITES.chariot = { 0:"assets/sprites/chariot_back.png", 1:"assets/sprites/chariot_front.png" };
 IMG_SPRITES.khopesh = { 0:"assets/sprites/khopesh_back_mobile.png", 1:"assets/sprites/khopesh_front.png" };
 IMG_SPRITES.priest  = { 0:"assets/sprites/priest_back.png",  1:"assets/sprites/priest_front.png" };
 IMG_SPRITES.slinger = { 0:"assets/sprites/slinger_back_mobile.png", 1:"assets/sprites/slinger_front.png" };
+/* Human siege-unit art (2026-07-30, direct request). These three paired sheets were
+   approved together at the same steep overhead angle, then split, chroma-keyed, and
+   resized to the roster's standard 420px long edge. Gameplay size/stats are unchanged. */
+IMG_SPRITES.elephant = { 0:"assets/sprites/elephant_back.png", 1:"assets/sprites/elephant_front.png" };
+IMG_SPRITES.ram = { 0:"assets/sprites/ram_back.png", 1:"assets/sprites/ram_front.png" };
+IMG_SPRITES.tlequauitl = { 0:"assets/sprites/tlequauitl_back.png", 1:"assets/sprites/tlequauitl_front.png" };
 /* Aztec roster art (2026-07-20, direct chat request — "please incorporate the aztec
    sprites"). Same treatment as the Egyptian batch above: verified already-transparent
    (corner alpha 0), resized from ~1-1.3MB/~1000-1500px sources to 420px on the long
@@ -4075,6 +4161,17 @@ function getSpriteImage(key,side){
   }
   return IMG_CACHE[cacheKey];
 }
+function getAxeAttackImage(frame){
+  const src=AXE_ATTACK_FRAMES[frame];
+  if(!src) return null;
+  const cacheKey="axeAttack:"+frame;
+  if(!IMG_CACHE[cacheKey]){
+    const img=new Image();
+    img.onerror=()=>console.warn("Axeman attack frame failed to load:",frame,src);
+    img.src=src; IMG_CACHE[cacheKey]=img;
+  }
+  return IMG_CACHE[cacheKey];
+}
 /* Some uploaded renders arrive on a flat white backdrop instead of a real transparent
    PNG (a plain JPEG can never carry alpha, so this is unavoidable for JPEG sources).
    Decoded once per cache key (alongside IMG_CACHE) into an offscreen canvas; if the
@@ -4149,6 +4246,14 @@ function spearmanAnim(u){
     rot:walk*0.012+hit*0.018
   };
 }
+const AXE_ATTACK_DURATION=0.48;
+function axeAttackFrame(u){
+  if(u.key!=="axe"||u.side!==0) return -1;
+  const left=(u.animAttackUntil||0)-elapsed();
+  if(left<=0||left>AXE_ATTACK_DURATION) return -1;
+  const progress=1-left/AXE_ATTACK_DURATION;
+  return Math.min(AXE_ATTACK_FRAMES.length-1,Math.floor(progress*AXE_ATTACK_FRAMES.length));
+}
 function drawUnitSprite(u){
   const s=unitSpriteScale(u);
   ctx.save();
@@ -4156,6 +4261,17 @@ function drawUnitSprite(u){
   const anim=spearmanAnim(u);
   ctx.translate(p.x+anim.x,p.y+HEX*0.42+anim.y);
   ctx.rotate(anim.rot);
+  const axeFrame=axeAttackFrame(u);
+  if(axeFrame>=0){
+    const img=getAxeAttackImage(axeFrame);
+    if(img&&img.complete&&img.naturalWidth>0){
+      const src=chromaKeyed(img,"axeAttack:"+axeFrame);
+      const h=32*s;
+      ctx.drawImage(src,-h/2,-h,h,h);
+      ctx.restore();
+      return;
+    }
+  }
   const entry=IMG_SPRITES[u.key];
   const perSide=entry && typeof entry==="object";
   if(u.side===1 && !perSide) ctx.scale(-1,1); // per-side art is already correctly oriented; the legacy mirror is only for one shared image
@@ -4201,6 +4317,11 @@ function warmSpriteCache(){
       else img.onload=()=>{ chromaKeyed(img,cacheKey); renderBG(); };
     }
   }
+  AXE_ATTACK_FRAMES.forEach((src,frame)=>{
+    const img=getAxeAttackImage(frame), cacheKey="axeAttack:"+frame;
+    if(img.complete&&img.naturalWidth>0) chromaKeyed(img,cacheKey);
+    else img.onload=()=>chromaKeyed(img,cacheKey);
+  });
 }
 /* ---------- vector buildings ---------- */
 function cnRoof(g,x,y,w,h){
