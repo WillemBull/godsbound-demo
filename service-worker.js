@@ -8,38 +8,33 @@
  * (it is 100% offline by design), so there is no live data that could go stale behind
  * the cache and no revalidation logic is warranted.
  *
- * UPDATING: bump CACHE_NAME whenever the HTML or any asset changes. Old caches are
- * deleted on activate. Without a bump, returning players keep the previous build,
- * because cache-first never re-checks the network for a URL it already holds.
+ * UPDATING: bump CACHE_NAME and the matching version in release-manifest.json whenever
+ * the HTML or any asset changes. The release validator rejects a mismatch. Old caches
+ * are deleted on activate.
  *
  * The precache list is deliberately SHORT: the shell plus the icons. The ~192 sprite
  * PNGs are NOT precached — that would mean a multi-megabyte download before the first
  * frame. They are cached lazily in fetch() as the game actually requests them, so a
  * player who has loaded the game once has everything they touched available offline.
  */
-const CACHE_NAME = "godsbound-v18";
+const CACHE_NAME = "godsbound-v24";
 
 const PRECACHE = [
   "./",
   "./index.html",
-  "./godsbound_beta.html",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-maskable-512.png",
-  "./assets/icons/apple-touch-icon.png",
+  "./assets/icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    /* Added individually rather than via cache.addAll: the shell is published under two
-       different names (godsbound_beta.html in the dev repo, index.html once the demo
-       publish renames it), so one of those two is always a 404 and addAll would reject
-       the entire install over it. */
-    await Promise.all(PRECACHE.map(url =>
-      cache.add(new Request(url, { cache: "reload" })).catch(() => {})
-    ));
+    /* The release builder always publishes the shell as index.html. A missing core file
+       must abort this install so the previous working service worker remains active. */
+    await cache.addAll(PRECACHE.map(url => new Request(url, { cache: "reload" })));
     await self.skipWaiting();
   })());
 });
@@ -75,7 +70,6 @@ self.addEventListener("fetch", event => {
          app still opens; otherwise let the failure surface. */
       if (req.mode === "navigate") {
         const shell = (await caches.match("./index.html"))
-          || (await caches.match("./godsbound_beta.html"))
           || (await caches.match("./"));
         if (shell) return shell;
       }

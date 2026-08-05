@@ -1,0 +1,29 @@
+{
+  "releaseVersion": 24,
+  "cacheName": "godsbound-v24",
+  "entry": {
+    "source": "godsbound_beta.html",
+    "output": "index.html"
+  },
+  "files": [
+    "manifest.json",
+    "service-worker.js",
+    "release-manifest.json"
+  ],
+  "directories": [
+    "assets/icons",
+    "assets/sprites"
+  ],
+  "developmentOnly": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "HANDOFF.md",
+    "HISTORY.md",
+    "ROADMAP.md",
+    "RELEASE.md",
+    "Draft Materials",
+    "history",
+    "tests",
+    "tools"
+  ]
+}

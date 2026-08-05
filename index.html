@@ -244,6 +244,9 @@
   .pgod .gpower{display:none;font-size:7.5px;color:#ffd97a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pgod.unlocked .gpower{display:block;}
   .pgod.armed{outline:2px solid #ffd97a;box-shadow:0 0 12px rgba(255,217,122,.8);}
+  /* First-tap preview (2026-07-29). Deliberately a different colour and weight from .armed:
+     previewed means "you are reading about this", armed means "this will fire where you tap". */
+  .pgod.previewed{outline:2px solid #b06ef0;box-shadow:0 0 10px rgba(176,110,240,.55);}
   .pgod.cooldown{opacity:.55;}
 
   #cards{display:flex;gap:3px;min-width:0;padding-bottom:8px;}
@@ -1101,6 +1104,7 @@ const S = {
   bldDmg:[0,0],
   playerGods:{}, aiGods:{},
   armedPower:null,
+  godPreview:null, // 2026-07-29: first tap previews a god (passive shown in the hint bar), second tap acts
   drag:null, uid:0,
   phase:"setup", bldDrag:null, setupStep:"faction",
   painted:{F:0,M:0,W:0}, paintMap:{}, paintSelected:null,
@@ -1306,6 +1310,12 @@ function tickEconomy(dt){
 }
 
 /* ---------------- OCCUPANCY (1 unit per hex PER LAYER: ground vs flying) ---------------- */
+/* How long a unit that is still walking a drawn route must keep seeing a legal reason to
+   step OFF that route before it actually does (2026-08-03, Willem: "put a slight pause
+   before a unit decides to deviate from the given route. i don't want the units deviating
+   unless necessary even if it is within the rule"). Deliberately shorter than followPath's
+   0.5s congestion valve, so the ordering of the two safety nets is unchanged. */
+const DEVIATE_DELAY=0.35;
 const HEX_CAPACITY=1; // 2026-07-22 direct chat request: "only one unit of any kind can occupy a hex at a time" (was a 3-slot, size-weighted cap)
 // 2026-07-23 direct chat request: "flying units can be in the same hex as ground
 // units, but not other flying units" -- capacity is now tracked per layer (flying
@@ -1506,6 +1516,7 @@ function refreshUI(){
     el.classList.toggle("unlocked",st.unlocked);
     el.classList.toggle("affordable",!st.unlocked && S.favor>=g.cost);
     el.classList.toggle("armed",S.armedPower===g.key);
+    el.classList.toggle("previewed",S.godPreview===g.key);
     el.classList.toggle("cooldown",st.unlocked && (elapsed()<st.cdUntil || S.favor<g.pcost));
   }
   for(const g of activeAiGods)
@@ -1726,8 +1737,8 @@ function makeUnit(side,key,hex,path){
     hp:def.hp, maxhp:def.hp, size:def.size, flying:!!def.flying,
     pos:{x:ct.x,y:ct.y}, hex:[hex[0],hex[1]], lastHex:null, arrived:true,
     path:path||null, pathIdx:0, free:!path,
-    target:null, marchGoal:null, hold:false, dead:false, sidestepped:false,
-    atkT:Math.random()*0.4, waitT:0, healT:0, assistFrom:null,
+    target:null, marchGoal:null, lockedGoal:null, hold:false, dead:false, sidestepped:false,
+    atkT:Math.random()*0.4, waitT:0, deviateT:0, healT:0, assistFrom:null,
     animMoveUntil:0, animAttackUntil:0, animHitUntil:0,
     buffUntil:0, buffSpd:1, buffDmg:1, slowUntil:0, stunUntil:0,
     // 2026-07-23: fields for the new Egyptian god powers/passives (mythology_game_design.xlsx)
@@ -1738,9 +1749,13 @@ function makeUnit(side,key,hex,path){
     ambushUsed:false
   };
 }
-function queueTrain(side,key,path,src,duty,readyAt){
+function queueTrain(side,key,path,src,duty,readyAt,goal){
   const def = unitsFor(side)[key];
-  S.training.push({side,key,path,src,duty,readyAt:readyAt!==undefined?readyAt:elapsed()+def.train});
+  /* `goal` (2026-07-29): the building the drag-time GHOST route showed the player. Carried
+     through training onto u.lockedGoal so the unit marches to exactly the building that was
+     displayed while they were drawing -- see updateUnit's march block. AI training passes
+     nothing and is unaffected. */
+  S.training.push({side,key,path,src,duty,goal:goal||null,readyAt:readyAt!==undefined?readyAt:elapsed()+def.train});
 }
 function tickTraining(){
   for(let i=S.training.length-1;i>=0;i--){
@@ -1767,6 +1782,7 @@ function tickTraining(){
       for(let k=0;k<spawnN;k++){
         const u=makeUnit(t.side,t.key,at,k===0?t.path:null);
         u.duty=t.duty;
+        if(t.goal) u.lockedGoal=t.goal; // march to the building the ghost route promised
         S.units.push(u);
         if(u.side===1&&u.duty==="attack"&&aiWave) aiWave.units.push(u);
       }
@@ -1886,7 +1902,7 @@ document.addEventListener("pointerdown",e=>{
         e.preventDefault(); return;
       }
     }
-    if(S.armedPower && h){ castPlayerPower(S.armedPower,h); return; }
+    if(S.armedPower && h){ S.godPreview=null; castPlayerPower(S.armedPower,h); return; }
     if(h) tryHoldToggle(h);
   }
 });
@@ -1948,7 +1964,7 @@ document.addEventListener("pointerup",e=>{
   if(!canAfford(d.def.cost,0)){ hint("Not enough resources."); return; }
   pay(d.def.cost,0,d.def.cat==="human");
   const readyAt=elapsed()+Math.max(0, d.def.train-(elapsed()-d.trainStart));
-  queueTrain(0,d.key,d.path,d.spawnBld,"attack",readyAt);
+  queueTrain(0,d.key,d.path,d.spawnBld,"attack",readyAt,d.ghostBld);
   useCard(d.key);
   fx(bldCenter(d.spawnBld),"ring","#e8b84b");
   hint(`${d.def.name} training…`);
@@ -1958,6 +1974,28 @@ document.addEventListener("pointerup",e=>{
 function onGodTap(key){
   if(S.over) return;
   const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
+  /* TWO-TAP UNLOCK (2026-07-29, refined the same day): the confirming tap applies ONLY to
+     UNLOCKING a god. Willem: "if you've selected the god you've seen their passive already,
+     so unlocking the god takes two taps, one to see passive and one to unlock, and then
+     using the god power takes one tap to arm and display the description and then you touch
+     where you want to aim it."
+
+     So: locked god -> first tap previews its PASSIVE in the hint bar, second tap unlocks.
+     Unlocked god -> falls straight through, arming the power in one tap (the existing code
+     below already prints the power's description), and the aim tap on the board fires it.
+     That keeps the deliberation where the real commitment is -- spending favour you cannot
+     get back -- and keeps casting fast, which is what it has to be mid-fight.
+
+     Preview is deliberately not gated on affordability: reading what a god does matters most
+     when you cannot yet afford it, because that is when you are deciding what to save for. */
+  if(!st.unlocked && S.godPreview!==key){
+    S.godPreview=key;
+    const passive = g.passive ? "Passive: "+g.passive : "No passive.";
+    hint(g.name+" \u2014 "+passive+" Tap again to unlock (\u{1F531}"+g.cost+").", true);
+    refreshUI();
+    return;
+  }
+  S.godPreview=null; // confirmed (or already unlocked): fall through and act
   if(!st.unlocked){
     if(S.favor>=g.cost){
       S.favor-=g.cost; st.unlocked=true;
@@ -2354,6 +2392,22 @@ function scanEncounter(u){
   }
   return best;
 }
+/* Where a free unit will march from a given hex, and the route it will take: the enemy
+   building reachable by the SHORTEST PATH (not straight-line distance), plus that path.
+
+   Extracted 2026-07-29 so that updateUnit's real march and the drag-time ghost route are
+   literally the same computation. A preview that can disagree with what the unit then does
+   would be worse than no preview at all -- it would teach the player something false. If the
+   march rule changes, both move together because there is only one rule. */
+function marchRouteFrom(hex,flying,side){
+  let best=null,bestPath=null,bestLen=1e9;
+  for(const b of buildings){
+    if(b.dead||b.side===side) continue;
+    const p=findPath(hex,bldAdjacent(b,flying),flying);
+    if(p && p.length<bestLen){ bestLen=p.length; best=b; bestPath=p; }
+  }
+  return best?{bld:best,path:bestPath}:null;
+}
 function routeToTarget(u,t){
   const goals = isBldg(t)? bldAdjacent(t,u.flying)
     : [t.hex,...neighbors(t.hex[0],t.hex[1]).filter(n=>routeOK(n[0],n[1],u.flying))];
@@ -2538,6 +2592,17 @@ function updateUnit(u,dt){
          scanEncounter above still interrupts to fight, followPath still handles blockers and
          the join-the-fight assist, and the route-wiping powers (Thoth's Rewrite, Wind
          Serpent, disruptsRoute) still clear u.path and are picked up by the re-path branch. */
+      /* LOCKED GOAL (2026-07-29, Willem: "make the units not only prefer to go to the
+         building originally picked, but only go to that building. I would prefer stale over
+         unpredictable"). If the player was shown a ghost route to a specific building while
+         drawing, the unit goes THERE and nowhere else -- it never re-evaluates which building
+         is nearest, even if another becomes closer or easier. The single unavoidable
+         exception is that building being destroyed: there is nothing left to walk to, so it
+         falls back to the normal shortest-route pick. */
+      if(u.lockedGoal){
+        if(u.lockedGoal.dead) u.lockedGoal=null;          // destroyed: the promise cannot be kept
+        else if(u.marchGoal!==u.lockedGoal){ u.marchGoal=u.lockedGoal; u.path=null; }
+      }
       if(u.marchGoal && (u.marchGoal.dead || u.marchGoal.side===u.side)){ u.marchGoal=null; u.path=null; }
       const rng=Math.max(u.def.range,1);
       const hasRoute=u.path&&u.pathIdx<u.path.length;
@@ -2545,12 +2610,8 @@ function updateUnit(u,dt){
         /* Pick by SHORTEST ROUTE, not straight-line: a building that is nearer as the crow
            flies can be much further to walk to around terrain, and that mismatch is what let
            "closest" flip back and forth in the first place. */
-        let best=null,bestPath=null,bestLen=1e9;
-        for(const b of buildings){
-          if(b.dead||b.side===u.side) continue;
-          const p=findPath(u.hex,bldAdjacent(b,u.flying),u.flying);
-          if(p && p.length<bestLen){ bestLen=p.length; best=b; bestPath=p; }
-        }
+        const march=marchRouteFrom(u.hex,u.flying,u.side); // same helper the drag ghost draws
+        const best=march&&march.bld, bestPath=march&&march.path;
         if(best){
           u.marchGoal=best;
           u.path = bestPath.length>1 ? bestPath.slice(1) : null;
@@ -2574,6 +2635,7 @@ function updateUnit(u,dt){
   if(u.target){
     const t=u.target, d=unitDist(u,t), rng=Math.max(u.def.range,1);
     if(d<=rng){
+      u.deviateT=0; // already in contact -- there is nothing to step off-route for
       /* u.hex advances the instant a unit commits to entering the next hex (see
          followPath) so hex-capacity checks can reserve it immediately — but that
          means u.hex can be "ahead" of where the unit is still visually sliding to
@@ -2612,17 +2674,38 @@ function updateUnit(u,dt){
     // matching fix for the return leg). Free-roaming units (u.free, no route to
     // return to) are unaffected -- chasing a moving target is normal for them.
     if(u.def.range<=1 && d<=rng+1 && !isBldg(t) && ((blk&&!u.sidestepped)||u.free)){
-      const step=neighbors(u.hex[0],u.hex[1])
-        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY)
-        .sort((a,b)=>hexDist(a,t.hex)-hexDist(b,t.hex))[0];
-      if(step && hexDist(step,t.hex)<d){
-        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; if(blk) u.sidestepped=true; }
-        return;
+      /* DEVIATION PAUSE (2026-08-03, Willem: "put a slight pause before a unit decides to
+         deviate from the given route. i don't want the units deviating unless necessary even
+         if it is within the rule"). The sidestep below is the ONE place a unit that is still
+         walking a drawn route physically leaves it, and until now it fired the instant it
+         became legal. A great many of those moments resolve themselves inside a few frames --
+         the blocker moves on, dies, or the route simply walks the unit into contact anyway --
+         so the unit left its path for nothing and the player saw a wobble.
+
+         So: hold the route for DEVIATE_DELAY of CONTINUOUS eligibility first, and only then
+         deviate. Legality is unchanged; this only makes the unit wait to see whether the
+         detour is still warranted. During the pause it keeps walking its route normally
+         (this block simply doesn't fire, and execution falls through to followPath).
+
+         The timer is cleared the moment the condition lapses, so it measures one sustained
+         obstruction rather than accumulating across unrelated encounters. Free units are
+         exempt -- they have no route to deviate FROM, and chasing is ordinary behaviour for
+         them; making them hesitate would be a different change Willem did not ask for. */
+      const deviating = blk && !u.free;
+      if(deviating) u.deviateT+=dt; else u.deviateT=0;
+      if(!deviating || u.deviateT>=DEVIATE_DELAY){
+        const step=neighbors(u.hex[0],u.hex[1])
+          .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY)
+          .sort((a,b)=>hexDist(a,t.hex)-hexDist(b,t.hex))[0];
+        if(step && hexDist(step,t.hex)<d){
+          if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; u.deviateT=0; if(blk) u.sidestepped=true; }
+          return;
+        }
       }
-    }
+    } else u.deviateT=0;
     if(u.free && isBldg(t)){ followPath(u,dt); return; }
     u.target=null; // out of range and not blocking: keep marching
-  }
+  } else u.deviateT=0;   // no target at all this frame: nothing to deviate toward
   if(u.def.heal && !u.target){
     u.healT-=dt;
     if(u.healT<=0){
@@ -4768,6 +4851,41 @@ function draw(){
     if(d.path.length){ const eL=hexCenter(...d.path[d.path.length-1]), e=toScreen(eL.x,eL.y);
       ctx.fillStyle=d.legal?"#e8b84b":"#ff463c";
       ctx.beginPath(); ctx.arc(e.x,e.y,5,0,7); ctx.fill(); }
+
+    /* GHOST ROUTE (2026-07-29, direct request): show where the unit will carry on to once
+       the drawn route runs out, so the player can see the whole journey while drawing rather
+       than being surprised by the march afterwards. It is the SAME marchRouteFrom() the unit
+       will actually run, so it cannot promise something different.
+
+       Memoised on the drawn route's end hex: draw() runs every frame, and this is a Dijkstra
+       across up to three buildings -- recomputing it 60x a second on a phone would be wasteful
+       when it only changes when the player extends or rewinds the route. */
+    if(d.path.length){
+      const endHex=d.path[d.path.length-1], key=endHex.join(",");
+      if(d.ghostKey!==key){
+        d.ghostKey=key;
+        const g=marchRouteFrom(endHex,d.def.flying,0);
+        d.ghost=g?g.path:null;
+        d.ghostBld=g?g.bld:null; // locked onto the unit at release -- see pointerup/queueTrain
+      }
+      if(d.ghost&&d.ghost.length>1){
+        /* Deliberately fainter and finer than the drawn route: this is a prediction, not an
+           instruction, and the two must not read as the same thing. */
+        ctx.save();
+        ctx.strokeStyle="rgba(232,184,75,.38)";
+        ctx.lineWidth=2; ctx.lineJoin="round"; ctx.setLineDash([3,6]);
+        ctx.beginPath();
+        for(let i=0;i<d.ghost.length;i++){
+          const gL=hexCenter(d.ghost[i][0],d.ghost[i][1]), gp=toScreen(gL.x,gL.y);
+          if(i===0) ctx.moveTo(gp.x,gp.y); else ctx.lineTo(gp.x,gp.y);
+        }
+        ctx.stroke();
+        const tL=hexCenter(...d.ghost[d.ghost.length-1]), tp=toScreen(tL.x,tL.y);
+        ctx.fillStyle="rgba(232,184,75,.5)";
+        ctx.beginPath(); ctx.arc(tp.x,tp.y,3.5,0,7); ctx.fill();
+        ctx.restore(); ctx.setLineDash([]);
+      }
+    }
   }
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const activeBuildings = S.setupStep==="terrain" ? playerHalf.buildings : buildings;
@@ -5057,7 +5175,7 @@ function startMatch(keepTerrain){
   S.aiGods = {};
   activeAiGods.forEach(g=>{ S.aiGods[g.key]={unlocked:false,cdUntil:0}; });
   buildEnemyGodsUI();
-  S.armedPower=null; S.drag=null; S.paintSelected=null;
+  S.armedPower=null; S.godPreview=null; S.drag=null; S.paintSelected=null;
   buildings.forEach(b=>{ b.hp=b.maxhp; b.dead=false; b.atkTimer=0; });
   DECK_INITIAL = [...S.loadout, ...S.heroPick];
   DECK.length=0; DECK.push(...DECK_INITIAL);
