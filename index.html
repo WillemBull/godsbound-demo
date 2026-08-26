@@ -230,6 +230,52 @@
   .legenddetail{margin-top:8px;padding:8px 10px;border-radius:10px;border:1px solid #6b5426;background:#241a12;}
   .legendlabel{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--egypt-gold);margin-bottom:3px;}
   .legendtext{font-size:9.5px;line-height:1.35;color:#aeb6c6;}
+  /* TUTORIAL (2026-08-25). Its own space, layered ABOVE the menu overlay and owning no
+     part of the real pickers. #tutorialbtn is a child of #menuscreen rather than of
+     #menupanel so it is positioned against the whole overlay and can never affect the
+     panel's flow or any bar's height. */
+  #tutorialbtn{position:absolute;top:8px;right:8px;z-index:58;pointer-events:auto;
+    font-family:Georgia,'Times New Roman',serif;font-size:10px;letter-spacing:1.1px;text-transform:uppercase;
+    padding:5px 10px;border-radius:0;border:1px solid #6b5426;background:#241a12;color:#f0dca7;cursor:pointer;}
+  #tutorialscreen{position:absolute;inset:0;z-index:70;display:none;pointer-events:auto;
+    background:rgba(8,8,14,.97);flex-direction:column;padding:12px 0 8px;text-align:left;}
+  #tutorialscreen.open{display:flex;}
+  #tutorialpanel{display:flex;flex-direction:column;min-height:0;flex:1;width:min(94%,520px);margin:0 auto;position:relative;}
+  #tutclose{position:absolute;top:-4px;right:0;z-index:2;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;
+    font-size:12px;line-height:1;padding:4px 8px;cursor:pointer;}
+  #tutsteps{font-size:9px;letter-spacing:1.4px;color:#8a93ab;text-transform:uppercase;margin-bottom:6px;}
+  #tutsteps b{color:#f0dca7;}
+  #tuttitle{font-family:Georgia,'Times New Roman',serif;font-size:17px;letter-spacing:1.4px;color:#f4d99b;
+    margin:0 0 8px;text-transform:uppercase;padding-right:34px;}
+  #tutbody{overflow-y:auto;min-height:0;flex:1;padding-right:2px;}
+  .tutlead{font-size:11px;line-height:1.45;color:#c8cfdd;margin-bottom:9px;}
+  .tutlead b{color:#f0dca7;}
+  .tutnote{font-size:10px;line-height:1.4;color:#aeb6c6;border-left:2px solid #6b5426;padding:5px 0 5px 8px;margin:9px 0;}
+  .tutrow{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(107,84,38,.45);}
+  .tutrow .uport{width:46px;flex:0 0 46px;}
+  .tutrowcopy{flex:1;min-width:0;}
+  .tutname{font-size:11px;font-weight:700;color:#f0dca7;}
+  /* DRILL (2026-08-25). Lives in #boardwrap over the live board. pointer-events:none on the
+     bar itself is load-bearing: step 3 asks the player to TAP THE BATTLEFIELD, so the
+     instructions must never intercept that tap. Only the buttons take input. */
+  #drillbar{position:absolute;top:0;left:0;right:0;z-index:40;display:none;pointer-events:none;
+    padding:8px 10px 9px;background:linear-gradient(180deg,rgba(8,8,14,.95),rgba(8,8,14,.82) 78%,rgba(8,8,14,0));text-align:left;}
+  #drillbar.open{display:block;}
+  #drillstep{font-size:8.5px;letter-spacing:1.4px;color:#8a93ab;text-transform:uppercase;}
+  #drillstep b{color:#f0dca7;}
+  #drilltitle{font-family:Georgia,'Times New Roman',serif;font-size:14px;letter-spacing:1.1px;
+    color:#f4d99b;text-transform:uppercase;margin:1px 0 3px;padding-right:52px;}
+  #drillbody{font-size:10.5px;line-height:1.4;color:#d3d9e6;padding-right:52px;}
+  #drillbody b{color:#f0dca7;}
+  #drillexit{position:absolute;top:7px;right:8px;pointer-events:auto;font-size:9px;letter-spacing:1px;
+    text-transform:uppercase;padding:4px 8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;cursor:pointer;}
+  #drilldone{pointer-events:auto;margin-top:7px;font-family:Georgia,'Times New Roman',serif;font-size:11px;
+    letter-spacing:1.2px;text-transform:uppercase;padding:7px 14px;border:1px solid #6b5426;
+    background:#241a12;color:#f0dca7;cursor:pointer;display:none;}
+  #drilldone.open{display:inline-block;}
+  .tutgloss{font-size:10px;line-height:1.35;color:#e0cf9e;margin:2px 0 3px;}
+  .tutrole{display:inline-block;font-size:8px;letter-spacing:1.2px;color:#0d0d12;background:#c8a961;
+    padding:1px 5px;margin-left:5px;vertical-align:1px;border-radius:2px;font-weight:800;}
   .trayempty{font-size:10px;color:#6f7786;align-self:center;}
   #btnbattle.disabled,.setupnext.disabled{opacity:.42;cursor:not-allowed;}
   .pickstep{height:100%;display:flex;flex-direction:column;min-height:0;padding:12px 0 8px;position:relative;}
@@ -305,6 +351,13 @@
 
   <div id="boardwrap">
     <canvas id="board"></canvas>
+    <div id="drillbar">
+      <button id="drillexit" onclick="endDrill()">Exit</button>
+      <div id="drillstep"></div>
+      <div id="drilltitle"></div>
+      <div id="drillbody"></div>
+      <button id="drilldone" onclick="endDrill()">Back to the menu</button>
+    </div>
     <div id="banner"></div>
     <div id="endscreen">
       <h1 id="endtitle"></h1>
@@ -313,6 +366,16 @@
       <button onclick="openDeckMenu()">Menu</button>
     </div>
     <div id="menuscreen">
+      <button id="tutorialbtn" onclick="openTutorial()">Tutorial</button>
+      <div id="tutorialscreen">
+        <div id="tutorialpanel">
+          <button id="tutclose" onclick="closeTutorial()">&#10005;</button>
+          <div id="tutsteps"></div>
+          <h2 id="tuttitle"></h2>
+          <div id="tutbody"></div>
+          <div class="setupnav"><button class="setupback" id="tutprev" onclick="tutorialGo(-1)">&larr; Back</button><button class="setupnext" id="tutnext" onclick="tutorialGo(1)">Next &rarr;</button></div>
+        </div>
+      </div>
       <div id="menupanel">
         <div id="stephome">
           <h1>GODSBOUND</h1>
@@ -1284,12 +1347,14 @@ function initDeckPresets(){
 }
 function editDeckSlot(slot){
   if(slot!==0&&slot!==1)return;
+  endDrill(true); // see onBattleTap
   if(S.deckEditing)saveActiveDeck();
   applyDeckPreset(slot,true);startMatch(true);S.phase="setup";S.setupStep="faction";S.selectionFaction=S.playerFaction;S.deckEditing=true;
   $("menuscreen").style.display="flex";renderDeckSlots();
 }
 function playDeckSlot(slot){
   if(slot!==0&&slot!==1)return;
+  endDrill(true); // see onBattleTap
   if(S.deckEditing)saveActiveDeck();
   if(!applyDeckPreset(slot)){hint("Build this deck before playing it.");return;}
   startMatch(true);S.phase="battle";S.selectionFaction=S.playerFaction;S.deckEditing=false;
@@ -1790,7 +1855,280 @@ function toggleGodDetailPick(){
   toggleGodPick(godDetailKey);
   renderGodPicker(); // refreshing the grid also closes the detail overlay (see above)
 }
+/* ================= TUTORIAL — a separate, READ-ONLY space (2026-08-25) =================
+   Willem's rule, verbatim: "this should be its own separate space ... nothing should
+   change in the true game play or picking." Everything below honours that literally:
+
+     - It NEVER writes S.godPick, S.heroPick, S.loadout, S.playerFaction, S.setupStep,
+       S.phase or any match state. It only READS FACTIONS and two caps off S.
+     - It is not wired into renderGodPicker/renderHeroPicker/renderLoadout at all. Those
+       three functions are untouched; the tutorial renders its own rows from the data.
+     - The page index lives in a module-level `let`, deliberately NOT in S, so startMatch()
+       has nothing to reset and saveActiveDeck() has nothing to accidentally persist.
+     - It walks the same three choices in the same order every time (Gods, Heroes, Units),
+       after one page establishing what the two currencies buy. No first-run flag, no
+       progress memory, no branching — "the same steps each time".
+
+   EVERY example is DERIVED from FACTIONS at render time rather than written out in prose.
+   That is the point: rebalance a cost or swap a default and the tutorial updates itself
+   instead of quietly starting to lie. The only hard-coded numbers are the ones read live
+   off S (FOOD_CAP/FAVOR_CAP) and the 180s match length, which is S's own starting t. */
+let tutorialPage=0;
+const TUTORIAL_MATCH_SECONDS=180; // mirrors S.t's initial value; the one number with no live source
+/* Presentation-only role tag. Deliberately mirrors the shape of unitDescription()'s
+   branches and lives next to nothing else -- it must never be consulted by game logic,
+   or it becomes a balance special case in disguise. */
+function tutorialRole(u){
+  if(u.siege) return "SIEGE";
+  if(u.splash) return "SPLASH";
+  if(u.heal) return "SUPPORT";
+  if(u.dtype==="ranged") return "RANGED";
+  if(u.armor==="shielded") return "SHIELD";
+  return "MELEE";
+}
+function tutorialFaction(){ return FACTIONS[S.playerFaction] || FACTIONS.egypt; }
+/* One line per role saying what the JOB is, separate from what the unit is. This exists
+   because unitDescription() cannot carry it: its branches test heal/siege/ranged/shielded/
+   heavy in that order, so the SPLASH unit (heavy armour in all three pantheons) falls into
+   the "heavy close-combat fighter" branch and the word splash never appears anywhere in the
+   picker's own copy -- see HANDOFF. Rather than change the real picker's text, which Willem
+   ruled out, the tutorial supplies the missing half itself. */
+const TUTORIAL_ROLE_GLOSS={
+  SHIELD :"Holds the front line so everything behind it can work.",
+  RANGED :"Attacks from two hexes back, outside melee reach.",
+  SPLASH :"Hits several enemies at once — the answer to massed cheap infantry.",
+  SIEGE  :"Damages buildings, which is the only thing that actually wins the match.",
+  SUPPORT:"Heals your units and hits myth units harder than anything else.",
+  MELEE  :"Cheap close-combat pressure and pursuit."
+};
+/* showRole is off for heroes on purpose: the four roles are a HUMAN-ROSTER idea (the
+   shield/ranged/splash/siege spread), and tagging a hero SIEGE next to the siege unit
+   teaches the wrong lesson about what heroes are for. */
+function tutorialUnitRow(key,showRole){
+  const f=tutorialFaction(), u=f.units[key];
+  if(!u) return "";
+  const role=tutorialRole(u);
+  const tag=showRole?`<span class="tutrole">${role}</span>`:"";
+  const gloss=showRole?`<div class="tutgloss">${TUTORIAL_ROLE_GLOSS[role]||""}</div>`:"";
+  return `<div class="tutrow"><div class="uport">${unitPortrait(key,u,true)}</div>
+    <div class="tutrowcopy"><div class="tutname">${u.name}${tag}</div>
+    ${gloss}
+    <div class="pickdesc">${unitDescription(u)}</div>
+    <div class="pickstats">${unitStats(u)}</div></div></div>`;
+}
+function tutorialGodRow(key){
+  const f=tutorialFaction(), g=f.allGods.find(x=>x.key===key);
+  if(!g) return "";
+  const myth=f.units[g.myth];
+  return `<div class="tutrow"><div class="uport">${godPortrait(g)}</div>
+    <div class="tutrowcopy"><div class="tutname">${g.name}</div>
+    <div class="pickdesc"><b>${g.power}</b> — ${g.desc}${g.passive?` <b>Passive:</b> ${g.passive}.`:""}</div>
+    <div class="pickstats">Unlock ${g.cost} Favor · Power ${g.pcost} Favor · Cooldown ${g.cd}s${myth?` · Myth: ${myth.name}`:""}</div></div></div>`;
+}
+/* Each page is a function so nothing is evaluated at load time -- FACTIONS and the
+   portrait helpers are all read fresh on open, and the pages follow the player's own
+   pantheon (a read, never a write) rather than always lecturing in Egyptian. */
+const TUTORIAL_PAGES=[
+  { title:"Your deck, and how it wins",
+    build(){
+      return `<div class="tutlead">A deck is exactly three choices: <b>4 gods</b>, <b>2 heroes</b> and
+        <b>4 human units</b>. The next three pages walk through them in that order — the same order the
+        real setup screens use.</div>
+      <div class="tutlead">A match lasts <b>${TUTORIAL_MATCH_SECONDS} seconds</b>. Each side has a City, a
+        Temple and a Fortress. Destroy all three and you win instantly. If time runs out, whoever destroyed
+        more buildings wins, and total building damage breaks a tie.</div>
+      <div class="tutlead"><b>🌾 Food</b> comes from your City and buys human units. It caps at
+        ${S.FOOD_CAP}.</div>
+      <div class="tutlead"><b>🔱 Favor</b> comes from your Temple and does three separate jobs: it
+        <b>unlocks</b> gods, it <b>casts</b> their powers, and it <b>buys myth units</b>. It caps at
+        ${S.FAVOR_CAP}.</div>
+      <div class="tutnote">Favor is the tight one, because all three of those jobs compete for the same
+        bar. That is why the god page matters more than it looks.</div>`;
+    } },
+  { title:"Gods — choose 4",
+    build(){
+      const f=tutorialFaction();
+      const costs=f.allGods.map(g=>g.cost);
+      const lo=Math.min(...costs), hi=Math.max(...costs);
+      return `<div class="tutlead">You pick four gods now, but you do <b>not</b> have them yet. Gods are
+        <b>unlocked during the match</b>, with Favor. Picking four is choosing what you could afford, not
+        what you start with.</div>
+      <div class="tutlead">Each god gives you three things: a <b>passive</b> that switches on the moment you
+        unlock them and stays on, a <b>power</b> you can cast again and again on a cooldown, and a
+        <b>myth unit</b> that only that god can field.</div>
+      <div class="tutlead">Across this pantheon, unlocking runs from <b>${lo}</b> to <b>${hi} Favor</b>
+        against a bar that caps at ${S.FAVOR_CAP}. A cheap god is on the board early. An expensive one buys
+        you a stronger match later at the price of a long opening with no gods at all.</div>
+      <div class="tutnote">That trade is the whole decision. There is no wrong answer, but a deck of four
+        expensive gods will spend most of the match as four locked portraits.</div>
+      <div class="tutlead">A balanced set for this pantheon:</div>
+      ${f.defaultGodPick.map(tutorialGodRow).join("")}
+      <div class="tutnote">In the real picker, tap any god and choose <b>Info</b> for its full description,
+        its myth unit's stats, and the legend behind it.</div>`;
+    } },
+  { title:"Heroes — choose 2",
+    build(){
+      const f=tutorialFaction();
+      return `<div class="tutlead">Heroes are your two named champions. You train them with Food like any
+        other unit, and each one carries a <b>signature ability</b> nothing else in the game has.</div>
+      <div class="tutlead">Units come in three categories, and they beat each other in a ring at
+        <b>×1.5</b> damage: <b>human beats hero</b>, <b>hero beats myth</b>, <b>myth beats human</b>.</div>
+      <div class="tutnote">Read that ring carefully — it is the reason a hero is not simply "the strong
+        one". Your hero tears through the myth units your opponent's gods summon, and gets swarmed by
+        cheap human infantry.</div>
+      <div class="tutlead">Your pantheon's two:</div>
+      ${f.defaultHeroes.map(k=>tutorialUnitRow(k,false)).join("")}
+      <div class="tutnote">In the real picker, tap <b>Legend</b> on a hero for the myth they come from.</div>`;
+    } },
+  { title:"Human units — choose 4",
+    build(){
+      const f=tutorialFaction();
+      return `<div class="tutlead">These four are what you actually spend most of the match training. They
+        are cheap, they die, and you keep sending more.</div>
+      <div class="tutlead">The recommended four are deliberately <b>four different jobs</b> rather than four
+        good units. A shield holds the front. A ranged unit damages from safely behind it. A splash unit
+        answers the massed cheap infantry the AI likes to send. And a siege unit breaks buildings.</div>
+      <div class="tutnote">Siege is the one to think hardest about, because <b>buildings are the win
+        condition</b>. A deck with no siege can win every fight on the board and still lose on the
+        tiebreak, having never damaged anything that counts.</div>
+      ${f.defaultLoadout.map(k=>tutorialUnitRow(k,true)).join("")}
+      <div class="tutlead">Every other unit in the pantheon stays available in the real picker — this four
+        is a starting point, not a rule.</div>`;
+    } },
+  { title:"Now try it", nextLabel:"Start the drill", nextAction:"drill",
+    build(){
+      return `<div class="tutlead">That is the deck. The rest of the game is three actions, and you can
+        practise all three right now on a real board with nothing attacking you.</div>
+      ${DRILL_STEPS.map((d,i)=>`<div class="tutrow"><div class="tutrowcopy">
+        <div class="tutname">${i+1}. ${d.title}</div><div class="pickdesc">${d.body}</div></div></div>`).join("")}
+      <div class="tutnote">It takes about 45 seconds. Food and Favor are topped up for you so nothing
+        stalls, and there is no timer — the drill ends when you have done all three.</div>`;
+    } }
+];
+function renderTutorial(){
+  const page=TUTORIAL_PAGES[tutorialPage];
+  if(!page) return;
+  $("tuttitle").textContent=page.title;
+  $("tutbody").innerHTML=page.build();
+  $("tutsteps").innerHTML=`Step <b>${tutorialPage+1}</b> of ${TUTORIAL_PAGES.length}`;
+  const prev=$("tutprev"), next=$("tutnext");
+  prev.textContent = tutorialPage===0 ? "✕ Close" : "← Back";
+  next.textContent = page.nextLabel || (tutorialPage===TUTORIAL_PAGES.length-1 ? "Done" : "Next →");
+}
+/* Always opens at page 1. "Walks through the same steps each time" -- deliberately no
+   memory of where the player stopped last time. */
+function openTutorial(){
+  tutorialPage=0;
+  renderTutorial();
+  $("tutorialscreen").classList.add("open");
+}
+function closeTutorial(){
+  $("tutorialscreen").classList.remove("open");
+}
+/* One entry point for both nav buttons. Stepping back off page 1 or forward off the last
+   page closes -- the ends of the walkthrough are exits, not dead buttons. */
+function tutorialGo(delta){
+  /* a page may claim the forward button for its own action (the last one starts the drill) */
+  const cur=TUTORIAL_PAGES[tutorialPage];
+  if(delta>0 && cur && cur.nextAction==="drill"){ beginDrill(); return; }
+  const next=tutorialPage+delta;
+  if(next<0||next>=TUTORIAL_PAGES.length){ closeTutorial(); return; }
+  tutorialPage=next;
+  renderTutorial();
+}
+/* ================= HANDS-ON DRILL (2026-08-25, direct request) =================
+   "lets add a game walk through that shows them how to spawn units and unlock gods and
+   cast god powers after they get walked through the set up. lets not make it a full game
+   but condence the important bits into about 45 seconds."
+
+   Three objectives, in the order the player meets them in a real match: train a unit,
+   unlock a god, cast its power. It runs on the REAL board with the REAL systems -- there
+   is no simulated fake of any of it, because the whole point is that the thing they just
+   did is the thing they will do in a match.
+
+   HOW IT STAYS ~45 SECONDS, without a countdown:
+     - Food and Favor are topped to their caps at the start of every step, so no objective
+       can ever stall waiting on income. That is the single biggest time sink removed.
+     - tickAI is gated off, so nothing is attacking and there is no pressure to react to.
+     - It ends the moment the third objective is met. There is deliberately NO timer cutting
+       the player off mid-lesson; 45s is the expected length, not a limit. The only clock
+       involvement is that endMatch() hands over to endDrill() instead of showing a
+       VICTORY/DEFEAT screen, in case someone leaves it open for the full 180s.
+
+   WHAT IT BORROWS AND GIVES BACK: the drill needs a known deck so the instructions are
+   true, so it saves the player's four gods / two heroes / four units, plays the faction's
+   recommended set (the same deck the tutorial pages just explained), and restores the
+   player's own on exit. That save/restore is the ONLY reason this touches selection state
+   at all, and test_tutorial.js asserts the round trip. */
+let drill=null;                    // {i, deck:{...}} while running, null otherwise. Module-level,
+                                   // NOT on S, for the same reason as tutorialPage.
+const DRILL_STEPS=[
+  { key:"train", title:"Send a soldier",
+    body:"Drag a unit card from the bottom bar <b>through one of your buildings</b>, keep dragging to draw a path onto the board, then let go. The unit is trained at that building and marches the path you drew." },
+  { key:"unlock", title:"Unlock a god",
+    body:"Tap a god portrait at the top <b>once</b> to read what its passive does, then tap it <b>again</b> to unlock it with Favor. The passive switches on the moment it unlocks and stays on for the rest of the match." },
+  { key:"cast", title:"Cast a god power",
+    body:"Tap your unlocked god <b>once</b> to arm its power, then <b>tap the battlefield</b> where you want it to land. Favor pays for the cast and the god goes on cooldown before you can use it again." }
+];
+function drillStep(){ return drill? DRILL_STEPS[drill.i] : null; }
+/* Topping both bars at every step is a teaching decision, not a balance one: a new player
+   waiting 20 seconds for Favor has learned nothing except that the game is slow. */
+function drillGrant(){ S.food=S.FOOD_CAP; S.favor=S.FAVOR_CAP; }
+function beginDrill(){
+  if(drill) return;
+  const f=tutorialFaction();
+  drill={ i:0, deck:{ gods:[...S.godPick], heroes:[...S.heroPick], units:[...S.loadout] } };
+  S.godPick=[...f.defaultGodPick]; S.heroPick=[...f.defaultHeroes]; S.loadout=[...f.defaultLoadout];
+  closeTutorial();
+  $("menuscreen").style.display="none";
+  startMatch(true);
+  S.phase="battle"; S.deckEditing=false;
+  drillGrant();
+  $("drilldone").classList.remove("open");
+  $("drillbar").classList.add("open");
+  renderDrill();
+}
+/* Restores the player's own deck. `silent` is for the guards on the real play paths, which
+   run their own startMatch and must not have this one fight them for control. */
+function endDrill(silent){
+  if(!drill) return;
+  S.godPick=[...drill.deck.gods]; S.heroPick=[...drill.deck.heroes]; S.loadout=[...drill.deck.units];
+  drill=null;
+  $("drillbar").classList.remove("open");
+  $("drilldone").classList.remove("open");
+  if(silent) return;
+  startMatch(true);
+  S.phase="setup"; S.setupStep="units"; S.deckEditing=true;
+  $("menuscreen").style.display="flex";
+  if(typeof renderLoadout==="function") renderLoadout();
+}
+/* Called from the three real game events. An event for a step that is not the current one
+   is ignored rather than skipping ahead -- the order is the lesson. */
+function drillEvent(kind){
+  const step=drillStep();
+  if(!step||step.key!==kind) return;
+  drill.i++;
+  if(drill.i>=DRILL_STEPS.length){ drillFinish(); return; }
+  drillGrant();
+  renderDrill();
+}
+function drillFinish(){
+  if(!drill) return;
+  drill.i=DRILL_STEPS.length;
+  $("drillstep").innerHTML="Done";
+  $("drilltitle").textContent="That is the whole game";
+  $("drillbody").innerHTML="Train units to apply pressure, unlock gods to change what you can do, and spend Favor on powers at the moment they matter. Everything else is which four gods, two heroes and four units you brought.";
+  $("drilldone").classList.add("open");
+}
+function renderDrill(){
+  const step=drillStep();
+  if(!step) return;
+  $("drillstep").innerHTML=`Step <b>${drill.i+1}</b> of ${DRILL_STEPS.length}`;
+  $("drilltitle").textContent=step.title;
+  $("drillbody").innerHTML=step.body;
+}
 function onBattleTap(){
+  endDrill(true); // never let a real match start with the drill's AI gate still active
   if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before you can battle."); return; }
   saveActiveDeck();
   $("menuscreen").style.display="none";
@@ -1864,6 +2202,7 @@ function queueTrain(side,key,path,src,duty,readyAt,goal){
   if(doubled) S.ptahCharge[side]=false;
   else if(S.ptahCharge[side] && !side) hint("Creator's Word shapes mortal things — train a soldier.");
   S.training.push({side,key,path,src,duty,goal:goal||null,spawnCount:doubled?2:undefined,readyAt:readyAt!==undefined?readyAt:elapsed()+def.train});
+  if(drill&&side===0) drillEvent("train"); // hands-on drill objective 1
 }
 function tickTraining(){
   for(let i=S.training.length-1;i>=0;i--){
@@ -1897,6 +2236,12 @@ function tickTraining(){
         if(u.side===1&&u.duty==="attack"&&aiWave) aiWave.units.push(u);
       }
       fx(hexCenter(at[0],at[1]),"spawn", t.side?"#c0392b":"#e8b84b");
+      /* Ptah's Creator's Word has no board location at CAST time -- it arms a charge and the
+         player decides later what to spend it on -- so its art lands HERE, at the building
+         the doubled unit walks out of, at the moment the word is fulfilled. t.spawnCount is
+         the one-shot Ptah charge; def.spawnCount is the permanent per-type plumbing, which
+         is not Ptah and must not borrow his glyph. */
+      if(t.spawnCount){ const pc=hexCenter(at[0],at[1]); spawnPowerFxAt("ptah",pc.x,pc.y); }
       S.training.splice(i,1);
     }
   }
@@ -2126,6 +2471,7 @@ function onGodTap(key){
   if(!st.unlocked){
     if(S.favor>=godUnlockCost(g,0)){
       S.favor-=godUnlockCost(g,0); st.unlocked=true;
+      if(drill) drillEvent("unlock"); // hands-on drill objective 2
       DECK.push(g.myth); renderCards();
       banner(`${g.name} unlocked!`,"#e8b84b");
       hint(`${g.power} available. ${FACTIONS[S.playerFaction].units[g.myth].name} joined your card rotation.`);
@@ -3325,7 +3671,10 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(h,hex)))-Math.min(...b.hexes.map(h=>hexDist(h,hex))))[0];
       if(!bld) return false;
       bld.invulnUntil=elapsed()+8;
-      fx(bldCenter(bld),"ring","#e8b84b"); castBanner(casterSide,g,"#e8b84b");
+      const bc=bldCenter(bld);
+      fx(bc,"ring","#e8b84b");
+      spawnPowerFxAt("bastet",bc.x,bc.y); // the ward sits on the BUILDING the branch chose
+      castBanner(casterSide,g,"#e8b84b");
       return true;
     }
     case "osiris": {
@@ -3380,6 +3729,10 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       } else {
         fx(target.pos,"ring","#6a4c93"); fx(target.pos,"text","#6a4c93","Spared");
       }
+      // the scales appear over the unit that was WEIGHED, which is the nearest enemy within
+      // 2 hexes and so is routinely not the hex that was tapped. Both outcomes show it --
+      // a judgment happened either way, and hiding it on a spare would read as a fizzle.
+      spawnPowerFxAt("anubis",target.pos.x,target.pos.y);
       castBanner(casterSide,g,"#6a4c93");
       return true;
     }
@@ -3501,7 +3854,9 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       target.pathIdx = 0;
       target.free = target.path.length===0;
       target.target = null;
-      fx(target.pos,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      fx(target.pos,"ring","#6a4c93");
+      spawnPowerFxAt("thoth",target.pos.x,target.pos.y); // the glyph rewrites THAT unit's path
+      castBanner(casterSide,g,"#6a4c93");
       return true;
     }
     case "sekhmet": {
@@ -3525,7 +3880,9 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
       if(!mine) return false;
       mine.invisible=true;
-      fx(mine.pos,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
+      fx(mine.pos,"ring","#6a4c93");
+      spawnPowerFxAt("nephthys",mine.pos.x,mine.pos.y); // the veil falls over the unit that vanished
+      castBanner(casterSide,g,"#6a4c93");
       return true;
     }
     case "erlangshen": {
@@ -3563,7 +3920,9 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         .sort((a,b)=>hexDist(a.hex,hex)-hexDist(b.hex,hex))[0];
       if(!mine) return false;
       mine.invulnUntil=elapsed()+4;
-      fx(mine.pos,"ring","#ffb3c6"); castBanner(casterSide,g,"#ffb3c6");
+      fx(mine.pos,"ring","#ffb3c6");
+      spawnPowerFxAt("xiwangmu",mine.pos.x,mine.pos.y); // the peach goes to the unit that ate it
+      castBanner(casterSide,g,"#ffb3c6");
       return true;
     }
     case "zhurong": {
@@ -3702,6 +4061,9 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       half2.side=casterSide; half2.maxhp=half2.hp*0.4; half2.hp=half2.maxhp; half2.despawnAt=elapsed()+10; half2.free=false;
       half1.target=half2; half2.target=half1;
       S.units.push(half1,half2);
+      // one glyph on EACH half -- the power's whole statement is that there are now two
+      spawnPowerFxAt("coyolxauhqui",half1.pos.x,half1.pos.y);
+      spawnPowerFxAt("coyolxauhqui",half2.pos.x,half2.pos.y);
       fx(pt,"ring","#6a4c93"); castBanner(casterSide,g,"#6a4c93");
       return true;
     }
@@ -3744,7 +4106,10 @@ function castPlayerPower(key,hex,pickedGod){
   S.armedPower=null;
   if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.favor<godPowerCost(g,0)){ hint("Power unavailable."); return; }
   S.favor-=godPowerCost(g,0); st.cdUntil=elapsed()+g.cd;
-  if(applyGodPower(0,g,hex,pickedGod)!==false) spawnPowerFx(key,hex); // only when the power actually applied
+  if(applyGodPower(0,g,hex,pickedGod)!==false){
+    spawnPowerFx(key,hex); // only when the power actually applied
+    if(drill) drillEvent("cast"); // hands-on drill objective 3
+  }
   S.chaosBuffUntil[1]=elapsed()+5; // Set's Lord of Storms: the OTHER side gets a dmg window after any cast
   hint(`${g.power} cast.`);
   refreshUI();
@@ -4137,6 +4502,9 @@ function pickAiUnit(){
   return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
 }
 function tickAI(dt){
+  /* The drill is a lesson, not a fight: with the AI gated off nothing trains, nothing
+     attacks, and the player can read an instruction without losing a building for it. */
+  if(drill) return;
   tickAiWave();
   for(const g of activeAiGods){
     const st=S.aiGods[g.key];
@@ -4699,8 +5067,9 @@ function getSpriteImage(key,side){
    - hold: seconds the loop frame persists. 0 = an instant power, and the loop phase is
      then a zero-length window that is simply skipped. Keep hold in sync with the real
      duration in the god's data-table effect, or the art will outlive the mechanic.
-   - anchor:"none" = a UI-only power (Isis's Secret Name, Ptah's Creator's Word). It has no
-     board location, so it deliberately spawns nothing.
+   - anchor:"none" = a UI-only power (Isis's Secret Name). It has no board location, so it
+     deliberately spawns nothing. Ptah's Creator's Word is NOT one of these any more: it has
+     no location at CAST time, but it has an exact one at FULFILMENT -- see tickTraining.
 
    Example entry (do NOT enable without the files -- it will warn and fall back):
      POWER_FX.horus = { hexes:9, hold:0, frames:{
@@ -4716,8 +5085,9 @@ const POWER_FX = {};
    telegraph/impact/dissipate structure AND pre-sized in exact multiples of one hex (56px),
    so they drop straight onto the footprints the sheet specifies -- no rescaling needed.
    Falcon's Wrath ships 504x56, i.e. 9 hexes x 1, which is exactly the row sweep.
-   Bastet's Guardian's Grace has no art yet; Isis's Secret Name has art but it is UI-scale
-   (36px) and targets a god BUTTON, not the board, so this pipeline cannot place it. ---- */
+   Isis's Secret Name has art but it is UI-scale (36px) and targets a god BUTTON, not the
+   board, so this pipeline cannot place it -- it is already doing its job as the god-tile
+   lock glyph, and Isis is the ONE Egyptian power with no board art. ---- */
 POWER_FX.horus = { hexes:9, hold:0, anchor:"row", frames:{
   telegraph:"assets/sprites/fx_horus_telegraph.png",
   impact:   "assets/sprites/fx_horus_impact.png",
@@ -4730,6 +5100,63 @@ POWER_FX.osiris = { hexes:1, hold:0, anchor:"self", frames:{
   telegraph:"assets/sprites/fx_osiris_telegraph.png",
   impact:   "assets/sprites/fx_osiris_impact.png",
   dissipate:"assets/sprites/fx_osiris_dissipate.png" } };
+/* ---- The remaining eight Egyptian powers (2026-08-25, direct request). Same pipeline, same
+   pre-sized-in-whole-hexes art (56px = 1 hex, 112 = 2, 280 = 5, 504 = 9). Footprints are read
+   straight off the file dimensions and each hold is copied from the duration in the god's own
+   branch in applyGodPower -- if a duration ever moves, move the hold with it.
+
+   FIVE of the eight are anchor:"self", because their art belongs on the THING AFFECTED and
+   not on the tapped hex. All five pick their subject by proximity to the cast point, so the
+   subject is routinely a hex or two away from where the player's finger landed:
+     anubis    the unit that was weighed (whether it died or was spared -- both are a judgment)
+     bastet    the building that was warded (the branch picks the nearest one, not the tapped hex)
+     nephthys  the unit that vanished
+     thoth     the unit whose route was reversed
+     ptah      the doubled unit, at the building it walks out of, WHENEVER that happens --
+               Creator's Word arms a charge, so the cast itself has no location at all
+   Set and Sekhmet are ordinary zone powers centred where you aim (radius 2 = 5 hexes across,
+   which is exactly what their 280px art measures).
+
+   Ra needs a new anchor:"col" -- the solar barque sails the target's COLUMN, the mirror of
+   Horus's row, and his art ships rotated to match (56x504 where Horus is 504x56). ---- */
+POWER_FX.ra = { hexes:1, hold:0, anchor:"col", frames:{
+  telegraph:"assets/sprites/fx_ra_telegraph.png",
+  impact:   "assets/sprites/fx_ra_impact.png",
+  dissipate:"assets/sprites/fx_ra_dissipate.png" } };
+/* hold:8 == bld.invulnUntil = elapsed()+8 in the bastet branch. */
+POWER_FX.bastet = { hexes:2, hold:8, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_bastet_telegraph.png",
+  impact:   "assets/sprites/fx_bastet_impact.png",
+  loop:     "assets/sprites/fx_bastet_loop.png",
+  dissipate:"assets/sprites/fx_bastet_dissipate.png" } };
+POWER_FX.anubis = { hexes:1, hold:0, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_anubis_telegraph.png",
+  impact:   "assets/sprites/fx_anubis_impact.png",
+  dissipate:"assets/sprites/fx_anubis_dissipate.png" } };
+/* hold:6 == u.slowUntil = elapsed()+6 in the set branch. */
+POWER_FX.set = { hexes:5, hold:6, frames:{
+  telegraph:"assets/sprites/fx_set_telegraph.png",
+  impact:   "assets/sprites/fx_set_impact.png",
+  loop:     "assets/sprites/fx_set_loop.png",
+  dissipate:"assets/sprites/fx_set_dissipate.png" } };
+/* hold:6 == u.frenzyUntil = elapsed()+6 in the sekhmet branch. */
+POWER_FX.sekhmet = { hexes:5, hold:6, frames:{
+  telegraph:"assets/sprites/fx_sekhmet_telegraph.png",
+  impact:   "assets/sprites/fx_sekhmet_impact.png",
+  loop:     "assets/sprites/fx_sekhmet_loop.png",
+  dissipate:"assets/sprites/fx_sekhmet_dissipate.png" } };
+POWER_FX.nephthys = { hexes:1, hold:0, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_nephthys_telegraph.png",
+  impact:   "assets/sprites/fx_nephthys_impact.png",
+  dissipate:"assets/sprites/fx_nephthys_dissipate.png" } };
+POWER_FX.thoth = { hexes:1, hold:0, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_thoth_telegraph.png",
+  impact:   "assets/sprites/fx_thoth_impact.png",
+  dissipate:"assets/sprites/fx_thoth_dissipate.png" } };
+POWER_FX.ptah = { hexes:1, hold:0, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_ptah_telegraph.png",
+  impact:   "assets/sprites/fx_ptah_impact.png",
+  dissipate:"assets/sprites/fx_ptah_dissipate.png" } };
 /* ---- Chinese god-power art (2026-08-23). Same story as the Egyptian set: cut to the
    telegraph/impact/dissipate structure and pre-sized in whole hexes, so the footprints below
    are read straight off the file dimensions (56px = 1 hex, 112 = 2, 392 = 7).
@@ -4783,6 +5210,93 @@ POWER_FX.tezcatlipoca = { hexes:1, hold:0, anchor:"self", frames:{
   telegraph:"assets/sprites/fx_tezcatlipoca_telegraph.png",
   impact:   "assets/sprites/fx_tezcatlipoca_impact.png",
   dissipate:"assets/sprites/fx_tezcatlipoca_dissipate.png" } };
+/* ---- The remaining twelve Chinese and Aztec powers (2026-08-25, direct request). With these
+   the registry covers 30 of the game's 31 powers; Isis is the only one left and stays that way,
+   her art being UI-scale and already serving as the god-tile lock glyph.
+
+   Footprints are read straight off the file dimensions as always (56px = 1 hex, 280 = 5, and
+   504x672 = the 9x12 arena). Every hold is copied from the duration in the god's OWN branch,
+   and a power whose art ships no loop frame keeps hold:0 even when its mechanic lasts -- the
+   registry's two structural invariants (loop implies hold, hold implies loop) enforce that
+   pairing, and a stun or a poison reads perfectly well off the units it is stamped on. ---- */
+/* Moonfall slows EVERY unit on the board, both sides, so it is a whole-arena overlay.
+   hold:5 == u.slowUntil = elapsed()+5 in its branch. */
+POWER_FX.chang = { hexes:9, hold:5, anchor:"board", frames:{
+  telegraph:"assets/sprites/fx_chang_telegraph.png",
+  impact:   "assets/sprites/fx_chang_impact.png",
+  loop:     "assets/sprites/fx_chang_loop.png",
+  dissipate:"assets/sprites/fx_chang_dissipate.png" } };
+/* Third Eye reads the whole board -- it unmakes conjured units wherever they stand and
+   reveals every hidden one -- so it is an arena overlay, not a zone. Its 10s hiding block is a
+   STATE rather than a visible effect and the art ships no loop frame, so hold stays 0. */
+POWER_FX.erlangshen = { hexes:9, hold:0, anchor:"board", frames:{
+  telegraph:"assets/sprites/fx_erlangshen_telegraph.png",
+  impact:   "assets/sprites/fx_erlangshen_impact.png",
+  dissipate:"assets/sprites/fx_erlangshen_dissipate.png" } };
+/* hold:8 == the rubble's expiresAt = elapsed()+8. */
+POWER_FX.gonggong = { hexes:5, hold:8, frames:{
+  telegraph:"assets/sprites/fx_gonggong_telegraph.png",
+  impact:   "assets/sprites/fx_gonggong_impact.png",
+  loop:     "assets/sprites/fx_gonggong_loop.png",
+  dissipate:"assets/sprites/fx_gonggong_dissipate.png" } };
+/* A thunder strike is instantaneous and the art ships no loop frame. The 6s stun deliberately
+   outlives the flash -- the stun state on the units carries it from there. */
+POWER_FX.leigong = { hexes:5, hold:0, frames:{
+  telegraph:"assets/sprites/fx_leigong_telegraph.png",
+  impact:   "assets/sprites/fx_leigong_impact.png",
+  dissipate:"assets/sprites/fx_leigong_dissipate.png" } };
+/* anchor:self -- the peach is eaten by ONE unit, picked by proximity to the cast point, so the
+   art belongs on that unit rather than on the tapped hex. hold:4 == mine.invulnUntil = elapsed()+4. */
+POWER_FX.xiwangmu = { hexes:1, hold:4, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_xiwangmu_telegraph.png",
+  impact:   "assets/sprites/fx_xiwangmu_impact.png",
+  loop:     "assets/sprites/fx_xiwangmu_loop.png",
+  dissipate:"assets/sprites/fx_xiwangmu_dissipate.png" } };
+/* hold:6 == the burning ground's expiresAt = elapsed()+6. */
+POWER_FX.zhurong = { hexes:5, hold:6, frames:{
+  telegraph:"assets/sprites/fx_zhurong_telegraph.png",
+  impact:   "assets/sprites/fx_zhurong_impact.png",
+  loop:     "assets/sprites/fx_zhurong_loop.png",
+  dissipate:"assets/sprites/fx_zhurong_dissipate.png" } };
+/* hold:8 == the flood's expiresAt = elapsed()+8 -- the same shape as Long Wang's Dragon Rain
+   at a smaller radius, and it shares the floodedHexes plumbing. */
+POWER_FX.tlaloc = { hexes:5, hold:8, frames:{
+  telegraph:"assets/sprites/fx_tlaloc_telegraph.png",
+  impact:   "assets/sprites/fx_tlaloc_impact.png",
+  loop:     "assets/sprites/fx_tlaloc_loop.png",
+  dissipate:"assets/sprites/fx_tlaloc_dissipate.png" } };
+/* The Flaying strips passives from EVERY enemy unit, so it is an arena overlay. The 10s strip
+   is a state with no loop frame shipped, so hold stays 0. */
+POWER_FX.xipetotec = { hexes:9, hold:0, anchor:"board", frames:{
+  telegraph:"assets/sprites/fx_xipetotec_telegraph.png",
+  impact:   "assets/sprites/fx_xipetotec_impact.png",
+  dissipate:"assets/sprites/fx_xipetotec_dissipate.png" } };
+/* Serpent Skirt poisons every enemy on the battlefield -- arena overlay. The poison ticks for
+   5s but no loop frame was supplied, so hold stays 0 and the poison reads off the units. */
+POWER_FX.coatlicue = { hexes:9, hold:0, anchor:"board", frames:{
+  telegraph:"assets/sprites/fx_coatlicue_telegraph.png",
+  impact:   "assets/sprites/fx_coatlicue_impact.png",
+  dissipate:"assets/sprites/fx_coatlicue_dissipate.png" } };
+/* anchor:self -- Dismemberment produces TWO halves, and its branch drops the glyph on each of
+   them via spawnPowerFxAt, the same shape as Osiris's reeds. A single effect at the cast hex
+   would say nothing about what was actually created. */
+POWER_FX.coyolxauhqui = { hexes:1, hold:0, anchor:"self", frames:{
+  telegraph:"assets/sprites/fx_coyolxauhqui_telegraph.png",
+  impact:   "assets/sprites/fx_coyolxauhqui_impact.png",
+  dissipate:"assets/sprites/fx_coyolxauhqui_dissipate.png" } };
+/* First Wind accelerates ALL your units wherever they stand -- arena overlay.
+   hold:4 == u.buffUntil = elapsed()+4. */
+POWER_FX.ehecatl = { hexes:9, hold:4, anchor:"board", frames:{
+  telegraph:"assets/sprites/fx_ehecatl_telegraph.png",
+  impact:   "assets/sprites/fx_ehecatl_impact.png",
+  loop:     "assets/sprites/fx_ehecatl_loop.png",
+  dissipate:"assets/sprites/fx_ehecatl_dissipate.png" } };
+/* A single obsidian-wing sweep; no loop frame shipped, so the 6s slow is carried by the units'
+   own status rather than by a held overlay. */
+POWER_FX.itzpapalotl = { hexes:5, hold:0, frames:{
+  telegraph:"assets/sprites/fx_itzpapalotl_telegraph.png",
+  impact:   "assets/sprites/fx_itzpapalotl_impact.png",
+  dissipate:"assets/sprites/fx_itzpapalotl_dissipate.png" } };
 const FX_TELEGRAPH=0.2, FX_IMPACT=0.35, FX_DISSIPATE=0.3; // seconds; matches the sheet's frame brief
 const FX_MAX=12; // hard cap on live power effects, mirroring the "text" effect cap
 function getFxImage(src){
@@ -4827,14 +5341,21 @@ function spawnPowerFx(key,hex){
     const a=hexCenter(0,0), b=hexCenter(COLS-1,ROWS-1);
     return spawnPowerFxAt(key,(a.x+b.x)/2,(a.y+b.y)/2);
   }
-  /* anchor:"row" -- Horus and Ra sweep the target's whole ROW, so the art has to span the
-     board and be centred on the row, not on whichever column happened to be tapped. Note a
+  /* anchor:"row" -- Horus sweeps the target's whole ROW, so the art has to span the board
+     and be centred on the row, not on whichever column happened to be tapped. Note a
      flat-top odd-q "row" is not a straight line: odd columns sit half a row lower, so the
      vertical centre is the midpoint of the two parities and the strip's own height covers
-     the ~24px zigzag. */
+     the ~24px zigzag.
+     anchor:"col" -- Ra's barque sails the target's COLUMN, the mirror image of that. A
+     column IS a straight line in odd-q (the half-row offset is per-column, so it shifts the
+     whole lane together), so this is simply the midpoint of the lane's first and last hex,
+     and x is the tapped column's own centre. */
   const c = def.anchor==="row"
     ? {x:(hexCenter(0,hex[1]).x+hexCenter(COLS-1,hex[1]).x)/2,
        y:(hexCenter(0,hex[1]).y+hexCenter(1,hex[1]).y)/2}
+    : def.anchor==="col"
+    ? {x:hexCenter(hex[0],0).x,
+       y:(hexCenter(hex[0],0).y+hexCenter(hex[0],ROWS-1).y)/2}
     : hexCenter(hex[0],hex[1]);
   const e={key,def,x:c.x,y:c.y,at:elapsed()};
   S.powerFx.push(e);
@@ -5691,6 +6212,9 @@ function checkInstantWin(){
     if(buildings.filter(b=>b.side===side&&b.dead).length===3){ endMatch(); return; }
 }
 function endMatch(){
+  /* Someone who leaves the drill open for the full 180s should get its own ending, not a
+     DEFEAT screen for a match they were never playing. */
+  if(drill){ drillFinish(); return; }
   if(S.over) return; S.over=true;
   const pKills=buildings.filter(b=>b.side===1&&b.dead).length;
   const aKills=buildings.filter(b=>b.side===0&&b.dead).length;
