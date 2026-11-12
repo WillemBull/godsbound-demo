@@ -1796,7 +1796,7 @@ function favorRate(side, cityUp){
   const eco = economyFor(side);
   /* Demeter's Bounty: the City, which has only ever made food, also brings in favour at half
      the temple's rate. Nothing else in the game crosses the two currencies. */
-  const cityFavor = (hasPassive(side,"bounty") && cityUp) ? 1.7 : 0;
+  const cityFavor = (hasPassive(side,"bounty") && cityUp) ? 1.7*greekPairingMultiplier(side,"bounty") : 0;
   return eco.favorBase*eco.favorMult*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor;
 }
 function tickEconomy(dt){
@@ -2123,7 +2123,8 @@ function unitTip(u){
   const cost=Object.entries(u.cost).map(([k,v])=>`${v} ${k==="f"?"Food":"Favor"}`).join(" + ");
   const dtype=u.dtype.charAt(0).toUpperCase()+u.dtype.slice(1);
   const armor=u.armor.charAt(0).toUpperCase()+u.armor.slice(1);
-  return `Cost: ${cost}\nHP: ${u.hp}\nDamage: ${u.dmg} (${dtype})\nArmor: ${armor}`;
+  return `Cost: ${cost}\nHP: ${u.hp}\nDamage: ${u.dmg} (${dtype})\nArmor: ${armor}`
+    +(u.hero?`\nAbility: ${heroAbilityDescription(u)}`:"");
 }
 function godTip(g){
   return `Unlock: ${godUnlockCost(g,0)} Favor\nPower: ${g.power} — ${g.desc}\nPower cost: ${godPowerCost(g,0)} Favor\nCooldown: ${g.cd}s`
@@ -2133,7 +2134,56 @@ function unitPortrait(key,u,front=false){
   const entry=IMG_SPRITES[key], src=entry && (typeof entry==="string"?entry:entry[front?1:0]);
   return src?`<img class="unitportrait" src="${src}" alt="${u.name}" draggable="false">`:`<span class="trayemoji">${u.emoji}</span>`;
 }
+const GREEK_PAIRINGS={
+  kingsAuthority:{hero:"heracles",god:"zeus",benefit:"damage near your buildings: +15% to +30%"},
+  trueSight:{hero:"odysseus",god:"athena",benefit:"reveal remains unchanged; no additional pairing bonus"},
+  rangedDmg10:{hero:"atalanta",god:"artemis",benefit:"ranged damage: +10% to +20%"},
+  messenger:{hero:"perseus",god:"hermes",benefit:"training time reduction: 25% to 50%"},
+  lyre:{hero:"chiron",god:"apollo",benefit:"temple healing: 2 to 4 HP per second"},
+  automata:{hero:"achilles",god:"hephaestus",benefit:"siege damage to buildings: +25% to +50%"},
+  warcry:{hero:"ajax",god:"ares",benefit:"damage against outnumbered enemies: +25% to +50%"},
+  earthshaker:{hero:"theseus",god:"poseidon",benefit:"damage to buildings: +10% to +20%"},
+  ferrymansToll:{hero:"orpheus",god:"hades",benefit:"favor per own unit death: 2 to 4"},
+  resurrection:{hero:"ariadne",god:"dionysus",benefit:"one-time myth resurrection health: 40% to 80%"},
+  bounty:{hero:"triptolemus",god:"demeter",benefit:"City favor: 1.7 to 3.4 per second"}
+};
+function greekPairingMultiplier(side,key){
+  const pair=GREEK_PAIRINGS[key];
+  return pair && key!=="trueSight" && hasPassive(side,key)
+    && S.units.some(u=>!u.dead && u.hp>0 && u.side===side && u.key===pair.hero)?2:1;
+}
+function heroAbilityDescription(u){
+  const pair=Object.values(GREEK_PAIRINGS).find(p=>GR_UNITS[p.hero]===u);
+  const god=pair && GR_GODS.find(g=>g.key===pair.god);
+  return heroSignatureDescription(u)+(pair?` Divine Favor — ${god.name}: ${pair.benefit}. Requires the god unlocked and this hero alive on the battlefield.`:"");
+}
+function heroSignatureDescription(u){
+  const pct=n=>Math.round(n*100);
+  if(u.abroadDmg) return `Deals ${pct(u.abroadDmg-1)}% more damage on the enemy half of the battlefield.`;
+  if(u.revivesOnce) return "Revives once at 40% health after a lethal blow.";
+  if(u.becomesOnDeath==="bata_tree") return "Becomes a persea tree on death. Allies can chop it down to bring back a stronger Bata; enemies cannot target the tree.";
+  if(u.becomesOnDeath==="nezha_lotus") return `Becomes an untargetable-by-enemies lotus on death, then returns stronger after ${CN_UNITS.nezha_lotus.becomesAfter}s or when allies destroy the lotus.`;
+  if(u.snipeEvery) return `While outside ordinary combat, fires at the closest visible enemy anywhere on the battlefield every ${u.snipeEvery}s, pausing for a ${u.snipeWindup}s windup.`;
+  if(u.bonusVsSerpent) return `Deals ${u.bonusVsSerpent} times normal damage to serpent myth units.`;
+  if(u.swallowedByMyth) return `Once per life, a lethal blow near an enemy myth lets him enter it. Returns at half health when it dies, or kills it from within after ${u.swallowedByMyth}s.`;
+  if(u.intoxicates) return `Attacks slow and weaken enemies for ${u.intoxicates}s.`;
+  if(u.becomesOnDeath==="xelhua_pyramid") return "Becomes a stationary pyramid on death. It blocks enemies and can be destroyed, but does not count as a victory building.";
+  if(u.meleeWithin) return `Fights with a bow at range and switches to a knife within ${u.meleeWithin} hex.`;
+  if(u.stalks) return `Approaches invisibly for a single ${u.ambushBuildingDmg}-damage building ambush. An ordinary attack spends his concealment and ambush.`;
+  if(u.ragesEvery) return `Every ${u.ragesEvery}s, enters a ${u.rageDur}s frenzy: ${pct(u.rageDmg-1)}% more damage, but attacks friend or foe.`;
+  if(u.meleeResist) return `Takes ${pct(1-u.meleeResist)}% less melee damage. Ranged attacks bypass this protection.`;
+  if(u.lastStandOnDeath) return `Once per life, a lethal blow triggers a ${u.lastStandDur}s stationary, invulnerable frenzy before death.`;
+  if(u.gorgonStun) return `Once per life, the Gorgon head stuns enemies ahead for ${u.gorgonStun}s.`;
+  if(u.retracesOnDeath) return "Once per life, survives a lethal blow at 40% health and retraces his route while invulnerable. Cannot attack during the retreat.";
+  if(u.splitsAtRouteEnd) return `At the end of her route, splits once into two figures with ${pct(u.splitsAtRouteEnd)}% of her maximum health each, if there is room beside her.`;
+  if(u.teachRange) return `Human soldiers within ${u.teachRange} hexes deal ${pct(u.teachDmg-1)}% more damage.`;
+  if(u.summonsEvery) return `Summons a shade every ${u.summonsEvery}s when an adjacent hex is available.`;
+  if(u.generatesFood) return `Generates ${u.generatesFood} food per second while alive.`;
+  if(u.hero && u.cat==="form") return "Reborn in a stronger final form. Cannot transform again.";
+  return "";
+}
 function unitDescription(u){
+  if(u.hero) return heroAbilityDescription(u);
   if(u.heal) return "Support unit that heals allies and deals extra damage to myth units.";
   if(u.siege) return "Durable crushing attacker built to break heavy units and buildings.";
   if(u.dtype==="ranged") return u.speed>.7?"Fast ranged skirmisher that attacks from two hexes away.":"Ranged attacker that deals damage safely from behind the front line.";
@@ -2909,7 +2959,7 @@ function queueTrain(side,key,path,src,duty,readyAt,goal){
      the DEFAULT ready time only -- a caller that passes an explicit readyAt (Mictlantecuhtli's
      delayed summon, the tests) is stating exactly when it wants the unit and is left alone. */
   const baseReady = readyAt!==undefined ? readyAt
-    : elapsed()+def.train*(hasPassive(side,"messenger")?0.75:1);
+    : elapsed()+def.train*(hasPassive(side,"messenger")?1-0.25*greekPairingMultiplier(side,"messenger"):1);
   S.training.push({side,key,path,src,duty,goal:goal||null,spawnCount:doubled?2:undefined,readyAt:baseReady});
   if(drill&&side===0) drillEvent("train"); // hands-on drill objective 1
 }
@@ -3452,6 +3502,7 @@ function unlockedMyths(side){
 function favorOnDeath(deadSide){
   const grant=(sd,amt)=>{ if(sd) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+amt);
                           else   S.favor  =Math.min(S.FAVOR_CAP,S.favor  +amt); };
+  if(hasPassive(deadSide,"ferrymansToll")) grant(deadSide,2*greekPairingMultiplier(deadSide,"ferrymansToll"));
   const opp=deadSide?0:1;
   if(hasPassive(opp,"inevitable")) grant(opp,1); // Mictlantecuhtli
   for(const sd of [0,1]){
@@ -3501,7 +3552,7 @@ function calcDmg(att,tgt){
   if(elapsed()<(tgt.bloodlustUntil||0)) d*=2; // Ares: Bloodlust cuts both ways
   if(elapsed()<att.weakenUntil) d*=0.7; // Sekhmet's Pestilence passive / Plague Bearer's weaken effect
   const adt=effDtype(att,tgt); // Atalanta switches weapons by distance; everyone else just reads def.dtype
-  if(adt==="ranged" && hasPassive(att.side,"rangedDmg10")) d*=1.1;
+  if(adt==="ranged" && hasPassive(att.side,"rangedDmg10")) d*=1+0.1*greekPairingMultiplier(att.side,"rangedDmg10");
   /* Chiron: The Teacher. He barely fights (dmg 8); his whole value is the soldiers standing
      near him. Driven by def.teachRange/teachDmg on the TEACHER, read off the attacker's
      neighbourhood, so any future mentor unit gets it by carrying the flags. */
@@ -3515,7 +3566,7 @@ function calcDmg(att,tgt){
   }
   if(hasPassive(att.side,"kingsAuthority")){ // Zeus: strong where his house stands
     const near=buildings.some(b=>b.side===att.side&&!b.dead&&Math.min(...b.hexes.map(h=>hexDist(att.hex,h)))<=2);
-    if(near) d*=1.15;
+    if(near) d*=1+0.15*greekPairingMultiplier(att.side,"kingsAuthority");
   }
   /* Sinuhe: only abroad. onEnemyHalf is absolute-row, so it means the same thing for both
      sides -- side 0 attacks upward into rows < AI_ROWS, side 1 downward into >= PLAYER_ROW0. */
@@ -3537,8 +3588,8 @@ function calcDmg(att,tgt){
   if(isBldg(tgt)){
     d*= adt==="crushing"?1.2 : adt==="melee"?0.35 : 0.2;
     if(att.def.siege) d*=1.6;
-    if(att.def.siege && hasPassive(att.side,"automata")) d*=1.25; // Hephaestus: his war machines break walls
-    if(hasPassive(att.side,"earthshaker")) d*=1.10; // Poseidon: the ground under their walls is never still // Hephaestus: his war machines break walls
+    if(att.def.siege && hasPassive(att.side,"automata")) d*=1+0.25*greekPairingMultiplier(att.side,"automata"); // Hephaestus: his war machines break walls
+    if(hasPassive(att.side,"earthshaker")) d*=1+0.1*greekPairingMultiplier(att.side,"earthshaker"); // Poseidon: the ground under their walls is never still // Hephaestus: his war machines break walls
     return d;
   }
   if(hasPassive(tgt.side,"fortressDefense")){ // Horus: Rightful King
@@ -3556,7 +3607,7 @@ function calcDmg(att,tgt){
       if(o.dead||o===tgt||hexDist(o.hex,tgt.hex)>1) continue;
       if(o.side===att.side) mine++; else theirs++;
     }
-    if(mine>theirs) d*=1.25;
+    if(mine>theirs) d*=1+0.25*greekPairingMultiplier(att.side,"warcry");
   }
   if(CAT_BEATS[att.def.cat]===tgt.def.cat) d*=1.5;
   if(att.def.antimyth && tgt.def.cat==="myth") d*=att.def.antimyth;
@@ -3609,8 +3660,15 @@ function beginLastStand(u){
    anything added later. Mirrors the shape every one of the file's raw-hp death sites uses.
    It does NOT go through dealDamage: there is no attacker, and none of the on-kill passives
    (Blood Debt, razorWings, the ambush flags) should fire for a unit nobody killed. */
+function tryMythResurrection(u){
+  if(u.def.cat!=="myth" || u.hasRevived || !hasPassive(u.side,"resurrection")) return false;
+  u.hasRevived=true; u.hp=u.maxhp*0.4*greekPairingMultiplier(u.side,"resurrection");
+  fx(u.pos,"ring","#ffb020");
+  return true;
+}
 function killUnit(u,color){
   if(!u||u.dead) return false;
+  if(tryMythResurrection(u)) return false;
   u.dead=true; u.hp=0;
   fx(u.pos,"boom",color||(u.side?"#c0392b":"#e8b84b"));
   if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
@@ -3646,7 +3704,7 @@ function razeBuilding(side,b,amount){
   if(!b||b.dead) return 0;
   if(elapsed()<(b.invulnUntil||0)) return 0; // Bastet's Guardian's Grace
   let d=amount;
-  if(hasPassive(side,"earthshaker")) d*=1.10; // Poseidon's own passive compounds with his power
+  if(hasPassive(side,"earthshaker")) d*=1+0.1*greekPairingMultiplier(side,"earthshaker"); // Poseidon's own passive compounds with his power
   b.hp-=d; S.bldDmg[side]+=Math.min(d,Math.max(0,b.hp+d));
   b.lastHitAt=elapsed();
   if(b.hp<=0 && !b.dead) onBuildingDestroyed(b);
@@ -3694,6 +3752,8 @@ function dealDamage(att,tgt){
         beginRetreat(tgt);
       } else if(tgt.def.lastStandOnDeath && !tgt.lastStandUsed){
         beginLastStand(tgt);
+      } else if(tryMythResurrection(tgt)){
+        // Dionysus restores a myth before any death rewards are paid.
       } else if(tgt.def.revivesOnce && !tgt.hasRevived){
         // Ra's Bennu Bird: revives once with partial health instead of dying
         tgt.hasRevived=true; tgt.hp=tgt.maxhp*0.4;
@@ -3720,10 +3780,6 @@ function dealDamage(att,tgt){
         if(att.side!==tgt.side && hasPassive(att.side,"bloodFavor")){
           if(att.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+2); else S.favor=Math.min(S.FAVOR_CAP,S.favor+2);
         }
-        if(hasPassive(tgt.side,"ferrymansToll")){ // Hades: paid for his own dead
-          if(tgt.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+2);
-          else S.favor=Math.min(S.FAVOR_CAP,S.favor+2);
-        }
         if(hasPassive(tgt.side,"earthMother")){
           if(tgt.side) S.aiFood=Math.min(S.FOOD_CAP,S.aiFood+2); else S.food=Math.min(S.FOOD_CAP,S.food+2);
         }
@@ -3739,9 +3795,7 @@ function dealDamage(att,tgt){
     }
     // Thoth's Ammit: executes any enemy unit that dips below a health threshold, on top of the direct hit
     if(!tgt.dead && att.def.executesBelow && tgt.hp>0 && tgt.hp<tgt.maxhp*att.def.executesBelow){
-      tgt.dead=true; fx(tgt.pos,"boom","#6a4c93");
-      if(tgt.def.cat==="human") S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
-      favorOnDeath(tgt.side);
+      killUnit(tgt,"#6a4c93");
     }
     /* Ordinary SPLASH (roadmap R1, 2026-07-29): a fraction of this hit's damage to every
        other unit within 1 hex of the primary target, on the DEFENDING side only.
@@ -3796,9 +3850,7 @@ function dealDamage(att,tgt){
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
         u.hp-=d*att.def.splash;
         if(u.hp<=0 && !u.dead){
-          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-          favorOnDeath(u.side);
+          killUnit(u);
         }
       }
     }
@@ -3811,9 +3863,7 @@ function dealDamage(att,tgt){
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
         u.hp-=d*att.def.chaosSplash;
         if(u.hp<=0 && !u.dead){
-          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-          favorOnDeath(u.side);
+          killUnit(u);
         }
       }
     }
@@ -4441,16 +4491,14 @@ function tickGodEffects(dt){
     if(elapsed()<u.poisonUntil && elapsed()>=(u.invulnUntil||0)){ // invulnerable: poison does not tick
       u.hp-=u.poisonDps*dt;
       if(u.hp<=0 && !u.dead){
-        u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-        if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-        favorOnDeath(u.side); // Mictlantecuhtli: Inevitable
+        killUnit(u);
         continue;
       }
     }
     if(hasPassive(u.side,"lyre") && u.hp>0 && u.hp<u.maxhp){ // Apollo: the healer's other half
       const tmp=getBld(u.side,"temple");
       if(tmp && !tmp.dead && Math.min(...tmp.hexes.map(h=>hexDist(u.hex,h)))<=3)
-        u.hp=Math.min(u.maxhp,u.hp+2*dt);
+        u.hp=Math.min(u.maxhp,u.hp+2*greekPairingMultiplier(u.side,"lyre")*dt);
     }
     if(u.def.cat==="hero" && hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp){
       u.hp=Math.min(u.maxhp,u.hp+u.maxhp*0.01*dt);
@@ -4583,9 +4631,7 @@ function tickGodEffects(dt){
       if(elapsed()<(e.invulnUntil||0)) continue; // invulnerable is COMPLETE
       e.hp-=u.def.auraDps*dt;
       if(e.hp<=0 && !e.dead){
-        e.dead=true; fx(e.pos,"boom",e.side?"#c0392b":"#e8b84b");
-        if(e.def.cat==="human") S.deadHumans.push({key:e.key,at:elapsed(),hex:[...e.hex],side:e.side});
-        favorOnDeath(e.side);
+        killUnit(e);
       }
     }
   }
@@ -4616,9 +4662,7 @@ function tickFloods(dt){
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
         u.hp-=f.dmgPerSec*dt;
         if(u.hp<=0 && !u.dead){
-          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-          favorOnDeath(u.side);
+          killUnit(u);
         }
       }
     }
@@ -4725,7 +4769,8 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         if(u.hp<=0){
           if(u.def.retracesOnDeath && !u.hasRevived){ beginRetreat(u); }
           else if(u.def.lastStandOnDeath && !u.lastStandUsed){ beginLastStand(u); }
-          else if((u.def.revivesOnce || (u.def.cat==="myth" && hasPassive(u.side,"resurrection"))) && !u.hasRevived){
+          else if(tryMythResurrection(u)){ /* no death rewards on resurrection */ }
+          else if(u.def.revivesOnce && !u.hasRevived){
             u.hasRevived=true; u.hp=u.maxhp*0.4; fx(u.pos,"ring","#ffb020");
           } else killUnit(u,"#c0392b"); // Ra's Solar Flare / Horus's rank strike
         }
@@ -4888,9 +4933,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
         u.hp-=40; fx(u.pos,"text","#2f7391","-40");
         if(u.hp<=0 && !u.dead){
-          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-          favorOnDeath(u.side);
+          killUnit(u);
         }
       }
       if(!n) return false;
@@ -5403,9 +5446,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         u.hp-=60; u.slowUntil=elapsed()+6; n++;
         fx(u.pos,"text","#8a5ba0","-60");
         if(u.hp<=0 && !u.dead){
-          u.dead=true; fx(u.pos,"boom",u.side?"#c0392b":"#e8b84b");
-          if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
-          favorOnDeath(u.side);
+          killUnit(u);
         }
       }
       if(!n) return false;
