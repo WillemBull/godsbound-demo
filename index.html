@@ -488,7 +488,7 @@
           <div id="terrainpalette">
             <button class="paintbtn" id="paintbtn-F" data-paint="F"><img class="terrainhex" id="paintbtn-F-img" src="assets/sprites/terrain_shared_forest.png" alt="Forest hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-F-name">Forest</span> <span class="pcount" id="paintbtn-F-count"></span></span><span class="terraindesc" id="paintbtn-F-desc">Slows movement by 25%. Units inside take 25% less ranged damage.</span></span></button>
             <button class="paintbtn" id="paintbtn-M" data-paint="M"><img class="terrainhex" src="assets/sprites/terrain_shared_mountain.png" alt="Mountain hex"><span class="terraincopy"><span class="terrainname">Mountain <span class="pcount" id="paintbtn-M-count"></span></span><span class="terraindesc">Impassable to ground units and blocks ranged line of sight.</span></span></button>
-            <button class="paintbtn" id="paintbtn-W" data-paint="W"><img class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-W-name">Water</span> <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc" id="paintbtn-W-desc">Slows movement by 50%. Units inside take 25% more damage.</span></span></button>
+            <button class="paintbtn" id="paintbtn-W" data-paint="W"><img id="paintbtn-W-img" class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-W-name">Water</span> <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc" id="paintbtn-W-desc">Slows movement by 50%. Units inside take 25% more damage.</span></span></button>
           </div>
           <div id="stepterrainbtns">
             <button id="btnback" class="setupback" onclick="goToUnitsStep()">← Back</button>
@@ -636,7 +636,7 @@ function toScreen(x,y){ const p=boardPivotY(); return {x, y:p+(y-p)*TILT_SQUASH}
 function fromScreen(x,y){ const p=boardPivotY(); return {x, y:p+(y-p)/TILT_SQUASH}; }
 
 /* ---------------- TERRAIN ----------------
-   P plain(china side) D desert F forest M mountain W water R road H high ground */
+   P plains (the one filler, both halves) F forest M mountain W water */
 const TMAP_INITIAL = [
  "PPPPPPPPP",
  "PPPPPPPPP",
@@ -645,24 +645,33 @@ const TMAP_INITIAL = [
  "PPPPPPPPP",
  "PPPPPPPPP",
  "PPPPPPPPP",
- "DDDDDDDDD",
- "DDDDDDDDD",
- "DDDDDDDDD",
- "DDDDDDDDD",
- "DDDDDDDDD",
- "DDDDDDDDD"
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP",
+ "PPPPPPPPP"
 ];
 let TMAP = TMAP_INITIAL.map(row=>[...row]);
 const terrain = (c,r)=> TMAP[r][c];
+/* 2026-09-28 (Willem): Desert, Road and High Ground are gone.
+   Road and High Ground were dead rows — nothing painted them, the starting map never
+   held one, the AI generator never made one, and loadDeck's validator already refused
+   them, so they only ever existed here.
+   Desert was real but indistinguishable: same speed as Plains, no block, no cover, and
+   the soil checks that look for bare ground accepted either. It was the filler tile for
+   the player's half and told apart from Plains only by a fill colour that U43 stopped
+   drawing when the board became an arena photograph. Every D is now a P; TERRAIN_MIGRATE
+   below carries saved decks across. */
 const TINFO = {
   P:{name:"Plains",   speed:1.0, fill:"#6f8a41", fill2:"#647d3a"},
-  D:{name:"Desert",   speed:1.0, fill:"#c7a15c", fill2:"#b99450"},
   F:{name:"Forest",   speed:0.75,fill:"#46672f", fill2:"#3e5d2b", cover:0.8},
   M:{name:"Mountain", speed:0,   fill:"#7b766d", fill2:"#6e6961", block:true},
-  W:{name:"Water",    speed:0.5, fill:"#2f7391", fill2:"#2a6884"},
-  R:{name:"Road",     speed:1.5, fill:"#a08a5c", fill2:"#957f53"},
-  H:{name:"High Ground",speed:0.85,fill:"#93905c",fill2:"#868353", highground:true}
+  W:{name:"Water",    speed:0.5, fill:"#2f7391", fill2:"#2a6884"}
 };
+/* A deck saved before that change still carries D tiles. They load as Plains rather than
+   being rejected, which is what they always were in play. */
+const TERRAIN_MIGRATE = ch => ch==="D" ? "P" : ch;
 const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
 
 /* ---------------- UNIT DATA ---------------- */
@@ -1033,7 +1042,7 @@ const GR_GODS = [
   {key:"demeter", name:"Demeter", emoji:"🌾", cost:150, power:"Blight", pcost:50, cd:25,
    myth:"empusa",
    desc:"The earth withholds: the enemy generates no food at all for 8s",
-   passiveKey:"bounty", passive:"Demeter's Bounty: your City generates favor as well, at half your temple's rate"},
+   passiveKey:"bounty", passive:"Demeter's Bounty: your City generates favor as well, at half the base favor rate"},
   /* HADES. Sheet power kept -- "raises fallen units, yours OR the enemy's" -- which is what
      separates him from Osiris: Field of Reeds raises only your own dead, Hades feeds on the
      enemy's casualties too.
@@ -1194,6 +1203,9 @@ const HERO_LEGEND={
 /* ---------------- FACTIONS (which unit/god tables apply to which side) ---------------- */
 const FACTIONS = {
   egypt: { units:EG_UNITS, allGods:EG_GODS, name:"Egyptians", label:"☥ Egyptian",
+           /* THE BREADBASKET (2026-11-10, Willem): "make the egyptians 10% faster on both food
+              and favor." */
+           economy:{ foodMult:1.10, favorMult:1.10 },
            /* FOCUS ROSTER (2026-08-21, Willem): development is concentrated on 4 humans,
               2 heroes and 4 gods per faction. The four humans are the same roles in every
               pantheon -- shield melee (20f) / ranged (25f) / SPLASH melee (30f) / SIEGE (55f).
@@ -1206,11 +1218,14 @@ const FACTIONS = {
            aiTitle:"PHARAOH AI", defaultLoadout:["spear","archer","axe","elephant"], defaultHeroes:["bata","doomedprince"],
            defaultGodPick:["horus","bastet","osiris","isis"] },
   china: { units:CN_UNITS, allGods:CN_GODS, name:"Chinese", label:"⛩ Chinese",
+           /* 2026-11-10 (Willem): "give china 10% above base for food only." */
+           economy:{ foodMult:1.10 },
            aiTitle:"SHANG-DI AI", defaultLoadout:["ji","xbow","dao","ram"], defaultHeroes:["nezha","houyi"],
            defaultGodPick:["jade","sunwukong","nuwa","longwang"] },
   aztec: { units:AZ_UNITS, allGods:AZ_GODS, name:"Aztecs", label:"🐆 Aztec",
-           /* THE SACRIFICE ECONOMY (2026-09-06, Willem). Aztec temples pay no favour bonus --
-              they sit on the 2.2/s floor everyone gets with a dead temple -- and the shortfall
+           /* THE SACRIFICE ECONOMY (2026-09-06, Willem). Aztecs earn a lower base favour rate --
+              2.2/s against everyone else's 3.4/s (2026-11-10: favour no longer comes from the
+              Temple; it is a flat base rate, and Willem kept the Aztecs on 2.2) -- and the shortfall
               comes back as 5 favour for EVERY body that hits the board, theirs included.
               WHY 6: measured over 40 simulated matches WITH AN AZTEC PLAYER (the number is
               faction-sensitive -- an Egyptian player's matches ran 45), a match produces a
@@ -1222,7 +1237,7 @@ const FACTIONS = {
               economy has a shape.
               The floor is deliberate: with no passive income at all a slow opening starves
               them out of gods entirely, and they cannot buy the units that make the deaths. */
-           economy:{ templeBonus:false, favorPerDeath:6 },
+           economy:{ favorBase:2.2, favorPerDeath:6 },
            defaultLoadout:["macuahuitl","atlatl","jaguar","tlequauitl"], defaultHeroes:["tepoztecatl","topiltzin"],
            defaultGodPick:["huitzilopochtli","quetzalcoatl","tezcatlipoca","mictlantecuhtli"] },
   /* GREECE (2026-08-26). PLAYER-ONLY, the same call as Aztec: no aiTitle, no godSched, no
@@ -1255,19 +1270,24 @@ function factionForSide(side){ return side ? S.aiFaction : S.playerFaction; }
    economyFor() -- the moment tickEconomy grows an `if faction==="aztec"` branch this stops
    being a system and becomes a special case. */
 const ECONOMY_DEFAULT={
-  templeBonus:true,  // a standing Temple raises favour income above the floor
+  /* 2026-11-10 (Willem): "get rid of the temple giving the favor and just make it a base
+     rate." Favour is a flat per-second base; the Temple no longer affects income. */
+  favorBase:3.4,     // favour per second, before god passives
+  foodMult:1,        // multiplies City food income (Egypt, China 1.10)
+  favorMult:1,       // multiplies the favour base (Egypt 1.10)
   favorPerDeath:0    // favour paid to this side for ANY unit dying anywhere on the board
 };
 function economyFor(side){
   const f=FACTIONS[factionForSide(side)];
   return Object.assign({},ECONOMY_DEFAULT,(f&&f.economy)||{});
 }
-/* TMAP_INITIAL's rows 0-5 use "P" and rows 6-11 use "D" as their blank/filler tile.
+/* TMAP_INITIAL is all "P" now: rows 6-11 used "D" as their blank/filler tile until Desert
+   was removed on 2026-09-28, and the two behaved identically in play.
    P and D are mechanically identical (same TINFO.speed, no other stats) — purely
    cosmetic. origTerrain() swaps that filler to whichever base the CURRENT faction on
    that half actually uses (desert for Egypt, plains for China), so a side's terrain
    always matches the faction playing it, not just its fixed row range. Any non-P/D
-   character (mountain/water/forest/road/high ground) passes through unchanged —
+   character (mountain/water/forest) passes through unchanged —
    TMAP_INITIAL itself ships with zero such characters as of 2026-07-16 (direct chat
    request, "no existing special tiles" — every match now starts on a fully flat
    desert/plains board), but the pass-through still matters for anything a player
@@ -1275,9 +1295,11 @@ function economyFor(side){
 function origTerrain(c,r){
   // No-man's land belongs to neither faction, so it never takes a faction filler.
   if(isNeutralRow(r)) return "P";
-  const base = factionForSide(r<AI_ROWS?1:0)==="egypt" ? "D" : "P";
+  // Egypt's half used to be filled with Desert and everyone else's with Plains. Desert is
+  // gone (2026-09-28) and the arena photograph is what tells the two halves apart now, so
+  // there is one filler left and no faction test to make.
   const ch = TMAP_INITIAL[r][c];
-  return (ch==="P"||ch==="D") ? base : ch;
+  return ch==="D" ? "P" : ch;
 }
 function deriveTMAP(){
   return TMAP_INITIAL.map((rowStr,r)=>rowStr.split("").map((ch,c)=>origTerrain(c,r)));
@@ -1604,7 +1626,8 @@ function deckStorage(){
 }
 function defaultDeckPreset(faction="egypt"){
   const f=FACTIONS[faction]||FACTIONS.egypt;
-  const validFaction=FACTIONS[faction]?faction:"egypt", base=validFaction==="egypt"?"D":"P";
+  const validFaction=FACTIONS[faction]?faction:"egypt";
+  const base="P";   // one filler since Desert was removed; see origTerrain
   return {
     faction:validFaction,
     loadout:[...f.defaultLoadout], heroes:[...f.defaultHeroes], gods:[...f.defaultGodPick],
@@ -1627,8 +1650,8 @@ function normalizeDeckPreset(raw){
   const gods=f.allGods.map(g=>g.key);
   if(!validPick(raw.loadout,4,humans)||!validPick(raw.heroes,2,heroes)||!validPick(raw.gods,4,gods)) return null;
   if(!Array.isArray(raw.terrain)||raw.terrain.length!==PLAYER_ROWS) return null;
-  const terrain=raw.terrain.map(row=>typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]);
-  if(terrain.some(row=>row.length!==COLS||row.some(ch=>!["P","D","F","M","W"].includes(ch)))) return null;
+  const terrain=raw.terrain.map(row=>(typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]).map(TERRAIN_MIGRATE));
+  if(terrain.some(row=>row.length!==COLS||row.some(ch=>!["P","F","M","W"].includes(ch)))) return null;
   const counts={F:0,M:0,W:0};
   terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
   if(Object.keys(counts).some(k=>counts[k]>TERRAIN_BUDGET[k])) return null;
@@ -1769,16 +1792,16 @@ const FOOD_RATE_MULT=0.70; // 2026-07-29 direct request (2nd trim, same day): 0.
 /* Favour per second for either side -- ONE formula (2026-09-16, Willem: unify both sides).
    The AI used to earn 3.0/2.0 against the player's 3.4/2.2 and never received Demeter's
    Bounty; both sides now earn the player's rates and both get Bounty. */
-function favorRate(side, cityUp, templeUp){
-  const templeLifts = templeUp && economyFor(side).templeBonus;
+function favorRate(side, cityUp){
+  const eco = economyFor(side);
   /* Demeter's Bounty: the City, which has only ever made food, also brings in favour at half
      the temple's rate. Nothing else in the game crosses the two currencies. */
   const cityFavor = (hasPassive(side,"bounty") && cityUp) ? 1.7 : 0;
-  return (templeLifts?3.4:2.2)*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor;
+  return eco.favorBase*eco.favorMult*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor;
 }
 function tickEconomy(dt){
-  const pCity=!getBld(0,"city").dead,  pTemple=!getBld(0,"temple").dead;
-  const aCity=!getBld(1,"city").dead,  aTemple=!getBld(1,"temple").dead;
+  const pCity=!getBld(0,"city").dead, aCity=!getBld(1,"city").dead;
+  const pFood=economyFor(0).foodMult, aFood=economyFor(1).foodMult; // faction food trait
   // 2026-07-23: Ra's old ad-hoc "+0.4 favor/s while unlocked" bonus is removed here --
   // Ra's passive is now "Eye of Ra" (open-tile damage, see calcDmg), matching
   // mythology_game_design.xlsx. Bastet's new "Home's Protection" passive (city food
@@ -1787,11 +1810,11 @@ function tickEconomy(dt){
   const pMorning = hasPassive(0,"morningStar") ? MORNING_STAR_BONUS : 0;
   const aMorning = hasPassive(1,"morningStar") ? MORNING_STAR_BONUS : 0;
   if(elapsed()<(S.blightUntil[0]||0)) { /* Demeter's Blight: nothing grows */ } else
-  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*(1+pMorning)*(1+mandateBoost(0)));
-  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*favorRate(0,pCity,pTemple));
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*pFood*(1+pMorning)*(1+mandateBoost(0)));
+  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*favorRate(0,pCity));
   if(elapsed()<(S.blightUntil[1]||0)) { /* Demeter's Blight */ } else
-  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*(1+aMorning)*(1+mandateBoost(1)));
-  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*favorRate(1,aCity,aTemple));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*aFood*(1+aMorning)*(1+mandateBoost(1)));
+  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*favorRate(1,aCity));
 }
 
 /* ---------------- OCCUPANCY (1 unit per hex PER LAYER: ground vs flying) ---------------- */
@@ -1904,7 +1927,10 @@ function paintTerrain(c,r,type){
   if(bldAt(c,r)) return false;
   const key=c+","+r, prevType=S.paintMap[key];
 
-  if(type==="D"){
+  /* "P" is the ERASE instruction, not a brush: the palette only ever paints F, M and W,
+     so asking for plain ground can only mean "put this hex back the way it was". It used
+     to be "D" for the same reason, until Desert stopped existing. */
+  if(type==="P"){
     if(prevType===undefined) return false; // nothing painted here to erase
     TMAP[r][c]=origTerrain(c,r+PLAYER_ROW0); // paintTerrain always operates on local (0..PLAYER_ROWS-1) rows; origTerrain expects absolute rows into TMAP_INITIAL
     S.painted[prevType]--;
@@ -2073,6 +2099,8 @@ function renderPalette(){
   // same movement/cover numbers, plus concealment (see hiddenFrom()). Renamed/re-arted
   // only while playing China; every other faction's Forest button is unchanged. The
   // thumbnail is swapped alongside the text so the palette matches what the board draws.
+  const wimg=$("paintbtn-W-img");
+  if(wimg){ wimg.src=IMG_SPRITES[waterArtKey(S.playerFaction)]; wimg.alt=nile?"Nile hex":texcoco?"Lake Texcoco hex":"Water hex"; }
   const bamboo=S.playerFaction==="china";
   $("paintbtn-F-name").textContent=bamboo?"Bamboo":"Forest";
   $("paintbtn-F-desc").textContent=bamboo
@@ -2329,8 +2357,8 @@ const TUTORIAL_PAGES=[
         ${S.FOOD_CAP}.</div>
       <div class="tutlead"><b>🔱 Favor</b> ${economyFor(0).favorPerDeath
         ? `comes from <b>death</b> — every unit that falls anywhere on the board, yours included, pays you
-           ${economyFor(0).favorPerDeath}. Your Temple adds nothing to it`
-        : "comes from your Temple"} and does three separate jobs: it
+           ${economyFor(0).favorPerDeath}, on top of a slow steady trickle`
+        : "flows in at a steady rate"} and does three separate jobs: it
         <b>unlocks</b> gods, it <b>casts</b> their powers, and it <b>buys myth units</b>. It caps at
         ${S.FAVOR_CAP}.</div>
       <div class="tutnote">Favor is the tight one, because all three of those jobs compete for the same
@@ -3037,7 +3065,7 @@ document.addEventListener("pointerdown",e=>{
     const h=pixelToHex(p.x,p.y);
     const paintedKey=h && h[0]+","+h[1];
     if(S.phase==="setup" && h && S.paintMap[paintedKey]!==undefined){
-      paintTerrain(h[0],h[1],"D");
+      paintTerrain(h[0],h[1],"P");
       renderPalette();
       e.preventDefault(); return;
     }
@@ -5186,9 +5214,9 @@ function applyGodPower(casterSide,g,hex,pickedGod){
          is the Pantao on Mount Kunlun; Sun Wukong's most famous crime is raiding it.
 
          OPEN GROUND ONLY, and it never overrides other terrain (Willem). Open ground is
-         exactly P and D -- the two mechanically identical base tiles at speed 1.0 with no
-         other property. Every other code is a real feature and is skipped: F is already
-         forest, M blocks, W is water, R is the 1.5x road, H is high ground. Building hexes
+         exactly P, the one base tile at speed 1.0 with no other property (it was P and D
+         until Desert was removed). Every other code is a real feature and is skipped: F is
+         already forest, M blocks, W is water. Building hexes
          are skipped too. THIS IS THE POWER'S COUNTERPLAY AND IT IS DELIBERATE: an opponent
          who paints mountains, water and forest across their half denies her the ground, and
          the grove takes an irregular shape that flows around obstacles instead of stamping a
@@ -5200,7 +5228,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
          that grew it; see inGrove(). */
       let n=0;
       for(const [c,r] of hexesInRadius(hex,g.groveRadius||2)){
-        if(!["P","D"].includes(terrain(c,r)) || bldAt(c,r)) continue;
+        if(terrain(c,r)!=="P" || bldAt(c,r)) continue;
         S.floodedHexes.push({c,r,orig:terrain(c,r),to:"F",owner:casterSide,expiresAt:elapsed()+(g.groveDur||8)});
         TMAP[r][c]="F"; n++;
       }
@@ -5468,7 +5496,7 @@ function pickAiPowerHex(key){
        and fall back through nearby hexes until one has soil in range. */
     if(!aiUnits.length) return null;
     const spearhead=aiUnits.slice().sort((a,b)=>b.hex[1]-a.hex[1])[0]; // furthest DOWN the board = deepest into the player's half
-    const hasSoil=(h)=>hexesInRadius(h,2).some(([c,r])=>["P","D"].includes(terrain(c,r))&&!bldAt(c,r));
+    const hasSoil=(h)=>hexesInRadius(h,2).some(([c,r])=>terrain(c,r)==="P"&&!bldAt(c,r));
     if(hasSoil(spearhead.hex)) return spearhead.hex;
     const alt=aiUnits.map(u=>u.hex).find(hasSoil);
     return alt || null; // no soil anywhere near the army: hold the power rather than waste it
@@ -6347,6 +6375,1175 @@ IMG_SPRITES.triptolemus = { 0:"assets/sprites/triptolemus_back.png", 1:"assets/s
 IMG_SPRITES.arena_bg_egypt = "assets/sprites/arena_bg_egypt.jpg";
 IMG_SPRITES.arena_bg_china = "assets/sprites/arena_bg_china.jpg";
 IMG_SPRITES.arena_bg_aztec = "assets/sprites/arena_bg_aztec.jpg";
+/* APPROVED SHEET ART START */
+// Source-pixel crop geometry: [width, height, human shoulder width]. No gameplay stats.
+const UNIT_ART_GEOMETRY = {
+  "macuahuitl": [
+    [
+      216,
+      213,
+      175
+    ],
+    [
+      221,
+      268,
+      175
+    ]
+  ],
+  "atlatl": [
+    [
+      210,
+      207,
+      175
+    ],
+    [
+      216,
+      264,
+      175
+    ]
+  ],
+  "jaguar": [
+    [
+      227,
+      270,
+      175
+    ],
+    [
+      245,
+      254,
+      175
+    ]
+  ],
+  "otomi": [
+    [
+      216,
+      219,
+      175
+    ],
+    [
+      214,
+      237,
+      175
+    ]
+  ],
+  "tlequauitl": [
+    [
+      194,
+      221,
+      175
+    ],
+    [
+      198,
+      257,
+      175
+    ]
+  ],
+  "cihuacoatl": [
+    [
+      221,
+      229,
+      175
+    ],
+    [
+      228,
+      214,
+      175
+    ]
+  ],
+  "ji": [
+    [
+      201,
+      226,
+      170
+    ],
+    [
+      198,
+      234,
+      170
+    ]
+  ],
+  "xbow": [
+    [
+      215,
+      213,
+      170
+    ],
+    [
+      212,
+      222,
+      170
+    ]
+  ],
+  "dao": [
+    [
+      219,
+      236,
+      170
+    ],
+    [
+      202,
+      245,
+      170
+    ]
+  ],
+  "horse": [
+    [
+      161,
+      433,
+      170
+    ],
+    [
+      174,
+      426,
+      170
+    ]
+  ],
+  "ram": [
+    [
+      279,
+      450,
+      0
+    ],
+    [
+      282,
+      452,
+      0
+    ]
+  ],
+  "monk": [
+    [
+      188,
+      223,
+      170
+    ],
+    [
+      182,
+      206,
+      170
+    ]
+  ],
+  "spear": [
+    [
+      184,
+      169,
+      150
+    ],
+    [
+      182,
+      174,
+      150
+    ]
+  ],
+  "archer": [
+    [
+      174,
+      139,
+      150
+    ],
+    [
+      173,
+      163,
+      150
+    ]
+  ],
+  "axe": [
+    [
+      189,
+      135,
+      150
+    ],
+    [
+      194,
+      115,
+      150
+    ]
+  ],
+  "priest": [
+    [
+      186,
+      151,
+      150
+    ],
+    [
+      189,
+      142,
+      150
+    ]
+  ],
+  "slinger": [
+    [
+      172,
+      148,
+      150
+    ],
+    [
+      170,
+      154,
+      150
+    ]
+  ],
+  "khopesh": [
+    [
+      209,
+      162,
+      150
+    ],
+    [
+      206,
+      163,
+      150
+    ]
+  ],
+  "chariot": [
+    [
+      220,
+      370,
+      150
+    ],
+    [
+      208,
+      396,
+      150
+    ]
+  ],
+  "camel": [
+    [
+      241,
+      369,
+      150
+    ],
+    [
+      165,
+      365,
+      150
+    ]
+  ],
+  "elephant": [
+    [
+      226,
+      393,
+      150
+    ],
+    [
+      224,
+      388,
+      150
+    ]
+  ],
+  "hoplite": [
+    [
+      192,
+      245,
+      165
+    ],
+    [
+      197,
+      235,
+      165
+    ]
+  ],
+  "toxotes": [
+    [
+      203,
+      205,
+      165
+    ],
+    [
+      186,
+      198,
+      165
+    ]
+  ],
+  "peltast": [
+    [
+      214,
+      224,
+      165
+    ],
+    [
+      205,
+      192,
+      165
+    ]
+  ],
+  "companion": [
+    [
+      160,
+      401,
+      165
+    ],
+    [
+      168,
+      397,
+      165
+    ]
+  ],
+  "krios": [
+    [
+      221,
+      410,
+      0
+    ],
+    [
+      223,
+      414,
+      0
+    ]
+  ],
+  "priestess": [
+    [
+      192,
+      206,
+      165
+    ],
+    [
+      179,
+      184,
+      165
+    ]
+  ],
+  "xiuhcoatl": [
+    [
+      135,
+      201,
+      0
+    ],
+    [
+      138,
+      197,
+      0
+    ]
+  ],
+  "jaguarspirit": [
+    [
+      111,
+      185,
+      0
+    ],
+    [
+      115,
+      189,
+      0
+    ]
+  ],
+  "featheredserpent": [
+    [
+      139,
+      189,
+      0
+    ],
+    [
+      153,
+      197,
+      0
+    ]
+  ],
+  "raintitan": [
+    [
+      160,
+      188,
+      0
+    ],
+    [
+      142,
+      195,
+      0
+    ]
+  ],
+  "tlaltecuhtli": [
+    [
+      230,
+      174,
+      0
+    ],
+    [
+      229,
+      183,
+      0
+    ]
+  ],
+  "tzitzimitl": [
+    [
+      173,
+      176,
+      0
+    ],
+    [
+      171,
+      171,
+      0
+    ]
+  ],
+  "itzcuintli": [
+    [
+      94,
+      188,
+      0
+    ],
+    [
+      97,
+      198,
+      0
+    ]
+  ],
+  "centzonhuitznahua": [
+    [
+      184,
+      169,
+      0
+    ],
+    [
+      179,
+      165,
+      0
+    ]
+  ],
+  "ehecatotontin": [
+    [
+      184,
+      182,
+      0
+    ],
+    [
+      189,
+      179,
+      0
+    ]
+  ],
+  "colotl": [
+    [
+      239,
+      181,
+      0
+    ],
+    [
+      257,
+      209,
+      0
+    ]
+  ],
+  "celestial": [
+    [
+      99,
+      209,
+      0
+    ],
+    [
+      102,
+      204,
+      0
+    ]
+  ],
+  "stone": [
+    [
+      235,
+      169,
+      0
+    ],
+    [
+      231,
+      168,
+      0
+    ]
+  ],
+  "dragon": [
+    [
+      151,
+      208,
+      0
+    ],
+    [
+      157,
+      200,
+      0
+    ]
+  ],
+  "stonemonkey": [
+    [
+      169,
+      184,
+      0
+    ],
+    [
+      159,
+      177,
+      0
+    ]
+  ],
+  "xiangliu": [
+    [
+      246,
+      206,
+      0
+    ],
+    [
+      244,
+      199,
+      0
+    ]
+  ],
+  "xiaotianquan": [
+    [
+      100,
+      197,
+      0
+    ],
+    [
+      189,
+      207,
+      0
+    ]
+  ],
+  "fenghuang": [
+    [
+      255,
+      209,
+      0
+    ],
+    [
+      236,
+      208,
+      0
+    ]
+  ],
+  "huoshu": [
+    [
+      227,
+      200,
+      0
+    ],
+    [
+      225,
+      201,
+      0
+    ]
+  ],
+  "jaderabbit": [
+    [
+      122,
+      185,
+      0
+    ],
+    [
+      124,
+      180,
+      0
+    ]
+  ],
+  "kui": [
+    [
+      158,
+      196,
+      0
+    ],
+    [
+      164,
+      198,
+      0
+    ]
+  ],
+  "sphinx": [
+    [
+      140,
+      220,
+      0
+    ],
+    [
+      148,
+      227,
+      0
+    ]
+  ],
+  "phoenix": [
+    [
+      213,
+      219,
+      0
+    ],
+    [
+      215,
+      221,
+      0
+    ]
+  ],
+  "jackal": [
+    [
+      175,
+      182,
+      0
+    ],
+    [
+      171,
+      167,
+      0
+    ]
+  ],
+  "serpopard": [
+    [
+      116,
+      237,
+      0
+    ],
+    [
+      142,
+      232,
+      0
+    ]
+  ],
+  "apis": [
+    [
+      143,
+      239,
+      0
+    ],
+    [
+      134,
+      241,
+      0
+    ]
+  ],
+  "scorpion": [
+    [
+      206,
+      228,
+      0
+    ],
+    [
+      199,
+      242,
+      0
+    ]
+  ],
+  "apep": [
+    [
+      200,
+      224,
+      0
+    ],
+    [
+      202,
+      238,
+      0
+    ]
+  ],
+  "ammit": [
+    [
+      164,
+      226,
+      0
+    ],
+    [
+      149,
+      243,
+      0
+    ]
+  ],
+  "plaguebearer": [
+    [
+      186,
+      203,
+      0
+    ],
+    [
+      164,
+      216,
+      0
+    ]
+  ],
+  "sheut": [
+    [
+      234,
+      224,
+      0
+    ],
+    [
+      234,
+      222,
+      0
+    ]
+  ],
+  "ushabti": [
+    [
+      199,
+      199,
+      0
+    ],
+    [
+      208,
+      196,
+      0
+    ]
+  ],
+  "cerberus": [
+    [
+      179,
+      234,
+      0
+    ],
+    [
+      185,
+      229,
+      0
+    ]
+  ],
+  "satyr": [
+    [
+      172,
+      178,
+      0
+    ],
+    [
+      188,
+      144,
+      0
+    ]
+  ],
+  "calydonianboar": [
+    [
+      157,
+      229,
+      0
+    ],
+    [
+      160,
+      235,
+      0
+    ]
+  ],
+  "eagle": [
+    [
+      256,
+      200,
+      0
+    ],
+    [
+      244,
+      178,
+      0
+    ]
+  ],
+  "hippocampus": [
+    [
+      210,
+      203,
+      0
+    ],
+    [
+      190,
+      203,
+      0
+    ]
+  ],
+  "griffin": [
+    [
+      233,
+      219,
+      0
+    ],
+    [
+      239,
+      202,
+      0
+    ]
+  ],
+  "phobos": [
+    [
+      210,
+      191,
+      0
+    ],
+    [
+      208,
+      196,
+      0
+    ]
+  ],
+  "python": [
+    [
+      210,
+      212,
+      0
+    ],
+    [
+      209,
+      223,
+      0
+    ]
+  ],
+  "shade": [
+    [
+      207,
+      208,
+      0
+    ],
+    [
+      198,
+      208,
+      0
+    ]
+  ],
+  "empusa": [
+    [
+      190,
+      236,
+      0
+    ],
+    [
+      188,
+      235,
+      0
+    ]
+  ],
+  "talos": [
+    [
+      281,
+      227,
+      0
+    ],
+    [
+      291,
+      226,
+      0
+    ]
+  ],
+  "atalanta": [
+    [
+      164,
+      148,
+      150
+    ],
+    [
+      166,
+      146,
+      150
+    ]
+  ],
+  "odysseus": [
+    [
+      183,
+      154,
+      150
+    ],
+    [
+      179,
+      152,
+      150
+    ]
+  ],
+  "heracles": [
+    [
+      196,
+      172,
+      150
+    ],
+    [
+      186,
+      186,
+      150
+    ]
+  ],
+  "achilles": [
+    [
+      178,
+      162,
+      150
+    ],
+    [
+      182,
+      164,
+      150
+    ]
+  ],
+  "ajax": [
+    [
+      189,
+      164,
+      150
+    ],
+    [
+      185,
+      177,
+      150
+    ]
+  ],
+  "perseus": [
+    [
+      179,
+      157,
+      150
+    ],
+    [
+      178,
+      160,
+      150
+    ]
+  ],
+  "theseus": [
+    [
+      156,
+      138,
+      150
+    ],
+    [
+      158,
+      153,
+      150
+    ]
+  ],
+  "ariadne": [
+    [
+      156,
+      151,
+      150
+    ],
+    [
+      152,
+      143,
+      150
+    ]
+  ],
+  "chiron": [
+    [
+      151,
+      191,
+      150
+    ],
+    [
+      161,
+      176,
+      150
+    ]
+  ],
+  "orpheus": [
+    [
+      155,
+      161,
+      150
+    ],
+    [
+      155,
+      165,
+      150
+    ]
+  ],
+  "triptolemus": [
+    [
+      201,
+      213,
+      150
+    ],
+    [
+      194,
+      224,
+      150
+    ]
+  ],
+  "ariadne_echo": [
+    [
+      158,
+      175,
+      150
+    ],
+    [
+      157,
+      172,
+      150
+    ]
+  ],
+  "sinuhe": [
+    [
+      170,
+      124,
+      145
+    ],
+    [
+      183,
+      119,
+      145
+    ]
+  ],
+  "nezha": [
+    [
+      173,
+      129,
+      145
+    ],
+    [
+      171,
+      110,
+      145
+    ]
+  ],
+  "tepoztecatl": [
+    [
+      173,
+      116,
+      145
+    ],
+    [
+      180,
+      112,
+      145
+    ]
+  ],
+  "doomedprince": [
+    [
+      165,
+      139,
+      145
+    ],
+    [
+      165,
+      142,
+      145
+    ]
+  ],
+  "nezha_lotus": [
+    [
+      174,
+      136,
+      0
+    ],
+    [
+      176,
+      135,
+      0
+    ]
+  ],
+  "topiltzin": [
+    [
+      170,
+      131,
+      145
+    ],
+    [
+      174,
+      118,
+      145
+    ]
+  ],
+  "bata": [
+    [
+      158,
+      116,
+      145
+    ],
+    [
+      147,
+      114,
+      145
+    ]
+  ],
+  "nezha_reborn": [
+    [
+      183,
+      137,
+      145
+    ],
+    [
+      183,
+      137,
+      145
+    ]
+  ],
+  "xelhua": [
+    [
+      194,
+      115,
+      145
+    ],
+    [
+      180,
+      116,
+      145
+    ]
+  ],
+  "bata_tree": [
+    [
+      161,
+      144,
+      0
+    ],
+    [
+      170,
+      148,
+      0
+    ]
+  ],
+  "houyi": [
+    [
+      157,
+      140,
+      145
+    ],
+    [
+      158,
+      140,
+      145
+    ]
+  ],
+  "xelhua_pyramid": [
+    [
+      156,
+      125,
+      0
+    ],
+    [
+      160,
+      135,
+      0
+    ]
+  ],
+  "bata_reborn": [
+    [
+      157,
+      125,
+      145
+    ],
+    [
+      197,
+      116,
+      145
+    ]
+  ],
+  "liji": [
+    [
+      165,
+      123,
+      145
+    ],
+    [
+      165,
+      121,
+      145
+    ]
+  ]
+};
+IMG_SPRITES.krios = {"0":"assets/sprites/krios_back.png","1":"assets/sprites/krios_front.png"};
+IMG_SPRITES.priestess = {"0":"assets/sprites/priestess_back.png","1":"assets/sprites/priestess_front.png"};
+IMG_SPRITES.cerberus = {"0":"assets/sprites/cerberus_back.png","1":"assets/sprites/cerberus_front.png"};
+IMG_SPRITES.satyr = {"0":"assets/sprites/satyr_back.png","1":"assets/sprites/satyr_front.png"};
+IMG_SPRITES.calydonianboar = {"0":"assets/sprites/calydonianboar_back.png","1":"assets/sprites/calydonianboar_front.png"};
+IMG_SPRITES.eagle = {"0":"assets/sprites/eagle_back.png","1":"assets/sprites/eagle_front.png"};
+IMG_SPRITES.hippocampus = {"0":"assets/sprites/hippocampus_back.png","1":"assets/sprites/hippocampus_front.png"};
+IMG_SPRITES.griffin = {"0":"assets/sprites/griffin_back.png","1":"assets/sprites/griffin_front.png"};
+IMG_SPRITES.phobos = {"0":"assets/sprites/phobos_back.png","1":"assets/sprites/phobos_front.png"};
+IMG_SPRITES.python = {"0":"assets/sprites/python_back.png","1":"assets/sprites/python_front.png"};
+IMG_SPRITES.shade = {"0":"assets/sprites/shade_back.png","1":"assets/sprites/shade_front.png"};
+IMG_SPRITES.empusa = {"0":"assets/sprites/empusa_back.png","1":"assets/sprites/empusa_front.png"};
+IMG_SPRITES.talos = {"0":"assets/sprites/talos_back.png","1":"assets/sprites/talos_front.png"};
+IMG_SPRITES.ariadne_echo = {"0":"assets/sprites/ariadne_echo_back.png","1":"assets/sprites/ariadne_echo_front.png"};
+IMG_SPRITES.nezha_lotus = {"0":"assets/sprites/nezha_lotus_back.png","1":"assets/sprites/nezha_lotus_front.png"};
+IMG_SPRITES.nezha_reborn = {"0":"assets/sprites/nezha_reborn_back.png","1":"assets/sprites/nezha_reborn_front.png"};
+IMG_SPRITES.xelhua_pyramid = {"0":"assets/sprites/xelhua_pyramid_back.png","1":"assets/sprites/xelhua_pyramid_front.png"};
+const TERRAIN_ART_LAYOUT = {"terrain_shared_forest":[16,48,1296,1148],"terrain_chinese_bamboo":[22,48,1288,1145],"terrain_shared_mountain":[45,55,1266,1143],"terrain_shared_water":[38,45,1308,1124],"terrain_egypt_nile":[10,30,1320,1148],"terrain_aztec_texcoco":[40,50,1307,1122]};
+IMG_SPRITES.terrain_egypt_nile = "assets/sprites/terrain_egypt_nile.png";
+IMG_SPRITES.terrain_aztec_texcoco = "assets/sprites/terrain_aztec_texcoco.png";
+IMG_SPRITES.arena_bg_egypt = {0:"assets/sprites/arena_egypt_top_clean.png",1:"assets/sprites/arena_egypt_bottom_clean.png"};
+IMG_SPRITES.arena_bg_china = {0:"assets/sprites/arena_china_top_clean.png",1:"assets/sprites/arena_china_bottom_clean.png"};
+IMG_SPRITES.arena_bg_aztec = {0:"assets/sprites/arena_aztec_top_clean.png",1:"assets/sprites/arena_aztec_bottom_clean.png"};
+IMG_SPRITES.arena_bg_greek = {0:"assets/sprites/arena_greek_top_clean.png",1:"assets/sprites/arena_greek_bottom_clean.png"};
+/* APPROVED SHEET ART END */
 const IMG_CACHE = {}; // cache key -> decoded Image, lazy + cached so we never re-decode base64 every frame
 function getSpriteImage(key,side){
   const entry=IMG_SPRITES[key];
@@ -6778,8 +7975,18 @@ function spriteScale(big){ return (HEX/24)*(big?1.2:0.95)*1.56; } // 2026-07-16:
 // reason spriteScale() itself was extracted: two independent copies of this formula
 // already drifted apart once this session (decision 27's HP-bar fix).
 function unitSpriteScale(u){
+  const art=UNIT_ART_GEOMETRY[u.key];
+  if(art){
+    const [w,h,bodyWidth]=art[u.side];
+    // Match the human body across infantry, heroes and riders, not the full weapon/mount.
+    const px=bodyWidth ? HEX*1.15/bodyWidth : HEX*(u.size>1?2.2:1.65)/Math.max(w,h);
+    return h*px/32;
+  }
   const mult=u.def.spriteScaleMult;
   return spriteScale(u.size>1)*(typeof mult==="object"?(mult[u.side]||1):(mult||1));
+}
+function unitSpriteBaseOffset(u){
+  return UNIT_ART_GEOMETRY[u.key]?16*unitSpriteScale(u):HEX*0.42;
 }
 /* Short elapsed-time stamps drive Spearman visual transforms and bitmap selection;
    simulation position, attack timing, hitboxes, and hex occupancy remain unchanged. */
@@ -6835,10 +8042,10 @@ function drawUnitSprite(u){
   ctx.save();
   const p=toScreen(u.pos.x,u.pos.y); // camera tilt: project the anchor only, sprite art itself stays undistorted
   const anim=spearmanAnim(u);
-  ctx.translate(p.x+anim.x,p.y+HEX*0.42+anim.y);
+  ctx.translate(p.x+anim.x,p.y+unitSpriteBaseOffset(u)+anim.y);
   ctx.rotate(anim.rot);
   const axeFrame=axeAttackFrame(u);
-  if(axeFrame>=0){
+  if(axeFrame>=0 && !UNIT_ART_GEOMETRY[u.key]){
     const img=getAxeAttackImage(axeFrame);
     if(img&&img.complete&&img.naturalWidth>0){
       const src=chromaKeyed(img,"axeAttack:"+axeFrame);
@@ -6848,7 +8055,9 @@ function drawUnitSprite(u){
       return;
     }
   }
-  let spriteKey=spearmanFrameKey(u);
+  // The approved sheets provide directional poses; keep their style during attacks too.
+  let spriteKey=UNIT_ART_GEOMETRY[u.key]?u.key:spearmanFrameKey(u);
+  if(u.key==="ariadne" && u.split) spriteKey="ariadne_echo";
   let entry=IMG_SPRITES[spriteKey];
   const perSide=entry && typeof entry==="object";
   if(u.side===1 && !perSide) ctx.scale(-1,1); // per-side art is already correctly oriented; the legacy mirror is only for one shared image
@@ -7071,17 +8280,19 @@ function squashedHexPoly(g,cx,cy,s){
    repeatedly through different clips -- calling drawArenaBgRect per strip would re-fit the
    image to each strip's own tiny box and tear the scene apart. Returns null when the art
    hasn't decoded yet, which is the caller's cue to use the flat fallback colour. */
-function arenaBgPlacement(faction,x,y,w,h){
-  const img=getSpriteImage("arena_bg_"+faction);
+function arenaBgPlacement(faction,x,y,w,h,side=0){
+  const img=getSpriteImage("arena_bg_"+faction,side);
   if(!(img && img.complete && img.naturalWidth>0)) return null;
+  // These frames are composed for one half-board: preserve all four edges and corners.
+  if(typeof IMG_SPRITES["arena_bg_"+faction]==="object") return {img,dx:x,dy:y,dw:w,dh:h};
   const boxAspect=w/h, imgAspect=img.naturalWidth/img.naturalHeight;
   let dw,dh;
   if(imgAspect>boxAspect){ dh=h; dw=dh*imgAspect; } else { dw=w; dh=dw/imgAspect; }
   return {img, dx:x+w/2-dw/2, dy:y+h/2-dh/2, dw, dh};
 }
 const ARENA_BG_FALLBACK = faction => faction==="egypt" ? "#c7a15c" : "#6f8a41";
-function drawArenaBgRect(g,faction,x,y,w,h){
-  const pl=arenaBgPlacement(faction,x,y,w,h);
+function drawArenaBgRect(g,faction,x,y,w,h,side=0){
+  const pl=arenaBgPlacement(faction,x,y,w,h,side);
   g.save();
   g.beginPath(); g.rect(x,y,w,h); g.clip();
   if(pl){
@@ -7158,8 +8369,11 @@ function sideForRow(r){
 function factionForRow(r){
   return factionForSide(sideForRow(r));
 }
+function waterArtKey(faction){
+  return faction==="egypt"?"terrain_egypt_nile":faction==="aztec"?"terrain_aztec_texcoco":"terrain_shared_water";
+}
 function drawSpecialTile(g,T,cx,cy,r){
-  const key = T==="F"?(factionForRow(r)==="china"?"terrain_chinese_bamboo":"terrain_shared_forest") : T==="M"?"terrain_shared_mountain" : T==="W"?"terrain_shared_water" : null;
+  const key = T==="F"?(factionForRow(r)==="china"?"terrain_chinese_bamboo":"terrain_shared_forest") : T==="M"?"terrain_shared_mountain" : T==="W"?waterArtKey(factionForRow(r)) : null;
   if(!key) return;
   const img=getSpriteImage(key);
   if(img && img.complete && img.naturalWidth>0){
@@ -7181,9 +8395,12 @@ function drawSpecialTile(g,T,cx,cy,r){
        stick out of the top of the hex a bit and thats okay"). It composites correctly
        because this loop runs top row first, so a hex's overflow lands on already-drawn
        rows rather than being painted over. */
-    const dw=HEX*2;
+    const plate=TERRAIN_ART_LAYOUT[key];
+    const dw=HEX*2*img.naturalWidth/(plate?plate[2]-plate[0]:img.naturalWidth);
     const dh=dw*(img.naturalHeight/img.naturalWidth);
-    g.drawImage(src,cx-dw/2,cy-dh/2,dw,dh);
+    const ax=plate?(plate[0]+plate[2])/2/img.naturalWidth:0.5;
+    const ay=plate?(plate[1]+plate[3])/2/img.naturalHeight:0.5;
+    g.drawImage(src,cx-dw*ax,cy-dh*ay,dw,dh);
     return;
   }
   if(T==="F"){
@@ -7265,7 +8482,7 @@ function renderBG(){
       const bgW=bgRight-bgLeft;
       g.save();
       g.beginPath(); g.rect(bgLeft,bgTop,bgW,band.bot-bgTop); g.clip();
-      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgW,band.bot-bgTop);
+      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgW,band.bot-bgTop,1);
       g.restore();
       // the player's half, cover-fitted to its own full footprint so the faded part and
       // the solid part below are one continuous image, not two differently-scaled copies
@@ -7283,7 +8500,7 @@ function renderBG(){
       g.save();g.beginPath();g.moveTo(bgLeft,bgTop);g.lineTo(bgRight,bgTop);
       for(let i=seam.length-1;i>=0;i--)g.lineTo(seam[i][0],seam[i][1]);
       g.closePath();g.clip();
-      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,Math.max(...seamY)-bgTop);
+      drawArenaBgRect(g,factionForSide(1),bgLeft,bgTop,bgRight-bgLeft,Math.max(...seamY)-bgTop,1);
       g.restore();
       g.save();g.beginPath();g.moveTo(seam[0][0],seam[0][1]);
       for(let i=1;i<seam.length;i++)g.lineTo(seam[i][0],seam[i][1]);
@@ -7465,7 +8682,7 @@ function draw(){
     // -- the old fixed offsets (HEX*0.78/1.05) landed around mid-torso once real image
     // art (much taller than the original vector sprites) became the default renderer.
     if(!u.dead && u.hp<u.maxhp){
-      const headY=p.y+HEX*0.42+spearmanAnim(u).y-32*unitSpriteScale(u)-HEX*0.15;
+      const headY=p.y+unitSpriteBaseOffset(u)+spearmanAnim(u).y-32*unitSpriteScale(u)-HEX*0.15;
       hpBar(p.x,headY,HEX*(big?1.4:1.0),u.hp/u.maxhp,u.side?"#e3392b":"#3f9bff",0.7);
     }
     if(!u.dead){
