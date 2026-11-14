@@ -1,6 +1,6 @@
 {
-  "releaseVersion": 57,
-  "cacheName": "godsbound-v57",
+  "releaseVersion": 58,
+  "cacheName": "godsbound-v58",
   "files": {
     "assets/icons/apple-touch-icon.png": "c98fa62bb19792809eaf3dcf3b54458d3392bddb41f97c1145f1c7fe4d3d3ce0",
     "assets/icons/icon-192.png": "7f6fab5c0f1ebfc95f66576507d0753b8e57d25b784867a43d876967f5e25e27",
@@ -397,9 +397,9 @@
     "assets/sprites/xiaotianquan_front.png": "0cd1d53dec78fa305d00e37b32554aa7129c616b897eeb1623760368bb242616",
     "assets/sprites/xiuhcoatl_back.png": "e9c0915d2f813795c1ec1d4dacf0ea08b3139556373e788b5e9bf378c21c8c7d",
     "assets/sprites/xiuhcoatl_front.png": "6a5c8c42b73307431527e5a9e6cca2ef2d2bb2293303efd1071a73fad77c7b6e",
-    "index.html": "45b5a7e0baf7378c4943c4512d7c4e5454b8f70c9cac3b48b22aaa4c0671f951",
+    "index.html": "4c8f4d9c30425d7d9669c2c4908b9c6749199158e6629b16484dc26b576d98d5",
     "manifest.json": "074efc824f4ee607c849febada73f9c174bd8ce25777585c1e61750d0577dd8f",
-    "release-manifest.json": "514be0fa1036c88eef039dcd4a517fca7e41ffac566e75982cb6bad0ce9836b6",
-    "service-worker.js": "84abe1c9191829624eb9957827e9f6126c081f9192dd096173d4e15a878ba6e2"
+    "release-manifest.json": "acffbbe886254321cf1334fcc6665fa7fa903f63ab022cd700bd91fb9b9e50d2",
+    "service-worker.js": "1fb6cf2532cc9acc4a44e5fbc10acabc4208386a02dea3e2f8cb0ac81afce970"
   }
 }

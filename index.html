@@ -127,7 +127,9 @@
   .modebtn{width:100%;min-height:62px;padding:14px;font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:800;letter-spacing:1.2px;border-radius:0;border:1px solid #6b5426;background:#241a12;color:#f0dca7;cursor:pointer;text-transform:uppercase;}
   .modebtn .modesub{display:block;font-size:10px;font-weight:600;color:#aaa18e;margin-top:3px;letter-spacing:.3px;}
   .modebtn:disabled{opacity:.35;cursor:not-allowed;}
-  #stepdecks{width:min(94%,520px);margin:auto;text-align:center;}
+  #stepdecks,#stepfestivaldeck{width:min(94%,520px);margin:auto;text-align:center;}
+  #festivaldeckcard{padding:16px;border:1px solid #6b5426;border-radius:10px;background:#241a12;text-align:left;}
+  #festivaldeckcard .decksummary{font-size:12px;line-height:1.6;}
   #deckslots{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;margin:14px auto 12px;}
   #deckslots .deckslot{width:100%;padding:12px;border:1px solid #6b5426;border-radius:10px;background:#241a12;color:#d8c8a8;text-align:left;}
   #deckslots .deckslot.selected{border-color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.45);}
@@ -424,6 +426,17 @@
           <div id="festivallist"></div>
           <div class="setupnav"><button class="setupback" onclick="goToHomeStep()">&larr; Home</button></div>
         </div>
+        <div id="stepfestivaldeck" style="display:none;">
+          <h1 id="festivaldecktitle">FESTIVAL DECK</h1>
+          <p id="festivaldeckintro"></p>
+          <div id="festivaldeckcard">
+            <div class="deckname">YOUR FESTIVAL DECK</div>
+            <div id="festivaldecksummary" class="decksummary"></div>
+            <div class="deckactions"><button id="festivaldeckedit" onclick="editFestivalDeck()">BUILD DECK</button><button id="festivaldeckplay" onclick="playFestivalDeck()">PLAY FESTIVAL</button></div>
+          </div>
+          <p>Festival decks are saved separately from your regular decks.</p>
+          <div class="setupnav"><button class="setupback" onclick="goToFestivalsStep()">← Festivals</button></div>
+        </div>
         <div id="steplegends" style="display:none;">
           <h1>LEGENDS</h1>
           <p>Play through a myth. The decks are set for you — the challenge is the objective.</p>
@@ -449,7 +462,7 @@
             <button class="factionbtn" id="factionbtn-aztec" data-faction="aztec">🐆 Aztecs</button>
             <button class="factionbtn" id="factionbtn-greek" data-faction="greek">🏛 Greeks</button>
           </div>
-          <div class="setupnav"><button class="setupback" onclick="goToDeckStep()">← Decks</button><button id="btnnextfaction" class="setupnext" onclick="beginGodSelection()">Next: Gods →</button></div>
+          <div class="setupnav"><button id="factionback" class="setupback" onclick="goToDeckStep()">← Decks</button><button id="btnnextfaction" class="setupnext" onclick="beginGodSelection()">Next: Gods →</button></div>
         </div>
         <div id="stepgods" class="pickstep" style="display:none;">
           <div id="godpicker">
@@ -1642,12 +1655,14 @@ function defaultDeckPreset(faction="egypt"){
 function validPick(list,count,allowed){
   return Array.isArray(list)&&list.length===count&&new Set(list).size===count&&list.every(k=>allowed.includes(k));
 }
-function normalizeDeckPreset(raw){
+function normalizeDeckPreset(raw,festivalKey){
   if(!raw||!FACTIONS[raw.faction]) return null;
   const faction=raw.faction, f=FACTIONS[faction];
   const humans=Object.keys(f.units).filter(k=>f.units[k].cat==="human");
   const heroes=Object.keys(f.units).filter(k=>f.units[k].cat==="hero");
-  const gods=f.allGods.map(g=>g.key);
+  const event=festivalKey?festivalByKey(festivalKey):null;
+  if(festivalKey&&!event) return null;
+  const gods=event?event.gods:f.allGods.map(g=>g.key);
   if(!validPick(raw.loadout,4,humans)||!validPick(raw.heroes,2,heroes)||!validPick(raw.gods,4,gods)) return null;
   if(!Array.isArray(raw.terrain)||raw.terrain.length!==PLAYER_ROWS) return null;
   const terrain=raw.terrain.map(row=>(typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]).map(TERRAIN_MIGRATE));
@@ -1751,10 +1766,12 @@ function selectDeckSlot(slot){
   renderDeckSlots();
 }
 function replayCurrentDeck(){
+  if(festival){ playFestivalDeck(); return; }
   applyDeckPreset(S.deckSlot);startMatch(true);S.phase="battle";S.selectionFaction=S.playerFaction;S.deckEditing=false;
   $("menuscreen").style.display="none";renderDeckSlots();
 }
 function openDeckMenu(){
+  if(festival){ startMatch(true); goToFestivalDeckStep(); return; }
   // 2026-07-23 direct chat request: "the menu button after the game takes me to
   // the home screen" -- S.setupStep was already being set to "home" here, but
   // startMatch() (called just above) unconditionally sets setupStep="faction"
@@ -2786,6 +2803,60 @@ const FESTIVALS=[
     gods:["nephthys","chang","coyolxauhqui","tezcatlipoca","artemis"] }
 ];
 let festival=null;   // the active festival object, or null. Module-level, NOT on S.
+let festivalReturnDeck=null;
+const festivalDecks={};
+const FESTIVAL_SAVE_KEY="godsbound-festival-decks-v1";
+function festivalDeckSnapshot(){
+  return {faction:S.playerFaction,loadout:[...S.loadout],heroes:[...S.heroPick],gods:[...S.godPick],
+    terrain:playerHalf.terrain.map(r=>[...r]),buildings:playerHalf.buildings.map(b=>({type:b.type,hexes:b.hexes.map(h=>[...h])}))};
+}
+function applyFestivalLayout(deck){
+  setDeckFaction(deck.faction);
+  HUMAN_KEYS=Object.keys(FACTIONS[deck.faction].units).filter(k=>FACTIONS[deck.faction].units[k].cat==="human");
+  HERO_KEYS=Object.keys(FACTIONS[deck.faction].units).filter(k=>FACTIONS[deck.faction].units[k].cat==="hero");
+  applyFactionUI();
+  S.loadout=[...deck.loadout]; S.heroPick=[...deck.heroes]; S.godPick=[...deck.gods];
+  playerHalf.terrain=deck.terrain.map(r=>[...r]);
+  for(const b of deck.buildings) playerHalf.buildings.find(x=>x.type===b.type).hexes=b.hexes.map(h=>[...h]);
+  S.paintMap={};S.painted={F:0,M:0,W:0};
+  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
+  S.selectionFaction=deck.faction;
+}
+function savedFestivalDeck(){
+  if(!festival) return null;
+  return normalizeDeckPreset(festivalDecks[festival.key],festival.key);
+}
+function renderFestivalDeck(){
+  if(!festival) return;
+  const deck=savedFestivalDeck();
+  $("festivaldecktitle").textContent=festival.title;
+  $("festivaldeckintro").textContent=festival.blurb;
+  $("festivaldecksummary").textContent=deck
+    ? `People: ${deck.faction}\nGods: ${deck.gods.map(k=>godDef(k).name).join(", ")}\nHeroes: ${deck.heroes.map(k=>unitDef(k).name).join(", ")}\nUnits: ${deck.loadout.map(k=>unitDef(k).name).join(", ")}`
+    : "Build your festival deck: choose your people, 4 festival gods, 2 heroes, 4 human units, and your terrain.";
+  $("festivaldeckplay").disabled=!deck;
+  $("festivaldeckedit").textContent=deck?"EDIT DECK":"BUILD DECK";
+}
+function goToFestivalDeckStep(){
+  if(!festival) return;
+  S.phase="setup"; S.deckEditing=false; S.setupStep="festivaldeck";
+  $("menuscreen").style.display="flex";
+  renderFestivalDeck(); renderSetupStep();
+}
+function editFestivalDeck(){
+  if(!festival) return;
+  const deck=savedFestivalDeck();
+  if(deck) applyFestivalLayout(deck);
+  else {S.loadout=[];S.heroPick=[];S.godPick=[];S.selectionFaction=null;}
+  S.phase="setup";S.deckEditing=false;S.setupStep="faction";
+  renderLoadout();renderHeroPicker();renderGodPicker();renderSetupStep();
+}
+function playFestivalDeck(){
+  const deck=savedFestivalDeck();
+  if(!deck){hint("Build a complete festival deck before playing.");return;}
+  applyFestivalLayout(deck);pickAiLayout();aiHalfTerrain=freshAiHalfTerrain();
+  onBattleTap();
+}
 function festivalByKey(k){ return FESTIVALS.find(f=>f.key===k)||null; }
 /* THE mechanism. Everywhere that used to read FACTIONS[playerFaction].allGods now reads this. */
 function godPool(){
@@ -2810,22 +2881,29 @@ function renderFestivalList(){
       <div class="festgods">${names}</div></button>`;
   }).join("");
 }
-/* Entering a festival does NOT start a match -- it drops the player into the ordinary setup
-   flow at the faction step, with the god pool swapped underneath. */
+/* Festival decks have their own chooser and storage; the editor reuses the selection steps. */
 function beginFestival(key){
   const f=festivalByKey(key);
   if(!f) return;
+  endDrill(true);endCampaign(true);endFestival(true);
+  if(S.deckEditing) saveActiveDeck();
+  festivalReturnDeck=festivalDeckSnapshot();
   festival=f;
+  try{
+    const saved=JSON.parse(deckStorage()?.getItem(FESTIVAL_SAVE_KEY)||"{}");
+    const deck=normalizeDeckPreset(saved[key],key);
+    if(deck) festivalDecks[key]=deck;
+  }catch(_){}
   S.godPick=[];
   S.selectionFaction=null;   // forces beginGodSelection to clear the trays for the new pool
-  S.setupStep="faction";
-  renderSetupStep();
+  goToFestivalDeckStep();
 }
 function endFestival(silent){
   if(!festival) return;
   festival=null;
-  S.godPick=[];
-  S.selectionFaction=null;
+  if(festivalReturnDeck) applyFestivalLayout(festivalReturnDeck);
+  festivalReturnDeck=null;
+  S.deckEditing=false;
   if(silent) return;
   S.setupStep="home";
   renderSetupStep();
@@ -2841,6 +2919,13 @@ function onBattleTap(){
 }
 function onFinishDeckTap(){
   if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before you can finish."); return; }
+  if(festival){
+    const deck=normalizeDeckPreset(festivalDeckSnapshot(),festival.key);
+    if(!deck){hint("Check your festival choices and terrain before finishing.");return;}
+    festivalDecks[festival.key]=deck;
+    try{const storage=deckStorage();const saved=JSON.parse(storage?.getItem(FESTIVAL_SAVE_KEY)||"{}");storage?.setItem(FESTIVAL_SAVE_KEY,JSON.stringify({...saved,[festival.key]:deck}));}catch(_){}
+    goToFestivalDeckStep();return;
+  }
   goToDeckStep();
 }
 
@@ -8898,6 +8983,9 @@ function renderSetupStep(){
   $("stephome").style.display = onHome? "flex":"none";
   $("tutorialbtn").style.display = onHome? "block":"none"; // home step only
   $("stepfestivals").style.display = S.setupStep==="festivals"? "block":"none";
+  $("stepfestivaldeck").style.display = S.setupStep==="festivaldeck"? "block":"none";
+  $("factionback").textContent=festival?"← Festival deck":"← Decks";
+  $("btnbattle").textContent=festival?"Save festival deck":"Finish";
   $("steplegends").style.display = S.setupStep==="legends"? "block":"none";
   $("stepdecks").style.display = onDecks? "block":"none";
   $("stepfaction").style.display = onFaction? "block":"none";
@@ -8913,10 +9001,12 @@ function renderSetupStep(){
   computeCamera();
 }
 function goToDeckStep(){
+  if(festival){goToFestivalDeckStep();return;}
   if(S.deckEditing)saveActiveDeck();
   S.deckEditing=false;S.setupStep="decks";renderDeckSlots();renderSetupStep();
 }
 function goToHomeStep(){
+  endFestival(true);
   S.setupStep="home"; renderDeckSlots(); renderSetupStep();
 }
 function goToFactionStep(){ S.setupStep="faction"; renderSetupStep(); }
