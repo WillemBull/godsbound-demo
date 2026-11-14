@@ -1353,7 +1353,11 @@ const SHAPES={
   pair:[[0,0],[1,0]],
   tri:[[0,0],[1,0],[0,1]],
   quad:[[0,0],[1,0],[0,1],[1,1]],
-  barbell:[[0,0],[0,1],[1,0],[2,0],[3,0],[4,0],[4,1]]
+  /* Tenochtitlan: two 3-hex lobes joined by a 1-hex causeway that sits BEHIND them (Willem,
+     2026-11-14). "Behind" is down-screen for the player and up-screen for the AI, so the AI uses
+     barbell_ai (the same hexes in the same index order, causeway raised half a hex). */
+  barbell:[[0,0],[0,1],[1,0],[2,1],[3,0],[4,0],[4,1]],
+  barbell_ai:[[0,0],[0,1],[1,0],[2,0],[3,0],[4,0],[4,1]]
 };
 /* `at` is the default anchor on the PLAYER's half in local rows (0 = front, PLAYER_ROWS-1 = back);
    `aiAt` the AI's default on its own half (absolute rows, 0 = back), else `at` mirrored. The
@@ -1371,7 +1375,7 @@ const STRUCTURE_LAYOUTS={
     {id:"luoyang",type:"city",name:"Luoyang", emoji:"🏯",shape:"tri", at:[6,2], aiAt:[6,3]}
   ],
   aztec:[
-    {id:"tenochtitlan",type:"city",name:"Tenochtitlan",emoji:"🛕",shape:"barbell",at:[2,2],
+    {id:"tenochtitlan",type:"city",name:"Tenochtitlan",emoji:"🛕",shape:"barbell",aiShape:"barbell_ai",at:[2,2],
      parts:[{type:"city",idx:[0,1,2]},{type:null,idx:[3]},{type:"city",idx:[4,5,6],mirror:true}]}
   ],
   greek:[
@@ -1380,7 +1384,9 @@ const STRUCTURE_LAYOUTS={
     {id:"corinth",type:"city",name:"Corinth",emoji:"🏛",shape:"pair",at:[1,4]}
   ]
 };
-const shapeOf = def => SHAPES[def.shape];
+/* A def's shape for a side: `aiShape` (if any) on side 1. A built structure stores its resolved
+   shape name in `shape` and has no aiShape, so shapeOf(building) is always that building's own. */
+const shapeOf = (def,side) => SHAPES[(side&&def.aiShape)||def.shape];
 function placeShape(shape,anchor){
   const A=offsetToCube(anchor[0],anchor[1]);
   return shape.map(([c,r])=>{
@@ -1400,12 +1406,12 @@ function layoutHexCount(faction){ return layoutFor(faction).reduce((n,d)=>n+shap
 function structureHp(faction,def){ return Math.round(STRUCTURE_TOTAL_HP*shapeOf(def).length/layoutHexCount(faction)); }
 function mkStructure(side,faction,def,hexes){
   return mkBld(side,def.type,def.name,def.emoji,hexes,structureHp(faction,def),
-    {id:def.id,faction,shape:def.shape,parts:def.parts||null});
+    {id:def.id,faction,shape:(side&&def.aiShape)||def.shape,parts:def.parts||null});
 }
 /* Does `hexes` have exactly the form of `def`, anchored at hexes[0]? */
-function hexesFitShape(def,hexes){
-  if(!Array.isArray(hexes)||hexes.length!==shapeOf(def).length) return false;
-  const want=placeShape(shapeOf(def),hexes[0]);
+function hexesFitShape(def,hexes,side){
+  if(!Array.isArray(hexes)||hexes.length!==shapeOf(def,side).length) return false;
+  const want=placeShape(shapeOf(def,side),hexes[0]);
   return want.every((h,i)=>Array.isArray(hexes[i])&&h[0]===hexes[i][0]&&h[1]===hexes[i][1]);
 }
 /* Places a faction's whole layout on a half (rows 0..o.rows-1): each structure goes to the
@@ -1420,7 +1426,7 @@ function autoLayout(faction,o){
     for(let r=0;r<o.rows;r++) for(let c=0;c<COLS;c++) cands.push([c,r]);
     cands.sort((a,b)=>hexDist(a,pref)-hexDist(b,pref)||a[1]-b[1]||a[0]-b[0]);
     let placed=null;
-    for(const a of cands){ const hexes=placeShape(shapeOf(def),a); if(ok(hexes)){placed=hexes;break;} }
+    for(const a of cands){ const hexes=placeShape(shapeOf(def,o.side),a); if(ok(hexes)){placed=hexes;break;} }
     if(!placed) return null;
     placed.forEach(h=>taken.add(h.join(",")));
     out.push({def,hexes:placed});
@@ -1503,8 +1509,8 @@ function aiPrefAnchor(def,jitter){
 }
 function makeAiLayout(faction,jitter){
   const prefs={}; for(const d of layoutFor(faction)) prefs[d.id]=aiPrefAnchor(d,jitter);
-  const lay=autoLayout(faction,{rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs,gap:true})
-         || autoLayout(faction,{rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs});
+  const lay=autoLayout(faction,{side:1,rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs,gap:true})
+         || autoLayout(faction,{side:1,rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs});
   return {faction, hexes:Object.fromEntries(lay.map(p=>[p.def.id,p.hexes]))};
 }
 /* Every structure of the layout's pantheon, each in its own shape, on the AI half (off its
@@ -1515,7 +1521,7 @@ function validAiLayout(layout){
   if(Object.keys(layout.hexes||{}).length!==defs.length) return false;
   for(const d of defs){
     const hexes=layout.hexes[d.id];
-    if(!hexesFitShape(d,hexes)) return false;
+    if(!hexesFitShape(d,hexes,1)) return false;
     for(const [c,r] of hexes){
       if(c<0||c>=COLS||r<0||r>=AI_STRUCTURE_ROWS) return false;
       const k=c+","+r; if(seen.has(k)) return false; seen.add(k);
@@ -8400,15 +8406,15 @@ function azTier(g,cx,baseY,w,h){ // one trapezoid step of an Aztec stepped pyram
 // Approved structure masters. Fronts remain in use for BOTH armies, as requested;
 // paired rear views are archived alongside them for future orientation support.
 const STRUCTURE_ART={
-  egypt_thebes:{file:"egypt_thebes",baseTop:0.05},
-  egypt_memphis:{file:"egypt_memphis",baseTop:0.08},
-  egypt_temple:{file:"egypt_temple",baseTop:0.08},
-  china_changan:{file:"china_changan",baseTop:0.10},
-  china_luoyang:{file:"china_luoyang",baseTop:0.12},
-  aztec_tenochtitlan:{file:"aztec_twin_cities",baseTop:0.12},
-  greek_athens:{file:"greek_athens",baseTop:0.07},
-  greek_sparta:{file:"greek_sparta",baseTop:0.07},
-  greek_corinth:{file:"greek_corinth",baseTop:0.05}
+  egypt_thebes:{file:"egypt_thebes",baseTop:0},
+  egypt_memphis:{file:"egypt_memphis",baseTop:0},
+  egypt_temple:{file:"egypt_temple",baseTop:0},
+  china_changan:{file:"china_changan",baseTop:0},
+  china_luoyang:{file:"china_luoyang",baseTop:0},
+  aztec_tenochtitlan:{file:"aztec_twin_cities",baseTop:0},
+  greek_athens:{file:"greek_athens",baseTop:0},
+  greek_sparta:{file:"greek_sparta",baseTop:0},
+  greek_corinth:{file:"greek_corinth",baseTop:0}
 };
 for(const [id,art] of Object.entries(STRUCTURE_ART)){
   const file="assets/sprites/structure_"+art.file+"_front.png";
@@ -8446,15 +8452,64 @@ function drawStructureArt(b){
   if(box&&!b.dead){
     const img=getSpriteImage(key,b.side);
     if(img&&img.complete&&img.naturalWidth>0){
+      // The approved roof plans stay inside their foundations. Clip the union of
+      // occupied hexes, including concave corners and the side-specific causeway.
+      ctx.save(); ctx.beginPath();
+      for(const h of b.hexes){
+        const p=hexCenter(...h), c=toScreen(p.x,p.y);
+        for(let i=0;i<6;i++){
+          const a=i*Math.PI/3, x=c.x+HEX*Math.cos(a), y=c.y+HEX*Math.sin(a)*TILT_SQUASH;
+          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.closePath();
+      }
+      ctx.clip();
       ctx.drawImage(chromaKeyed(img,key+":"+b.side),box.x,box.y,box.width,box.height);
+      ctx.restore();
       return;
     }
+    return; // Keep the footprint visible while loading; never flash oversized old art.
   }
   for(const p of structureParts(b)){
     if(!p.type) continue; // the Aztec causeway: footprint only
     const cL=hexesCentroid(p.hexes), c=toScreen(cL.x,cL.y);
     drawBuilding({side:b.side,type:p.type,dead:b.dead,hexes:p.hexes,mirror:p.mirror,artScale:partArtScale(p.hexes.length)},c);
   }
+}
+/* CITY OUTLINE (Willem, 2026-11-14: "just the outlines of the cities"). One border around the
+   whole structure instead of a stroke on every one of its hexes: each hex's six edges are
+   collected in screen space and an edge shared by two of the structure's own hexes is dropped.
+   Hexes are filled at full size, so the tint has no seams between them either. */
+function structureOutlineEdges(b){
+  const seen=new Map(), k=p=>Math.round(p.x*10)+","+Math.round(p.y*10);
+  for(const h of b.hexes){
+    const cL=hexCenter(h[0],h[1]), ct=toScreen(cL.x,cL.y), pts=[];
+    for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i); pts.push({x:ct.x+HEX*Math.cos(a), y:ct.y+HEX*Math.sin(a)*TILT_SQUASH}); }
+    for(let i=0;i<6;i++){
+      const p=pts[i], q=pts[(i+1)%6], key=[k(p),k(q)].sort().join("|");
+      if(seen.has(key)) seen.delete(key); else seen.set(key,[p,q]);
+    }
+  }
+  return [...seen.values()];
+}
+const STRUCTURE_ART_ON=true; // Approved 80-degree footprint artwork.
+/* Screen-space bounds of a structure's own hexes (no art involved). */
+function structureFootprintBox(b){
+  const cs=b.hexes.map(h=>{const p=hexCenter(h[0],h[1]);return toScreen(p.x,p.y);});
+  const hy=HEX*SQ3/2*TILT_SQUASH;
+  return {left:Math.min(...cs.map(p=>p.x))-HEX, right:Math.max(...cs.map(p=>p.x))+HEX,
+          top:Math.min(...cs.map(p=>p.y))-hy, bottom:Math.max(...cs.map(p=>p.y))+hy};
+}
+function drawStructureOutline(b){
+  for(const h of b.hexes){
+    const ctL=hexCenter(h[0],h[1]), ct=toScreen(ctL.x,ctL.y);
+    squashedHexPoly(ctx,ct.x,ct.y,HEX);
+    ctx.fillStyle=b.dead?"rgba(30,30,30,.55)":(b.side?"rgba(192,57,43,.22)":"rgba(232,184,75,.20)");
+    ctx.fill();
+  }
+  ctx.beginPath();
+  for(const [p,q] of structureOutlineEdges(b)){ ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); }
+  ctx.strokeStyle=b.dead?"#6b6b6b":(b.side?"#c0392b":"#e8b84b"); ctx.lineWidth=2; ctx.lineCap="round"; ctx.stroke();
 }
 function drawBuilding(b,c){
   const s=HEX/24*(b.artScale||1); ctx.save(); ctx.translate(c.x,c.y+HEX*0.55);
@@ -8955,32 +9010,23 @@ function draw(){
   const activeBuildings = S.setupStep==="terrain" ? playerHalf.buildings : buildings;
   for(const b of activeBuildings){
     const cL=bldCenter(b), c=toScreen(cL.x,cL.y);
-    for(const h of b.hexes){ const ctL=hexCenter(h[0],h[1]), ct=toScreen(ctL.x,ctL.y);
-      squashedHexPoly(ctx,ct.x,ct.y,HEX-1);
-      ctx.fillStyle=b.dead?"rgba(30,30,30,.55)":(b.side?"rgba(192,57,43,.28)":"rgba(232,184,75,.25)");
-      ctx.fill();
-      ctx.strokeStyle=b.side?"#c0392b":"#e8b84b"; ctx.lineWidth=1.5; ctx.stroke(); }
-    drawStructureArt(b);
+    drawStructureOutline(b);
+    // Approved overhead artwork is constrained to the exact occupied footprint.
+    if(STRUCTURE_ART_ON) drawStructureArt(b);
     const lbl=b.name.toUpperCase();
     ctx.font=`bold ${Math.max(7,HEX*0.3)}px sans-serif`;
     const mm=ctx.measureText(lbl)||{width:HEX*1.4};
-    const lk="bld_"+factionForSide(b.side)+"_"+b.type, artedLbl=IMG_SPRITES[lk];
     const tw=(mm.width||HEX*1.4)+HEX*0.55, lh=HEX*0.5;
-    // Below the sprite's own base for arted buildings; the old fixed offset for vector ones.
-    const structureBox=structureSpriteBox(b);
-    const ly=structureBox ? structureBox.bottom+HEX*0.04 : artedLbl? bldSpriteBox(c,(BLD_SCALE[lk]||1)*structureArtScale(b)).bottom - HEX*0.55 : c.y+HEX*0.86;
+    const fp=structureFootprintBox(b);
+    // Keep names below the artwork so they do not obscure roofs or the causeway.
+    const ly=STRUCTURE_ART_ON&&!b.dead ? fp.bottom+HEX*0.04 : c.y-lh/2;
     rrect(ctx,c.x-tw/2,ly,tw,lh,3);
     ctx.fillStyle="rgba(10,12,16,.85)"; ctx.fill();
-    ctx.strokeStyle=b.side?"rgba(210,80,60,.85)":"rgba(232,184,75,.85)"; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle="#ddd6c4"; ctx.fillText(lbl,c.x,ly+lh/2+0.5);
-    /* 2026-08-29: the bar used to sit at a fixed c.y-HEX*1.15, which is now INSIDE the sprite.
-       Anchored off the sprite's real top edge, the same rule the unit HP bar follows. A building
-       with no image art (Greek before this pass, or a decode still in flight) keeps the old
-       offset, which is correct for the smaller vector shapes. */
+    ctx.strokeStyle=b.dead?"rgba(120,120,120,.85)":b.side?"rgba(210,80,60,.85)":"rgba(232,184,75,.85)"; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=b.dead?"#8a8a8a":"#ddd6c4"; ctx.fillText(lbl,c.x,ly+lh/2+0.5);
     if(!b.dead){
-      const bk="bld_"+factionForSide(b.side)+"_"+b.type, arted=IMG_SPRITES[bk];
-      const barY=structureBox ? structureBox.top-HEX*0.30 : arted? bldSpriteBox(c,(BLD_SCALE[bk]||1)*structureArtScale(b)).top - HEX*0.30 : c.y-HEX*1.15;
-      hpBar(c.x,barY,HEX*2.2,b.hp/b.maxhp,b.side?"#e74c3c":"#e8b84b");
+      const barY=fp.top-HEX*0.30;
+      hpBar(c.x,barY,Math.max(HEX*2.2,Math.min(fp.right-fp.left,HEX*3.2)),b.hp/b.maxhp,b.side?"#e74c3c":"#e8b84b");
     }
   }
   // 2026-07-29 direct chat request (bamboo, see hiddenFrom()): a unit concealed from the

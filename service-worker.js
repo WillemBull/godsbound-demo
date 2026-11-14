@@ -17,7 +17,7 @@
  * frame. They are cached lazily in fetch() as the game actually requests them, so a
  * player who has loaded the game once has everything they touched available offline.
  */
-const CACHE_NAME = "godsbound-v60";
+const CACHE_NAME = "godsbound-v61";
 
 const PRECACHE = [
   "./",

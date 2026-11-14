@@ -1,6 +1,6 @@
 {
-  "releaseVersion": 60,
-  "cacheName": "godsbound-v60",
+  "releaseVersion": 61,
+  "cacheName": "godsbound-v61",
   "entry": {
     "source": "godsbound_beta.html",
     "output": "index.html"
