@@ -1,6 +1,6 @@
 {
-  "releaseVersion": 59,
-  "cacheName": "godsbound-v59",
+  "releaseVersion": 60,
+  "cacheName": "godsbound-v60",
   "files": {
     "assets/icons/apple-touch-icon.png": "c98fa62bb19792809eaf3dcf3b54458d3392bddb41f97c1145f1c7fe4d3d3ce0",
     "assets/icons/icon-192.png": "7f6fab5c0f1ebfc95f66576507d0753b8e57d25b784867a43d876967f5e25e27",
@@ -359,6 +359,24 @@
     "assets/sprites/stone_front.png": "b4b80c9b401bc25108dbacaec80276a00c730c5d770b129177150e0d810a3064",
     "assets/sprites/stonemonkey_back.png": "e13c814356e28ee1e58f1b268ea35aa727683a13fbbc058f168d19cfab5b5c83",
     "assets/sprites/stonemonkey_front.png": "e6f6ff91eb54a21db247340cec1d1a0aaee2f71e37c387a37cf6e0838bb8b292",
+    "assets/sprites/structure_aztec_twin_cities_back.png": "2305c3026cb5f07a4fe34a10089e5336e9742fb1481871e49a9ad07dc5c62fed",
+    "assets/sprites/structure_aztec_twin_cities_front.png": "5dc4f66061984c097f487ade3001fbe9f7d70d41a9f400669ee96fedb65a70b6",
+    "assets/sprites/structure_china_changan_back.png": "54f1d732c4aa1930aed1541538999b327ae5267f8e0c8c26914fabba051d01ae",
+    "assets/sprites/structure_china_changan_front.png": "ee5b12d0bc15b43f558f14a82fc366ac08a0c1747e475fe7dff559a056dbd260",
+    "assets/sprites/structure_china_luoyang_back.png": "ecfc833df89a4a46e6482c04a8ccca778ceec5c751c50ee27cc71e3464a99de8",
+    "assets/sprites/structure_china_luoyang_front.png": "30d6be50ee3b559eacf17e669b294d1f2403c7ef2f65006d7b9a7071b9504380",
+    "assets/sprites/structure_egypt_memphis_back.png": "79dd104fb1cb411857048743fda27911ab8febdb5efb7bfc59bbaf02c39a9333",
+    "assets/sprites/structure_egypt_memphis_front.png": "b125347f97298e2e4d25c56b7e2de44db985e2080c842b359235ab6ae603ac98",
+    "assets/sprites/structure_egypt_temple_back.png": "c56e330ce463d30677c38ccad6c0f3ca2e347ccc37148ea07403035511632cb1",
+    "assets/sprites/structure_egypt_temple_front.png": "6314a5b1b0b6d9b5eecef7810e9283bae1a3f7a4bf4308f464894458a9b0bca8",
+    "assets/sprites/structure_egypt_thebes_back.png": "b47f1a4049c8e9bf37e64877e2945d3e307ed9c04cc35072756f9fc3376fe3c7",
+    "assets/sprites/structure_egypt_thebes_front.png": "2c416c38ba4fcbc52777733d55f54d049ec1501bd955ba7266c21e2abf805a53",
+    "assets/sprites/structure_greek_athens_back.png": "0d617e0a97a4928f7679acb11cbfe424cc367db15d9f080cab8ed6863edb7c51",
+    "assets/sprites/structure_greek_athens_front.png": "5db94c6f1e8c8c094457ca2a802e0d604d6b12622808e37e71005d003eb8342f",
+    "assets/sprites/structure_greek_corinth_back.png": "75c602afd976b9f3509303b6a516b6c4be424bd911d0fb829dc15570c02af546",
+    "assets/sprites/structure_greek_corinth_front.png": "3ffa0fa62d594d553649a771dcead130786109180120f87c9854815a507173ea",
+    "assets/sprites/structure_greek_sparta_back.png": "fbe056f7804aff83d9c1fe6fae130aac805c5abcc814e270b1c171954a1aa87a",
+    "assets/sprites/structure_greek_sparta_front.png": "f86c164dc12e3d86f80c4e165dd9316ad9b0b3c47d2ca25fc99b3187847ea643",
     "assets/sprites/talos_back.png": "82977d5d9fcde864e47a8a134c1221cd89a91197a073224f172f67f98af8acd1",
     "assets/sprites/talos_front.png": "6e97c07ccf8911b5c52fc3738c98d38e879c1690733f7376b39a09c3dc6cfde8",
     "assets/sprites/tepoztecatl_back.png": "81f2f986ce31426bd754931865b04ecf655398a068245261eb04dc786461d104",
@@ -397,9 +415,9 @@
     "assets/sprites/xiaotianquan_front.png": "0cd1d53dec78fa305d00e37b32554aa7129c616b897eeb1623760368bb242616",
     "assets/sprites/xiuhcoatl_back.png": "e9c0915d2f813795c1ec1d4dacf0ea08b3139556373e788b5e9bf378c21c8c7d",
     "assets/sprites/xiuhcoatl_front.png": "6a5c8c42b73307431527e5a9e6cca2ef2d2bb2293303efd1071a73fad77c7b6e",
-    "index.html": "1606803962a5ee964caa05c471d0fe78173592a22d762e99f8363db8a82a06eb",
-    "manifest.json": "074efc824f4ee607c849febada73f9c174bd8ce25777585c1e61750d0577dd8f",
-    "release-manifest.json": "143921c0127d73edb62a2621e678056c02c211c82ce7dd66ed3d3a35d778c39f",
-    "service-worker.js": "a8e4e55982c0af288275f42288fbf1bcc8b323f6627783999b9081d58b626ef4"
+    "index.html": "7e644be58eaf3eb3fafe743b07a7896ef967cb77f316593dd8fae353c74dbca5",
+    "manifest.json": "1c170991d75279c316ff6144d28a737808463086bf0c110220951c5e2701f4d9",
+    "release-manifest.json": "1fa93ef6ed83ad8b41f59fba181c49b0f2850ae1fcc4db34f1e881420d72945d",
+    "service-worker.js": "00c63875a7b07ad829c8d2e7eefedbb6bd34913e8d55db19ff151a2fb2179fe6"
   }
 }

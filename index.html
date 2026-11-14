@@ -916,10 +916,10 @@ const EG_GODS = [
   // Realigned 2026-07-23 to match mythology_game_design.xlsx (direct chat request);
   // 5 new gods added (set, thoth, sekhmet, nephthys, ptah). See HANDOFF.md for the
   // mechanic-by-mechanic mapping and any deliberate simplifications vs. the doc text.
-  {key:"horus", name:"Horus",  emoji:"🦅", cost:80,  power:"Falcon's Wrath", pcost:40, cd:20, myth:"serpopard", desc:"Falcon strike sweeps the target's entire row, dealing 70 dmg to every enemy unit hit", passiveKey:"fortressDefense", passive:"-15% incoming damage within 2 hexes of your fortress"},
-  {key:"bastet",name:"Bastet", emoji:"🐈", cost:120, power:"Guardian's Grace", pcost:40, cd:20, myth:"sphinx", desc:"One of your buildings becomes immune to all damage for 8s", passiveKey:"cityFoodBoost", passive:"City generates food 20% faster"},
+  {key:"horus", name:"Horus",  emoji:"🦅", cost:80,  power:"Falcon's Wrath", pcost:40, cd:20, myth:"serpopard", desc:"Falcon strike sweeps the target's entire row, dealing 70 dmg to every enemy unit hit", passiveKey:"fortressDefense", passive:"-15% incoming damage within 2 hexes of any of your buildings"},
+  {key:"bastet",name:"Bastet", emoji:"🐈", cost:120, power:"Guardian's Grace", pcost:40, cd:20, myth:"sphinx", desc:"One of your buildings becomes immune to all damage for 8s", passiveKey:"cityFoodBoost", passive:"Food generates 20% faster"},
   {key:"osiris",name:"Osiris", emoji:"☥",  cost:150, power:"Field of Reeds", pcost:60, cd:25, myth:"apis",   desc:"Temporarily revives up to 3 recently fallen warriors near your nearest building for 20s", passiveKey:"deathFavorNearTemple", passive:"Units dying within 3 hexes of your temple generate 3 favor"},
-  {key:"isis",  name:"Isis",   emoji:"🌙", cost:200, power:"Secret Name",   pcost:50, cd:25, myth:"scorpion", desc:"Locks the enemy god closest to being ready, preventing its use for 15s", passiveKey:"heroRegen", passive:"Hero units slowly regenerate health"},
+  {key:"isis",  name:"Isis",   emoji:"🌙", cost:200, power:"Secret Name",   pcost:50, cd:25, myth:"scorpion", desc:"Locks the enemy god closest to being ready, preventing its use for 15s", passiveKey:"heroRegen", passive:"All your units slowly regenerate health (1% of max HP per second)"},
   {key:"ra",    name:"Ra",     emoji:"☀️", cost:150, power:"Solar Barque",  pcost:50, cd:25, myth:"phoenix",desc:"The barque sails the target's column. Strongest at noon: 40 dmg at dawn, 90 at midday, 45 at dusk", passiveKey:"openTileDmg", passive:"+15% damage while standing on open (non-forest, non-mountain) terrain"},
   {key:"anubis",name:"Anubis", emoji:"🐺", cost:120, power:"Judgment",      pcost:50, cd:25, myth:"jackal", desc:"Weigh an enemy unit against Ma'at: it dies on a chance equal to the damage it has taken, never less than 20%", passiveKey:"corpseWindow", passive:"Fallen allies stay eligible for Osiris's revival for 90s (was 60s)"},
   {key:"set",   name:"Set",    emoji:"🌪️", cost:150, power:"Desert Storm", pcost:50, cd:25, myth:"apep",   desc:"A sandstorm slows every unit (both sides) within 2 hexes of target for 6s", passiveKey:"chaosDamageBoost", passive:"+20% damage for 5s immediately after any enemy god power is cast"},
@@ -932,7 +932,7 @@ const CN_GODS = [
   // 2026-07-23 (direct chat request, mythology_game_design.xlsx): realigned from 4
   // gods to the sheet's 10. Guan Yu and Zhong Kui are gone (not on the sheet at all --
   // see HANDOFF.md decision 21 for why they were dropped rather than kept as extras).
-  {key:"jade", name:"Jade Emperor", emoji:"☯️", cost:80,  power:"Celestial Decree", pcost:100, cd:20, myth:"celestial", desc:"Temporarily conscripts one enemy unit to fight for you for 8s, then it returns to its own side", passiveKey:"mandateOfHeaven", passive:"While all three of your buildings stand, resource generation is boosted; losing one weakens the mandate"},
+  {key:"jade", name:"Jade Emperor", emoji:"☯️", cost:80,  power:"Celestial Decree", pcost:100, cd:20, myth:"celestial", desc:"Temporarily conscripts one enemy unit to fight for you for 8s, then it returns to its own side", passiveKey:"mandateOfHeaven", passive:"While all of your buildings stand, resource generation is boosted; losing one weakens the mandate"},
   {key:"sunwukong", name:"Sun Wukong", emoji:"🐒", cost:120, power:"72 Transformations", pcost:100, cd:20, myth:"stonemonkey", desc:"Permanently turn one of your own units near the target into a random myth from your unlocked gods", passiveKey:"cloudSomersault", passive:"Your hero units ignore all terrain movement penalties"},
   {key:"nuwa", name:"Nu Wa", emoji:"🐍", cost:150, power:"Five Colored Stones", pcost:50, cd:25, myth:"stone", desc:"Instantly repairs your most damaged building to full health", passiveKey:"motherOfHumanity", passive:"Human units cost 10% less food to train"},
   {key:"longwang", name:"Long Wang", emoji:"🐉", cost:150, power:"Dragon Rain", pcost:50, cd:25, myth:"dragon", desc:"Floods a large zone into water for 8s, dealing 40 dmg to every unit caught in the deluge", passiveKey:"lordOfFourSeas", passive:"Water tiles on your half generate extra favor; your units move faster in or adjacent to water"},
@@ -1048,7 +1048,7 @@ const GR_GODS = [
   {key:"apollo", name:"Apollo", emoji:"🎯", cost:150, power:"Silver Arrows", pcost:50, cd:25,
    myth:"python",
    desc:"A volley falls within 2 hexes of target: 45 damage, and those hit deal 30% less damage for 6s",
-   passiveKey:"lyre", passive:"The Lyre: your units within 3 hexes of your temple slowly heal"},
+   passiveKey:"lyre", passive:"The Lyre: your units within 3 hexes of any of your buildings slowly heal"},
   /* HERMES. Sheet's "Stolen Routes" reveals the enemy's drawn paths -- unique, but it is a
      UI feature with informational value only. Replaced with the other thing Hermes is: on
      his first day alive he stole Apollo's cattle. NOTHING in the game steals resources, and
@@ -1066,7 +1066,7 @@ const GR_GODS = [
   {key:"demeter", name:"Demeter", emoji:"🌾", cost:150, power:"Blight", pcost:50, cd:25,
    myth:"empusa",
    desc:"The earth withholds: the enemy generates no food at all for 8s",
-   passiveKey:"bounty", passive:"Demeter's Bounty: your City generates favor as well, at half the base favor rate"},
+   passiveKey:"bounty", passive:"Demeter's Bounty: you generate extra favor, at half the base favor rate"},
   /* HADES. Sheet power kept -- "raises fallen units, yours OR the enemy's" -- which is what
      separates him from Osiris: Field of Reeds raises only your own dead, Hades feeds on the
      enemy's casualties too.
@@ -1329,24 +1329,119 @@ function deriveTMAP(){
   return TMAP_INITIAL.map((rowStr,r)=>rowStr.split("").map((ch,c)=>origTerrain(c,r)));
 }
 
-/* ---------------- BUILDINGS (2 hexes each) ---------------- */
-function mkBld(side,type,name,emoji,hexes,hp){
-  return {side,type,name,emoji,hexes,hp,maxhp:hp,dead:false,atkTimer:0};
+/* ---------------- BUILDINGS: PANTHEON STRUCTURES (2026-11-13, Willem) ----------------
+   Each pantheon's buildings follow how that civilisation was actually organised, and
+   historical accuracy outranks overlap with other pantheons:
+     Egypt  -- two great cities (3-hex triangles) and a temple set apart (1 hex)
+     China  -- paired capitals: Chang'an (4 hexes) and Luoyang (3)
+     Aztec  -- ONE structure: Tenochtitlan and its twin city Tlatelolco joined by a causeway (7-hex barbell)
+     Greece -- three city-states, 2 hexes each
+   RULES (Willem): every pantheon has the SAME total HP (STRUCTURE_TOTAL_HP), split across its
+   structures BY HEX COUNT; HP belongs to the structure, never to a hex. There is no Fortress
+   and nothing depends on which structure stands (no building attacks; food and favour are flat).
+   Win = destroy every enemy structure. At time, the larger SHARE of the enemy's total HP
+   destroyed wins (endMatch) -- a raw count of buildings is not comparable across pantheons.
+   SHAPES are offset [c,r] relative to an EVEN-column anchor at [0,0], which is always shape[0].
+   placeShape() moves a shape through cube coordinates, so it keeps its form at either column
+   parity -- the 2-hex pair now always runs down-right, the way the building art is drawn. */
+function mkBld(side,type,name,emoji,hexes,hp,extra){
+  return Object.assign({side,type,name,emoji,hexes,hp,maxhp:hp,dead:false},extra||{});
 }
-const buildings = [
-  mkBld(1,"city",    "City",    "🏯", [[4,1],[5,1]],  540),
-  mkBld(1,"temple",  "Temple",  "⛩️", [[1,1],[2,1]],  480),
-  mkBld(1,"fortress","Fortress","🗼", [[6,3],[7,3]], 660),
-  mkBld(0,"fortress","Fortress","🏰", [[6,8],[7,8]],660),
-  mkBld(0,"city",    "City",    "🏛️", [[4,10],[5,10]], 540),
-  mkBld(0,"temple",  "Temple",  "🛕", [[1,10],[2,10]], 480)
-];
+const STRUCTURE_TOTAL_HP=1680; // the old City + Temple + Fortress total (540+480+660)
+const SHAPES={
+  one:[[0,0]],
+  pair:[[0,0],[1,0]],
+  tri:[[0,0],[1,0],[0,1]],
+  quad:[[0,0],[1,0],[0,1],[1,1]],
+  barbell:[[0,0],[0,1],[1,0],[2,0],[3,0],[4,0],[4,1]]
+};
+/* `at` is the default anchor on the PLAYER's half in local rows (0 = front, PLAYER_ROWS-1 = back);
+   `aiAt` the AI's default on its own half (absolute rows, 0 = back), else `at` mirrored. The
+   defaults deliberately cover the old City/Fortress hexes, so a forward city sits where the
+   Fortress did. `parts` draws one structure as several
+   pieces of art; a part with type null is footprint only (the Aztec causeway). */
+const STRUCTURE_LAYOUTS={
+  egypt:[
+    {id:"thebes", type:"city",  name:"Thebes",  emoji:"🏛️", shape:"tri", at:[4,4], aiAt:[4,1]},
+    {id:"memphis",type:"city",  name:"Memphis", emoji:"🏛️", shape:"tri", at:[6,2], aiAt:[6,3]},
+    {id:"temple", type:"temple",name:"Temple",  emoji:"🛕", shape:"one", at:[1,4], aiAt:[1,1]}
+  ],
+  china:[
+    {id:"changan",type:"city",name:"Chang'an",emoji:"🏯",shape:"quad",at:[4,4], aiAt:[4,0]},
+    {id:"luoyang",type:"city",name:"Luoyang", emoji:"🏯",shape:"tri", at:[6,2], aiAt:[6,3]}
+  ],
+  aztec:[
+    {id:"tenochtitlan",type:"city",name:"Tenochtitlan",emoji:"🛕",shape:"barbell",at:[2,2],
+     parts:[{type:"city",idx:[0,1,2]},{type:null,idx:[3]},{type:"city",idx:[4,5,6],mirror:true}]}
+  ],
+  greek:[
+    {id:"athens", type:"city",name:"Athens", emoji:"🏛",shape:"pair",at:[6,2]},
+    {id:"sparta", type:"city",name:"Sparta", emoji:"🏛",shape:"pair",at:[4,4]},
+    {id:"corinth",type:"city",name:"Corinth",emoji:"🏛",shape:"pair",at:[1,4]}
+  ]
+};
+const shapeOf = def => SHAPES[def.shape];
+function placeShape(shape,anchor){
+  const A=offsetToCube(anchor[0],anchor[1]);
+  return shape.map(([c,r])=>{
+    const d=offsetToCube(c,r), x=A[0]+d[0], z=A[2]+d[2];
+    return [x, z+(x-(x&1))/2];
+  });
+}
+/* The placement of `shapeName` in which its idx-th hex sits on h (dragging by any hex). */
+function shapeAnchoredAt(shapeName,idx,h){
+  const sh=SHAPES[shapeName], d=offsetToCube(sh[idx][0],sh[idx][1]), H=offsetToCube(h[0],h[1]);
+  const x=H[0]-d[0], z=H[2]-d[2];
+  return placeShape(sh,[x, z+(x-(x&1))/2]);
+}
+function layoutFor(faction){ return STRUCTURE_LAYOUTS[faction]||STRUCTURE_LAYOUTS.egypt; }
+function structureDef(faction,id){ return layoutFor(faction).find(d=>d.id===id)||null; }
+function layoutHexCount(faction){ return layoutFor(faction).reduce((n,d)=>n+shapeOf(d).length,0); }
+function structureHp(faction,def){ return Math.round(STRUCTURE_TOTAL_HP*shapeOf(def).length/layoutHexCount(faction)); }
+function mkStructure(side,faction,def,hexes){
+  return mkBld(side,def.type,def.name,def.emoji,hexes,structureHp(faction,def),
+    {id:def.id,faction,shape:def.shape,parts:def.parts||null});
+}
+/* Does `hexes` have exactly the form of `def`, anchored at hexes[0]? */
+function hexesFitShape(def,hexes){
+  if(!Array.isArray(hexes)||hexes.length!==shapeOf(def).length) return false;
+  const want=placeShape(shapeOf(def),hexes[0]);
+  return want.every((h,i)=>Array.isArray(hexes[i])&&h[0]===hexes[i][0]&&h[1]===hexes[i][1]);
+}
+/* Places a faction's whole layout on a half (rows 0..o.rows-1): each structure goes to the
+   legal anchor nearest its preferred one -- in bounds, off mountain/water, no overlap, and
+   with o.gap a clear hex between structures. Returns [{def,hexes}] or null. */
+function autoLayout(faction,o){
+  const out=[], taken=new Set();
+  const ok=hexes=>hexes.every(([c,r])=>c>=0&&c<COLS&&r>=0&&r<o.rows&&!"MW".includes(o.terrainAt(c,r)||"P")&&!taken.has(c+","+r))
+    && (!o.gap || hexes.every(h=>out.every(p=>p.hexes.every(q=>hexDist(h,q)>=2))));
+  for(const def of layoutFor(faction)){
+    const pref=(o.prefs&&o.prefs[def.id])||def.at, cands=[];
+    for(let r=0;r<o.rows;r++) for(let c=0;c<COLS;c++) cands.push([c,r]);
+    cands.sort((a,b)=>hexDist(a,pref)-hexDist(b,pref)||a[1]-b[1]||a[0]-b[0]);
+    let placed=null;
+    for(const a of cands){ const hexes=placeShape(shapeOf(def),a); if(ok(hexes)){placed=hexes;break;} }
+    if(!placed) return null;
+    placed.forEach(h=>taken.add(h.join(",")));
+    out.push({def,hexes:placed});
+  }
+  return out;
+}
+function defaultPlayerStructures(faction,terrain){
+  const lay=autoLayout(faction,{rows:PLAYER_ROWS,terrainAt:(c,r)=>terrain&&terrain[r]?terrain[r][c]:"P"});
+  return lay ? lay.map(p=>mkStructure(0,faction,p.def,p.hexes)) : [];
+}
+const buildings = [];
 const bldHexMap = {};
 function rebuildBldHexMap(){
   for(const k in bldHexMap) delete bldHexMap[k];
   buildings.forEach(b=>b.hexes.forEach(h=>bldHexMap[h[0]+","+h[1]]=b));
 }
-rebuildBldHexMap();
+function setSideStructures(side,list){
+  for(let i=buildings.length-1;i>=0;i--) if(buildings[i].side===side) buildings.splice(i,1);
+  buildings.push(...list);
+  rebuildBldHexMap();
+}
 function bldAt(c,r){
   if(S.setupStep==="terrain"){
     const b=playerHalf.buildings.find(bd=>bd.hexes.some(h=>h[0]===c&&h[1]===r));
@@ -1364,11 +1459,8 @@ function bldAt(c,r){
    always has: a fixed template inside TMAP_INITIAL/buildings, composed in unchanged. */
 let playerHalf = {
   terrain: TMAP_INITIAL.slice(PLAYER_ROW0).map(row=>row.split("")), // placeholder; corrected by the first startMatch() once FACTIONS/S exist, same pattern TMAP's own init already uses
-  buildings: [
-    mkBld(0,"fortress","Fortress","🏰",[[6,2],[7,2]],660),
-    mkBld(0,"city","City","🏛️",[[4,4],[5,4]],540),
-    mkBld(0,"temple","Temple","🛕",[[1,4],[2,4]],480),
-  ] // local coords = absolute positions minus PLAYER_ROW0
+  faction: "egypt", // whose layout `buildings` holds; syncPlayerLayout() follows S.playerFaction
+  buildings: defaultPlayerStructures("egypt",null) // local coords = absolute positions minus PLAYER_ROW0
 };
 let aiHalfTerrain = TMAP_INITIAL.slice(0,AI_ROWS).map(row=>row.split("")); // placeholder; faction-corrected by first startMatch(), like playerHalf above
 function freshPlayerHalfTerrain(){
@@ -1387,59 +1479,72 @@ function freshPlayerHalfTerrain(){
    AI_TERRAIN_LAYOUT addition too, not just this one). The fixed, asymmetric pattern
    remains the safety fallback for generateAiTerrain(); normal fresh matches now use
    its faction-aware, randomized defensive funnels. */
-/* ---------------- AI BUILDING LAYOUTS (roadmap 8.7, 2026-07-29) ----------------
-   Three alternative side-1 building arrangements, re-rolled on full resets only so a
-   Rematch fights the same arena and Menu re-rolls it. Layout 0 is the historical fixed
-   arrangement (city centre-back, temple west-back, fortress east-forward); the other
-   two mirror and deepen it so the AI's weak side and the depth of its forward fortress
-   both move between matches.
-
-   NOTE on the step's "rows 0-8": that bound is from the 9x18 board, when the AI half
-   really was rows 0-8. The board has been 9x12 since 2026-07-17 and the AI half is
-   rows 0-5, so validAiLayout() bounds against AI_ROWS. All three layouts below were
-   already inside rows 0-5, so no coordinates needed changing.
+/* ---------------- AI STRUCTURE LAYOUTS (roadmap 8.7; per pantheon since 2026-11-13) ----------------
+   The AI's structures follow its pantheon's layout (STRUCTURE_LAYOUTS). Every full reset
+   re-rolls their positions -- a Rematch fights the same arena and Menu re-rolls it: each
+   anchor is the player default mirrored onto the AI half and jittered, then placed by
+   autoLayout with a clear hex BETWEEN structures, so on the still-flat board every structure
+   keeps an open ring and a way out.
 
    ORDERING IS LOAD-BEARING: the layout must be applied BEFORE freshAiHalfTerrain(),
    because 8.0's terrain generator reads buildings.filter(side===1) live via
    aiTerrainBlockedHexes() and validates route reachability against the actual building
    spots. Applying it afterwards would scatter terrain against the previous layout. */
-const AI_LAYOUTS=[
-  {city:[[4,1],[5,1]], temple:[[1,1],[2,1]], fortress:[[6,3],[7,3]]}, // historical fixed layout
-  {city:[[2,1],[3,1]], temple:[[6,1],[7,1]], fortress:[[3,4],[4,4]]},
-  {city:[[6,1],[7,1]], temple:[[4,0],[5,0]], fortress:[[2,3],[3,3]]}
-];
-let aiLayoutIdx=0;
-/* Mirror of canPlaceBuilding's rules for the AI's half (canPlaceBuilding itself is
-   hard-bound to the player's rows and playerHalf.buildings, so it can't be reused).
-   Checked by the test suite against every entry in AI_LAYOUTS. */
+let aiLayout=null; // {faction, hexes:{id:[[c,r],...]}} -- the layout currently on the board
+/* AI structures stay off the AI's FRONT row (AI_ROWS-1), as the old fixed layouts did: measured
+   2026-11-13, a structure on that row made generateAiTerrain fall back to its fixed set in ~1 of 5
+   layouts (mountains and water have nowhere to funnel); off it, the fallback all but vanishes. */
+const AI_STRUCTURE_ROWS=AI_ROWS-1;
+function aiPrefAnchor(def,jitter){
+  const base=def.aiAt||[def.at[0],AI_ROWS-2-def.at[1]];
+  const c=base[0]+(jitter?Math.floor(Math.random()*5)-2:0);
+  const r=base[1]+(jitter?Math.floor(Math.random()*3)-1:0);
+  return [Math.max(0,Math.min(COLS-1,c)),Math.max(0,Math.min(AI_STRUCTURE_ROWS-1,r))];
+}
+function makeAiLayout(faction,jitter){
+  const prefs={}; for(const d of layoutFor(faction)) prefs[d.id]=aiPrefAnchor(d,jitter);
+  const lay=autoLayout(faction,{rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs,gap:true})
+         || autoLayout(faction,{rows:AI_STRUCTURE_ROWS,terrainAt:()=>"P",prefs});
+  return {faction, hexes:Object.fromEntries(lay.map(p=>[p.def.id,p.hexes]))};
+}
+/* Every structure of the layout's pantheon, each in its own shape, on the AI half (off its
+   front row), no overlap. */
 function validAiLayout(layout){
-  const types=["city","temple","fortress"];
-  if(types.some(t=>!layout[t]||layout[t].length!==2)) return false;
-  const seen=new Set();
-  for(const t of types){
-    const [a,b]=layout[t];
-    for(const [c,r] of [a,b]){
-      if(c<0||c>=COLS||r<0||r>=AI_ROWS) return false;      // in bounds, AI half only
-      if("MW".includes(terrain(c,r))) return false;            // never on blocking/slowing feature terrain
-      const k=c+","+r;
-      if(seen.has(k)) return false;                            // no two buildings share a hex
-      seen.add(k);
+  if(!layout||!STRUCTURE_LAYOUTS[layout.faction]) return false;
+  const defs=layoutFor(layout.faction), seen=new Set();
+  if(Object.keys(layout.hexes||{}).length!==defs.length) return false;
+  for(const d of defs){
+    const hexes=layout.hexes[d.id];
+    if(!hexesFitShape(d,hexes)) return false;
+    for(const [c,r] of hexes){
+      if(c<0||c>=COLS||r<0||r>=AI_STRUCTURE_ROWS) return false;
+      const k=c+","+r; if(seen.has(k)) return false; seen.add(k);
     }
-    if(hexDist(a,b)!==1) return false;                         // the two hexes must be adjacent
   }
   return true;
 }
 function applyAiLayout(layout){
-  for(const b of buildings.filter(b=>b.side===1)) b.hexes=layout[b.type].map(h=>[...h]);
-  rebuildBldHexMap();
+  aiLayout=layout;
+  setSideStructures(1, layoutFor(layout.faction).map(d=>mkStructure(1,layout.faction,d,layout.hexes[d.id].map(h=>[...h]))));
 }
 /* Re-roll and apply. Call sites deliberately pair this with every AI-terrain
    regeneration, never on its own. */
+/* A few jittered layouts leave the terrain generator no legal way to place its full allowance
+   (measured ~1 in 75 for Egypt's three structures), and it then falls back to a fixed partial
+   set -- so a layout the generator cannot fill is re-rolled. */
+let aiPendingTerrain=null; // the terrain pickAiLayout proved fits; freshAiHalfTerrain uses it once
 function pickAiLayout(){
-  aiLayoutIdx=Math.floor(Math.random()*AI_LAYOUTS.length);
-  applyAiLayout(AI_LAYOUTS[aiLayoutIdx]);
-  return AI_LAYOUTS[aiLayoutIdx];
+  let layout=null;
+  for(let i=0;i<6;i++){
+    layout=makeAiLayout(S.aiFaction,true);
+    applyAiLayout(layout);
+    aiPendingTerrain=generateAiTerrain();
+    if(["F","M","W"].every(k=>aiPendingTerrain[k].length===TERRAIN_BUDGET[k])) break;
+  }
+  return layout;
 }
+applyAiLayout(makeAiLayout("china",false));       // the opening board, before S exists
+setSideStructures(0, playerHalf.buildings.map(pb=>mkStructure(0,"egypt",structureDef("egypt",pb.id),pb.hexes.map(([c,r])=>[c,r+PLAYER_ROW0]))));
 const AI_TERRAIN_LAYOUT={
   F:[[0,0],[8,0],[0,3],[8,5],[0,1]],
   M:[[3,2],[5,3],[3,4],[2,4],[3,1],[6,1]],
@@ -1561,7 +1666,9 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
   return {F:fbClean("F"),M:fbClean("M"),W:fbClean("W")};
 }
 function freshAiHalfTerrain(){
-  return aiLayoutHalf(generateAiTerrain());
+  const t=aiPendingTerrain||generateAiTerrain();
+  aiPendingTerrain=null;
+  return aiLayoutHalf(t);
 }
 function composeAbsoluteTMAP(){
   const full = deriveTMAP();
@@ -1569,24 +1676,58 @@ function composeAbsoluteTMAP(){
   for(let r=0;r<PLAYER_ROWS;r++) full[PLAYER_ROW0+r] = [...playerHalf.terrain[r]];
   return full;
 }
-function composeAbsoluteBuildings(){
-  for(const pb of playerHalf.buildings){
-    const live = buildings.find(b=>b.side===0&&b.type===pb.type);
-    live.hexes = pb.hexes.map(([c,r])=>[c,r+PLAYER_ROW0]);
-  }
-  rebuildBldHexMap();
+/* Keeps the player's half on the layout of the faction being played; a change of pantheon
+   puts the new pantheon's structures at their defaults (around any painted terrain). */
+function syncPlayerLayout(){
+  if(playerHalf.faction===S.playerFaction && playerHalf.buildings.length) return;
+  playerHalf.faction=S.playerFaction;
+  playerHalf.buildings=defaultPlayerStructures(S.playerFaction,playerHalf.terrain);
 }
-const bldCenter = b => {
-  const a=hexCenter(b.hexes[0][0],b.hexes[0][1]), z=hexCenter(b.hexes[1][0],b.hexes[1][1]);
-  return {x:(a.x+z.x)/2, y:(a.y+z.y)/2};
-};
-function getBld(side,type){ return buildings.find(b=>b.side===side&&b.type===type); }
+/* Puts saved structures ([{id,hexes}] in local coords) onto the player's half. */
+function setPlayerStructures(faction,saved){
+  playerHalf.faction=faction;
+  playerHalf.buildings=layoutFor(faction).map(d=>{
+    const s=saved&&saved.find(x=>x.id===d.id);
+    return s ? mkStructure(0,faction,d,s.hexes.map(h=>[...h])) : null;
+  });
+  if(playerHalf.buildings.some(b=>!b)) playerHalf.buildings=defaultPlayerStructures(faction,playerHalf.terrain);
+}
+function composeAbsoluteBuildings(){
+  syncPlayerLayout();
+  const live=buildings.filter(b=>b.side===0);
+  const same=live.length===playerHalf.buildings.length
+    && playerHalf.buildings.every(pb=>live.some(b=>b.id===pb.id&&b.faction===playerHalf.faction));
+  if(same){ // move, don't rebuild: a structure keeps its HP state
+    for(const pb of playerHalf.buildings) live.find(b=>b.id===pb.id).hexes=pb.hexes.map(([c,r])=>[c,r+PLAYER_ROW0]);
+    rebuildBldHexMap();
+  } else {
+    setSideStructures(0, playerHalf.buildings.map(pb=>
+      mkStructure(0,playerHalf.faction,structureDef(playerHalf.faction,pb.id),pb.hexes.map(([c,r])=>[c,r+PLAYER_ROW0]))));
+  }
+}
+function hexesCentroid(hexes){
+  let x=0,y=0;
+  for(const h of hexes){ const p=hexCenter(h[0],h[1]); x+=p.x; y+=p.y; }
+  return {x:x/hexes.length, y:y/hexes.length};
+}
+const bldCenter = b => hexesCentroid(b.hexes);
+/* A side's structure by id, or the first of that TYPE (standing first). Several pantheons have
+   no temple and some have several cities, so a lookup that names one falls back to any
+   structure of that side -- callers that need an exact building use bldById. */
+function getBld(side,key){
+  const mine=buildings.filter(b=>b.side===side);
+  return mine.find(b=>b.id===key)
+      || mine.find(b=>b.type===key&&!b.dead) || mine.find(b=>b.type===key)
+      || mine.find(b=>!b.dead) || mine[0] || null;
+}
+function bldById(side,id){ return buildings.find(b=>b.side===side&&b.id===id)||null; }
 
 function canPlaceBuilding(b, hexes){
-  if(!hexes || hexes.length!==2) return false;
-  const [h0,h1] = hexes;
-  if(!inBounds(h0[0],h0[1]) || !inBounds(h1[0],h1[1])) return false;
-  if(hexDist(h0,h1)!==1) return false;
+  const want = b&&b.shape ? SHAPES[b.shape].length : 2;
+  if(!hexes || hexes.length!==want) return false;
+  if(hexes.some(h=>!inBounds(h[0],h[1]))) return false;
+  if(b&&b.shape){ if(!hexesFitShape(b,hexes)) return false; }
+  else if(hexDist(hexes[0],hexes[1])!==1) return false;
   for(const h of hexes){
     const t=terrain(h[0],h[1]);
     if(t==="M"||t==="W") return false;
@@ -1656,12 +1797,29 @@ function defaultDeckPreset(faction="egypt"){
     faction:validFaction,
     loadout:[...f.defaultLoadout], heroes:[...f.defaultHeroes], gods:[...f.defaultGodPick],
     terrain:Array.from({length:PLAYER_ROWS},()=>Array(COLS).fill(base)),
-    buildings:[
-      {type:"fortress",hexes:[[6,2],[7,2]]},
-      {type:"city",hexes:[[4,4],[5,4]]},
-      {type:"temple",hexes:[[1,4],[2,4]]}
-    ]
+    buildings:normalizePresetStructures(validFaction,null,Array.from({length:PLAYER_ROWS},()=>Array(COLS).fill(base)))
   };
+}
+/* A preset's structures for `faction`: exactly its layout's ids, each in its own shape, on the
+   player's half, off mountain/water, no overlap. Anything else -- including every deck saved
+   before 2026-11-13 (City/Temple/Fortress pairs) -- gets the faction's default layout instead
+   of losing the whole deck. */
+function normalizePresetStructures(faction,raw,terrain){
+  const defs=layoutFor(faction);
+  const valid=Array.isArray(raw)&&raw.length===defs.length&&(()=>{
+    const occupied=new Set();
+    for(const d of defs){
+      const s=raw.find(x=>x&&x.id===d.id); if(!s||!Array.isArray(s.hexes)) return false;
+      const hexes=s.hexes.map(h=>Array.isArray(h)?[Number(h[0]),Number(h[1])]:[NaN,NaN]);
+      if(hexes.some(h=>!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=PLAYER_ROWS)) return false;
+      if(!hexesFitShape(d,hexes)) return false;
+      for(const h of hexes){ const k=h[0]+","+h[1]; if(occupied.has(k)||["M","W"].includes(terrain[h[1]][h[0]])) return false; occupied.add(k); }
+    }
+    return true;
+  })();
+  if(valid) return defs.map(d=>({id:d.id,hexes:raw.find(x=>x&&x.id===d.id).hexes.map(h=>[Number(h[0]),Number(h[1])])}));
+  const lay=autoLayout(faction,{rows:PLAYER_ROWS,terrainAt:(c,r)=>terrain[r][c]});
+  return lay ? lay.map(p=>({id:p.def.id,hexes:p.hexes})) : null;
 }
 function validPick(list,count,allowed){
   return Array.isArray(list)&&list.length===count&&new Set(list).size===count&&list.every(k=>allowed.includes(k));
@@ -1681,23 +1839,15 @@ function normalizeDeckPreset(raw,festivalKey){
   const counts={F:0,M:0,W:0};
   terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
   if(Object.keys(counts).some(k=>counts[k]>TERRAIN_BUDGET[k])) return null;
-  if(!Array.isArray(raw.buildings)||raw.buildings.length!==3) return null;
-  const types=new Set(), occupied=new Set(), buildings=[];
-  for(const b of raw.buildings){
-    if(!b||!["temple","city","fortress"].includes(b.type)||types.has(b.type)||!Array.isArray(b.hexes)||b.hexes.length!==2) return null;
-    const hexes=b.hexes.map(h=>Array.isArray(h)?[Number(h[0]),Number(h[1])]:[]);
-    if(hexes.some(h=>h.length!==2||!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=PLAYER_ROWS)) return null;
-    if(hexDist(hexes[0],hexes[1])!==1) return null;
-    for(const h of hexes){const key=h[0]+","+h[1];if(occupied.has(key)||["M","W"].includes(terrain[h[1]][h[0]]))return null;occupied.add(key);}
-    types.add(b.type); buildings.push({type:b.type,hexes});
-  }
+  const buildings=normalizePresetStructures(faction,raw.buildings,terrain);
+  if(!buildings) return null;
   return {faction,loadout:[...raw.loadout],heroes:[...raw.heroes],gods:[...raw.gods],terrain,buildings};
 }
 function captureDeckPreset(){
   return normalizeDeckPreset({
     faction:S.playerFaction, loadout:S.loadout, heroes:S.heroPick, gods:S.godPick,
     terrain:playerHalf.terrain.map(row=>[...row]),
-    buildings:playerHalf.buildings.map(b=>({type:b.type,hexes:b.hexes.map(h=>[...h])}))
+    buildings:playerHalf.buildings.map(b=>({id:b.id,hexes:b.hexes.map(h=>[...h])}))
   });
 }
 function persistDeckPresets(){
@@ -1719,6 +1869,7 @@ function setDeckFaction(faction){
   else if(faction==="china")S.aiFaction="egypt";
   else S.aiFaction=Math.random()<0.5?"egypt":"china";
   S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
+  syncPlayerLayout();
 }
 function applyDeckPreset(slot,useDefault=false){
   const preset=normalizeDeckPreset(deckPresets[slot])||(useDefault?defaultDeckPreset():null);
@@ -1738,10 +1889,7 @@ function applyDeckPreset(slot,useDefault=false){
   aiHalfTerrain=freshAiHalfTerrain();
   S.loadout=[...preset.loadout]; S.heroPick=[...preset.heroes]; S.godPick=[...preset.gods];
   playerHalf.terrain=preset.terrain.map(row=>[...row]);
-  for(const saved of preset.buildings){
-    const b=playerHalf.buildings.find(x=>x.type===saved.type);
-    b.hexes=saved.hexes.map(h=>[...h]);
-  }
+  setPlayerStructures(preset.faction,preset.buildings);
   S.paintMap={};S.painted={F:0,M:0,W:0};
   playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
   persistDeckPresets();
@@ -1796,13 +1944,13 @@ function openDeckMenu(){
 }
 
 /* ---------------- ECONOMY ---------------- */
-// Jade Emperor: Mandate of Heaven -- while all 3 of a side's buildings stand,
-// resource generation is boosted; losing one weakens the mandate; losing two (down
-// to one or zero standing) removes it entirely.
+// Jade Emperor: Mandate of Heaven -- while ALL of a side's structures stand, resource
+// generation is boosted; with at least half standing the mandate is weakened; below
+// half it is gone. (Was "all 3 buildings"; pantheons now have 1-3 structures.)
 function mandateBoost(side){
   if(!hasPassive(side,"mandateOfHeaven")) return 0;
-  const alive=buildings.filter(b=>b.side===side&&!b.dead).length;
-  return alive>=3 ? 0.15 : (alive===2 ? 0.05 : 0);
+  const mine=buildings.filter(b=>b.side===side), alive=mine.filter(b=>!b.dead).length;
+  return alive===mine.length ? 0.15 : (alive*2>=mine.length ? 0.05 : 0);
 }
 // Long Wang: Lord of the Four Seas -- water tiles on your OWN half generate a small
 // amount of extra favor per second, scaling with how many you have.
@@ -1820,15 +1968,16 @@ const FOOD_RATE_MULT=0.70; // 2026-07-29 direct request (2nd trim, same day): 0.
 /* Favour per second for either side -- ONE formula (2026-09-16, Willem: unify both sides).
    The AI used to earn 3.0/2.0 against the player's 3.4/2.2 and never received Demeter's
    Bounty; both sides now earn the player's rates and both get Bounty. */
-function favorRate(side, cityUp){
+function favorRate(side){
   const eco = economyFor(side);
-  /* Demeter's Bounty: the City, which has only ever made food, also brings in favour at half
-     the temple's rate. Nothing else in the game crosses the two currencies. */
-  const cityFavor = (hasPassive(side,"bounty") && cityUp) ? 1.7*greekPairingMultiplier(side,"bounty") : 0;
+  /* Demeter's Bounty: extra favour at half the base rate. It used to need the City standing;
+     since 2026-11-13 (Willem) nothing depends on which structure stands. */
+  const cityFavor = hasPassive(side,"bounty") ? 1.7*greekPairingMultiplier(side,"bounty") : 0;
   return eco.favorBase*eco.favorMult*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor;
 }
 function tickEconomy(dt){
-  const pCity=!getBld(0,"city").dead, aCity=!getBld(1,"city").dead;
+  /* 2026-11-13 (Willem): food no longer depends on a City standing -- every pantheon has a
+     different set of structures, so the rate is flat for as long as the side is alive. */
   const pFood=economyFor(0).foodMult, aFood=economyFor(1).foodMult; // faction food trait
   // 2026-07-23: Ra's old ad-hoc "+0.4 favor/s while unlocked" bonus is removed here --
   // Ra's passive is now "Eye of Ra" (open-tile damage, see calcDmg), matching
@@ -1838,11 +1987,11 @@ function tickEconomy(dt){
   const pMorning = hasPassive(0,"morningStar") ? MORNING_STAR_BONUS : 0;
   const aMorning = hasPassive(1,"morningStar") ? MORNING_STAR_BONUS : 0;
   if(elapsed()<(S.blightUntil[0]||0)) { /* Demeter's Blight: nothing grows */ } else
-  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(pCity?(hasPassive(0,"cityFoodBoost")?6:5):2)*pFood*(1+pMorning)*(1+mandateBoost(0)));
-  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*favorRate(0,pCity));
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(hasPassive(0,"cityFoodBoost")?6:5)*pFood*(1+pMorning)*(1+mandateBoost(0)));
+  S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*favorRate(0));
   if(elapsed()<(S.blightUntil[1]||0)) { /* Demeter's Blight */ } else
-  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(aCity?(hasPassive(1,"cityFoodBoost")?6:5):2)*aFood*(1+aMorning)*(1+mandateBoost(1)));
-  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*favorRate(1,aCity));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(hasPassive(1,"cityFoodBoost")?6:5)*aFood*(1+aMorning)*(1+mandateBoost(1)));
+  S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*favorRate(1));
 }
 
 /* ---------------- OCCUPANCY (1 unit per hex PER LAYER: ground vs flying) ---------------- */
@@ -2428,10 +2577,11 @@ const TUTORIAL_PAGES=[
       return `<div class="tutlead">A deck is exactly three choices: <b>4 gods</b>, <b>2 heroes</b> and
         <b>4 human units</b>. The next three pages walk through them in that order — the same order the
         real setup screens use.</div>
-      <div class="tutlead">A match lasts <b>${TUTORIAL_MATCH_SECONDS} seconds</b>. Each side has a City, a
-        Temple and a Fortress. Destroy all three and you win instantly. If time runs out, whoever destroyed
-        more buildings wins, and total building damage breaks a tie.</div>
-      <div class="tutlead"><b>🌾 Food</b> comes from your City and buys human units. It caps at
+      <div class="tutlead">A match lasts <b>${TUTORIAL_MATCH_SECONDS} seconds</b>. Each pantheon has its own
+        buildings — Egypt two cities and a temple, China two capitals, the Aztecs one great city. Destroy
+        all of the enemy's and you win instantly. If time runs out, whoever destroyed the larger share of
+        the other side's building health wins.</div>
+      <div class="tutlead"><b>🌾 Food</b> flows in steadily and buys human units. It caps at
         ${S.FOOD_CAP}.</div>
       <div class="tutlead"><b>🔱 Favor</b> ${economyFor(0).favorPerDeath
         ? `comes from <b>death</b> — every unit that falls anywhere on the board, yours included, pays you
@@ -2637,7 +2787,8 @@ function renderDrill(){
        objective {type:"raze", bld}   destroy that enemy building
                  {type:"slay"}        kill the level's champion
                  {type:"survive"}     still standing when the clock runs out
-       fail      {bld}                losing YOUR building of that type ends it immediately
+       fail      {bld}                losing YOUR building with that id ends it immediately
+       (bld is a structure id from STRUCTURE_LAYOUTS -- "thebes", "temple", "changan", ...)
        champion  {key,at,hex}         one scripted enemy unit, spawned once at `at` seconds
    Add a type only by adding a branch to campaignOutcome, never by special-casing a level.
 
@@ -2658,8 +2809,8 @@ const CAMPAIGN_LEVELS=[
     gods:["horus","isis","osiris","anubis"], heroes:["bata","doomedprince"],
     loadout:["spear","archer","axe","elephant"],
     aiGods:["set","sekhmet","nephthys","anubis"],
-    objective:{ type:"raze", bld:"fortress", text:"Take the throne — destroy Set's <b>Fortress</b> before the eighty years are out." },
-    fail:{ bld:"fortress", text:"Your own Fortress falls." } },
+    objective:{ type:"raze", bld:"thebes", text:"Take the throne — raze Set's seat at <b>Thebes</b> before the eighty years are out." },
+    fail:{ bld:"thebes", text:"Your own Thebes falls." } },
 
   { key:"havoc",
     title:"Havoc in Heaven",
@@ -2668,7 +2819,7 @@ const CAMPAIGN_LEVELS=[
     gods:["sunwukong","nuwa","longwang","chang"], heroes:["nezha","houyi"],
     loadout:["ji","xbow","dao","ram"],
     aiGods:["jade","erlangshen","leigong","xiwangmu"],
-    objective:{ type:"raze", bld:"temple", text:"Storm the celestial hall — destroy the Jade Emperor's <b>Temple</b>." } },
+    objective:{ type:"raze", bld:"changan", text:"Storm the celestial court — destroy the Jade Emperor's seat at <b>Chang'an</b>." } },
 
   { key:"nightbarque",
     title:"The Night Barque",
@@ -2689,9 +2840,9 @@ function campaignLevel(key){ return CAMPAIGN_LEVELS.find(l=>l.key===key)||null; 
    Kept pure so the whole objective vocabulary is testable without running a match. */
 function campaignOutcome(lv,st){
   if(!lv) return null;
-  if(lv.fail&&lv.fail.bld){ const b=getBld(0,lv.fail.bld); if(b&&b.dead) return "lose"; }
+  if(lv.fail&&lv.fail.bld){ const b=bldById(0,lv.fail.bld); if(b&&b.dead) return "lose"; }
   if(buildings.filter(b=>b.side===0&&!b.dead).length===0) return "lose"; // losing everything always loses
-  if(lv.objective.type==="raze"){ const b=getBld(1,lv.objective.bld); if(b&&b.dead) return "win"; }
+  if(lv.objective.type==="raze"){ const b=bldById(1,lv.objective.bld); if(b&&b.dead) return "win"; }
   if(lv.objective.type==="slay"&&st&&st.spawned
      && !S.units.some(u=>u.id===st.championId&&!u.dead)) return "win";
   if(S.t<=0) return lv.objective.type==="survive" ? "win" : "lose";
@@ -2819,7 +2970,7 @@ const festivalDecks={};
 const FESTIVAL_SAVE_KEY="godsbound-festival-decks-v1";
 function festivalDeckSnapshot(){
   return {faction:S.playerFaction,loadout:[...S.loadout],heroes:[...S.heroPick],gods:[...S.godPick],
-    terrain:playerHalf.terrain.map(r=>[...r]),buildings:playerHalf.buildings.map(b=>({type:b.type,hexes:b.hexes.map(h=>[...h])}))};
+    terrain:playerHalf.terrain.map(r=>[...r]),buildings:playerHalf.buildings.map(b=>({id:b.id,hexes:b.hexes.map(h=>[...h])}))};
 }
 function applyFestivalLayout(deck){
   setDeckFaction(deck.faction);
@@ -2828,7 +2979,7 @@ function applyFestivalLayout(deck){
   applyFactionUI();
   S.loadout=[...deck.loadout]; S.heroPick=[...deck.heroes]; S.godPick=[...deck.gods];
   playerHalf.terrain=deck.terrain.map(r=>[...r]);
-  for(const b of deck.buildings) playerHalf.buildings.find(x=>x.type===b.type).hexes=b.hexes.map(h=>[...h]);
+  setPlayerStructures(deck.faction,deck.buildings);
   S.paintMap={};S.painted={F:0,M:0,W:0};
   playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
   S.selectionFaction=deck.faction;
@@ -3137,7 +3288,7 @@ document.addEventListener("pointerdown",e=>{
     card.classList.add("dragging");
     ghost.textContent=def.emoji; ghost.style.display="block";
     ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px";
-    hint(`Drag ${def.name} through your City, Fortress or Temple, then draw a route.`);
+    hint(`Drag ${def.name} through one of your buildings, then draw a route.`);
     e.preventDefault(); return;
   }
   const god=e.target.closest(".pgod");
@@ -3223,7 +3374,7 @@ document.addEventListener("pointerdown",e=>{
     if(S.phase==="setup" && h){
       const b=bldAt(h[0],h[1]);
       if(b && b.side===0){
-        S.bldDrag={bld:b, origHexes:b.hexes.map(x=>[...x]), preview:b.hexes.map(x=>[...x])};
+        S.bldDrag={bld:b, grab:Math.max(0,b.hexes.findIndex(x=>x[0]===h[0]&&x[1]===h[1])), origHexes:b.hexes.map(x=>[...x]), preview:b.hexes.map(x=>[...x])};
         e.preventDefault(); return;
       }
     }
@@ -3235,7 +3386,8 @@ document.addEventListener("pointermove",e=>{
   if(S.bldDrag){
     const p=boardXY(e); if(!p.inside) return;
     const h=pixelToHex(p.x,p.y); if(!h) return;
-    S.bldDrag.preview=[[h[0],h[1]],[h[0]+1,h[1]]];
+    const bd=S.bldDrag; // the hex you grabbed follows the pointer; the shape keeps its form
+    bd.preview = bd.bld.shape ? shapeAnchoredAt(bd.bld.shape,bd.grab,h) : [[h[0],h[1]],[h[0]+1,h[1]]];
     return;
   }
   if(!S.drag) return;
@@ -3688,9 +3840,8 @@ function calcDmg(att,tgt){
     if(hasPassive(att.side,"earthshaker")) d*=1+0.1*greekPairingMultiplier(att.side,"earthshaker"); // Poseidon: the ground under their walls is never still // Hephaestus: his war machines break walls
     return d;
   }
-  if(hasPassive(tgt.side,"fortressDefense")){ // Horus: Rightful King
-    const fort=getBld(tgt.side,"fortress");
-    if(fort && !fort.dead && Math.min(...fort.hexes.map(h=>hexDist(tgt.hex,h)))<=2) d*=0.85;
+  if(hasPassive(tgt.side,"fortressDefense")){ // Horus: Rightful King -- near ANY standing structure (no Fortress since 2026-11-13)
+    if(buildings.some(b=>b.side===tgt.side&&!b.dead&&b.hexes.some(h=>hexDist(tgt.hex,h)<=2))) d*=0.85;
   }
   /* Ares, Warcry: numbers tell. Counts bodies adjacent to the TARGET, not to the attacker,
      so it rewards actually surrounding something rather than merely having a big army. */
@@ -4576,7 +4727,6 @@ function updateUnit(u,dt){
   followPath(u,dt);
 }
 
-/* ---------- fortress defense ---------- */
 function tickGodEffects(dt){
   // 2026-07-23: per-frame upkeep for the new Egyptian god mechanics that aren't a
   // one-shot cast effect -- poison damage over time (Isis's Scorpion Guard), hero
@@ -4592,11 +4742,13 @@ function tickGodEffects(dt){
       }
     }
     if(hasPassive(u.side,"lyre") && u.hp>0 && u.hp<u.maxhp){ // Apollo: the healer's other half
-      const tmp=getBld(u.side,"temple");
-      if(tmp && !tmp.dead && Math.min(...tmp.hexes.map(h=>hexDist(u.hex,h)))<=3)
+      // near ANY standing structure: Greece has no temple since 2026-11-13
+      if(buildings.some(b=>b.side===u.side&&!b.dead&&b.hexes.some(h=>hexDist(u.hex,h)<=3)))
         u.hp=Math.min(u.maxhp,u.hp+2*greekPairingMultiplier(u.side,"lyre")*dt);
     }
-    if(u.def.cat==="hero" && hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp){
+    /* Isis (2026-11-12, Willem): regeneration extends from heroes to EVERY unit, at the same
+       1% of max HP per second. The key keeps its old name so the Unity export still matches. */
+    if(hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp){
       u.hp=Math.min(u.maxhp,u.hp+u.maxhp*0.01*dt);
     }
     if(u.def.generatesFavor){
@@ -4771,22 +4923,6 @@ function tickFloods(dt){
     }
   }
   if(terrainChanged) renderBG(); // refresh cached terrain art when temporary water/rubble disappears
-}
-function tickFortresses(dt){
-  for(const b of buildings){
-    if(b.type!=="fortress"||b.dead) continue;
-    b.atkTimer-=dt;
-    if(b.atkTimer>0) continue;
-    const tgt=S.units.filter(u=>!u.dead&&u.side!==b.side&&!enemyIgnores(u,b.side)&&elapsed()>=(u.invulnUntil||0)&&unitDist(u,b)<=1)
-      .sort((a,b2)=>a.hp-b2.hp)[0];
-    if(tgt){
-      b.atkTimer=1;
-      tgt.hp-=18;
-      const bc=bldCenter(b);
-      S.effects.push({kind:"tracer",x:bc.x,y:bc.y,x2:tgt.pos.x,y2:tgt.pos.y,t:0,life:0.18,color:b.side?"#ff9a7a":"#ffe08a"});
-      if(tgt.hp<=0) killUnit(tgt); // fortress gun
-    }
-  }
 }
 
 /* ================================================================
@@ -6000,9 +6136,7 @@ function tickAI(dt){
   let src=buildings.find(b=>b.side===1&&!b.dead
     && S.units.some(u=>!u.dead&&u.side===0&&unitDist(u,b)<=2)); // defend the attacked building directly
   if(!src){
-    src=getBld(1,"city");
-    if(src.dead && !getBld(1,"fortress").dead) src=getBld(1,"fortress");
-    if(src.dead) src=buildings.find(b=>b.side===1&&!b.dead);
+    src=buildings.find(b=>b.side===1&&!b.dead&&b.type==="city")||buildings.find(b=>b.side===1&&!b.dead);
   }
   if(!src) return;
   const starts=bldAdjacent(src,aiUnitsTbl[key].flying).sort((a,b)=>b[1]-a[1]);
@@ -8261,8 +8395,69 @@ function cnRoof(g,x,y,w,h){
 function azTier(g,cx,baseY,w,h){ // one trapezoid step of an Aztec stepped pyramid (teocalli)
   g.beginPath(); g.moveTo(cx-w,baseY); g.lineTo(cx-w*0.72,baseY-h); g.lineTo(cx+w*0.72,baseY-h); g.lineTo(cx+w,baseY); g.closePath(); g.fill();
 }
+/* STRUCTURE ART (2026-11-14). Nine approved masters use the actual projected footprint
+   bounds. Old type-based PARTS remain only as loading/missing-art and rubble fallbacks. */
+// Approved structure masters. Fronts remain in use for BOTH armies, as requested;
+// paired rear views are archived alongside them for future orientation support.
+const STRUCTURE_ART={
+  egypt_thebes:{file:"egypt_thebes",baseTop:0.05},
+  egypt_memphis:{file:"egypt_memphis",baseTop:0.08},
+  egypt_temple:{file:"egypt_temple",baseTop:0.08},
+  china_changan:{file:"china_changan",baseTop:0.10},
+  china_luoyang:{file:"china_luoyang",baseTop:0.12},
+  aztec_tenochtitlan:{file:"aztec_twin_cities",baseTop:0.12},
+  greek_athens:{file:"greek_athens",baseTop:0.07},
+  greek_sparta:{file:"greek_sparta",baseTop:0.07},
+  greek_corinth:{file:"greek_corinth",baseTop:0.05}
+};
+for(const [id,art] of Object.entries(STRUCTURE_ART)){
+  const file="assets/sprites/structure_"+art.file+"_front.png";
+  IMG_SPRITES["structure_"+id]={0:file,1:file};
+}
+function structureArtKey(b){ return (b.faction||factionForSide(b.side))+"_"+b.id; }
+function structureSpriteBox(b){
+  const art=STRUCTURE_ART[structureArtKey(b)];
+  if(!art||!b.hexes||!b.hexes.length) return null;
+  // Fit the painted base to the actual projected footprint, not a nominal hex count.
+  // The small roof allowance above the base avoids shrinking taller architecture.
+  const centers=b.hexes.map(h=>{const p=hexCenter(...h);return toScreen(p.x,p.y);});
+  const left=Math.min(...centers.map(p=>p.x))-HEX;
+  const right=Math.max(...centers.map(p=>p.x))+HEX;
+  const top=Math.min(...centers.map(p=>p.y))-HEX*SQ3/2*TILT_SQUASH;
+  const bottom=Math.max(...centers.map(p=>p.y))+HEX*SQ3/2*TILT_SQUASH;
+  const inset=HEX*0.04, width=right-left-2*inset;
+  const baseHeight=bottom-top-2*inset, height=baseHeight/(1-art.baseTop);
+  const y=bottom-inset-height;
+  return {x:left+inset,y,width,height,top:y,bottom:bottom-inset,baseTop:top+inset};
+}
+const PART_ART_SCALE={1:0.62,2:1,3:1.12,4:1.25};
+function partArtScale(n){ return PART_ART_SCALE[n]||Math.sqrt(n/2); }
+function structureParts(b){
+  if(!b.hexes) return [{type:b.type,hexes:null,mirror:false}];
+  if(b.parts) return b.parts.map(p=>({type:p.type,mirror:!!p.mirror,hexes:p.idx.map(i=>b.hexes[i])}));
+  return [{type:b.type,hexes:b.hexes,mirror:false}];
+}
+function structureArtScale(b){
+  const sizes=structureParts(b).filter(p=>p.type).map(p=>partArtScale(p.hexes?p.hexes.length:2));
+  return sizes.length ? Math.max(...sizes) : 1;
+}
+function drawStructureArt(b){
+  const box=structureSpriteBox(b), key="structure_"+structureArtKey(b);
+  if(box&&!b.dead){
+    const img=getSpriteImage(key,b.side);
+    if(img&&img.complete&&img.naturalWidth>0){
+      ctx.drawImage(chromaKeyed(img,key+":"+b.side),box.x,box.y,box.width,box.height);
+      return;
+    }
+  }
+  for(const p of structureParts(b)){
+    if(!p.type) continue; // the Aztec causeway: footprint only
+    const cL=hexesCentroid(p.hexes), c=toScreen(cL.x,cL.y);
+    drawBuilding({side:b.side,type:p.type,dead:b.dead,hexes:p.hexes,mirror:p.mirror,artScale:partArtScale(p.hexes.length)},c);
+  }
+}
 function drawBuilding(b,c){
-  const s=HEX/24; ctx.save(); ctx.translate(c.x,c.y+HEX*0.55);
+  const s=HEX/24*(b.artScale||1); ctx.save(); ctx.translate(c.x,c.y+HEX*0.55);
   if(b.dead){
     ctx.fillStyle="#57534e";
     ctx.beginPath(); ctx.moveTo(-14*s,0); ctx.lineTo(-6*s,-8*s); ctx.lineTo(0,-3*s); ctx.lineTo(7*s,-9*s); ctx.lineTo(14*s,0); ctx.closePath(); ctx.fill();
@@ -8284,17 +8479,13 @@ function drawBuilding(b,c){
          off the board geometry (see BLD_CANVAS_HEXES). The translate above put the origin at
          c + HEX*0.55, which the vector fallback below still wants, so this undoes it rather than
          moving the translate and disturbing every vector branch. */
-      const box=bldSpriteBox({x:0,y:-HEX*0.55},BLD_SCALE[bldKey]);
-      /* COLUMN PARITY. Buildings always occupy [c,r] and [c+1,r], but hexCenter offsets odd
-         columns down by half a row, so the second hex is DOWN-right from an even column and
-         UP-right from an odd one -- two different diagonals, and the art is authored for the
-         down-right one. Mirroring HORIZONTALLY maps a down-right footprint onto an up-right one
-         (the two pairs are point reflections of each other, and a point reflection is a
-         horizontal mirror composed with a vertical one, so the horizontal mirror alone lands the
-         base correctly while leaving the building right way up -- a vertical flip would stand it
-         on its roof). Architecture is near-symmetric here, so the mirror is not noticeable; the
-         misalignment it prevents is about a full hex and very much is. */
-      if(b.hexes && (b.hexes[0][0]&1)){
+      const box=bldSpriteBox({x:0,y:-HEX*0.55},(BLD_SCALE[bldKey]||1)*(b.artScale||1));
+      /* MIRRORING. Buildings used to occupy [c,r],[c+1,r], whose second hex is down-right from an
+         even column and up-right from an odd one, so odd columns were mirrored. Since 2026-11-13
+         placeShape() keeps every shape's form at either parity, so a pair always runs down-right
+         like the art and no parity mirror is needed. `mirror` is now a per-part choice (the
+         second Aztec city faces the first across the causeway). */
+      if(b.mirror){
         ctx.save(); ctx.scale(-1,1);
         ctx.drawImage(src,-box.x-box.d,box.y,box.d,box.d);
         ctx.restore();
@@ -8769,14 +8960,15 @@ function draw(){
       ctx.fillStyle=b.dead?"rgba(30,30,30,.55)":(b.side?"rgba(192,57,43,.28)":"rgba(232,184,75,.25)");
       ctx.fill();
       ctx.strokeStyle=b.side?"#c0392b":"#e8b84b"; ctx.lineWidth=1.5; ctx.stroke(); }
-    drawBuilding(b,c);
+    drawStructureArt(b);
     const lbl=b.name.toUpperCase();
     ctx.font=`bold ${Math.max(7,HEX*0.3)}px sans-serif`;
     const mm=ctx.measureText(lbl)||{width:HEX*1.4};
     const lk="bld_"+factionForSide(b.side)+"_"+b.type, artedLbl=IMG_SPRITES[lk];
     const tw=(mm.width||HEX*1.4)+HEX*0.55, lh=HEX*0.5;
     // Below the sprite's own base for arted buildings; the old fixed offset for vector ones.
-    const ly=artedLbl? bldSpriteBox(c,BLD_SCALE[lk]).bottom - HEX*0.55 : c.y+HEX*0.86;
+    const structureBox=structureSpriteBox(b);
+    const ly=structureBox ? structureBox.bottom+HEX*0.04 : artedLbl? bldSpriteBox(c,(BLD_SCALE[lk]||1)*structureArtScale(b)).bottom - HEX*0.55 : c.y+HEX*0.86;
     rrect(ctx,c.x-tw/2,ly,tw,lh,3);
     ctx.fillStyle="rgba(10,12,16,.85)"; ctx.fill();
     ctx.strokeStyle=b.side?"rgba(210,80,60,.85)":"rgba(232,184,75,.85)"; ctx.lineWidth=1; ctx.stroke();
@@ -8787,7 +8979,7 @@ function draw(){
        offset, which is correct for the smaller vector shapes. */
     if(!b.dead){
       const bk="bld_"+factionForSide(b.side)+"_"+b.type, arted=IMG_SPRITES[bk];
-      const barY=arted? bldSpriteBox(c,BLD_SCALE[bk]).top - HEX*0.30 : c.y-HEX*1.15;
+      const barY=structureBox ? structureBox.top-HEX*0.30 : arted? bldSpriteBox(c,(BLD_SCALE[bk]||1)*structureArtScale(b)).top - HEX*0.30 : c.y-HEX*1.15;
       hpBar(c.x,barY,HEX*2.2,b.hp/b.maxhp,b.side?"#e74c3c":"#e8b84b");
     }
   }
@@ -8919,9 +9111,19 @@ function resize(){
   fitAppToPhone();
   computeCamera();
 }
+/* Share (0..1) of `side`'s total structure HP that is gone: a dead structure counts in full,
+   a standing one by its missing HP. Healing back counts against it. */
+function hpShareDestroyed(side){
+  const mine=buildings.filter(b=>b.side===side);
+  const total=mine.reduce((n,b)=>n+b.maxhp,0);
+  if(!total) return 0;
+  return mine.reduce((n,b)=>n+(b.dead?b.maxhp:Math.min(b.maxhp,Math.max(0,b.maxhp-b.hp))),0)/total;
+}
 function checkInstantWin(){
-  for(const side of [0,1])
-    if(buildings.filter(b=>b.side===side&&b.dead).length===3){ endMatch(); return; }
+  for(const side of [0,1]){
+    const mine=buildings.filter(b=>b.side===side);
+    if(mine.length && mine.every(b=>b.dead)){ endMatch(); return; } // every structure, however many the pantheon has
+  }
 }
 function endMatch(){
   /* A Legends level owns its own win condition -- the normal buildings-destroyed
@@ -8931,15 +9133,17 @@ function endMatch(){
      DEFEAT screen for a match they were never playing. */
   if(drill){ drillFinish(); return; }
   if(S.over) return; S.over=true;
+  /* 2026-11-13 (Willem): at time, the larger SHARE of the enemy's total structure HP destroyed
+     wins. Pantheons have 1-5 structures, so a count of buildings is not comparable. */
   const pKills=buildings.filter(b=>b.side===1&&b.dead).length;
   const aKills=buildings.filter(b=>b.side===0&&b.dead).length;
-  let win = pKills>aKills?1 : aKills>pKills?-1
-          : S.bldDmg[0]>S.bldDmg[1]?1 : S.bldDmg[1]>S.bldDmg[0]?-1 : 0;
+  const pShare=hpShareDestroyed(1), aShare=hpShareDestroyed(0);
+  let win = pShare>aShare+1e-9?1 : aShare>pShare+1e-9?-1 : 0;
   $("endtitle").textContent = win>0?"⚜ VICTORY ⚜":win<0?"DEFEAT":"DRAW";
   $("endtitle").style.color = win>0?"#e8b84b":win<0?"#ff5b4d":"#ccc";
   $("enddetail").textContent =
-    `Buildings destroyed — You: ${pKills}  Enemy: ${aKills}\n`+
-    `Building damage dealt — You: ${Math.floor(S.bldDmg[0])}  Enemy: ${Math.floor(S.bldDmg[1])}`;
+    `Enemy HP destroyed — You: ${Math.round(pShare*100)}%  Enemy: ${Math.round(aShare*100)}%\n`+
+    `Buildings destroyed — You: ${pKills}  Enemy: ${aKills}`;
   $("endscreen").style.display="flex";
 }
 
@@ -9007,7 +9211,7 @@ function renderSetupStep(){
   $("menupanel").classList.toggle("fullpage", !onTerrain);
   $("menupanel").classList.toggle("home-active", onHome);
   $("menupanel").dataset.faction=S.playerFaction;
-  if(onTerrain){ TMAP = playerHalf.terrain; }
+  if(onTerrain){ syncPlayerLayout(); TMAP = playerHalf.terrain; }
   else { TMAP = composeAbsoluteTMAP(); composeAbsoluteBuildings(); }
   computeCamera();
 }
@@ -9058,6 +9262,7 @@ function setPlayerFaction(faction){
   S.selectionFaction=null;
   S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
   startMatch(false);
+  syncPlayerLayout();
 }
 function startMatch(keepTerrain){
   applyFactionUI();
@@ -9085,7 +9290,8 @@ function startMatch(keepTerrain){
   activeAiGods.forEach(g=>{ S.aiGods[g.key]={unlocked:false,cdUntil:0}; });
   buildEnemyGodsUI();
   S.armedPower=null; S.godPreview=null; S.drag=null; S.paintSelected=null;
-  buildings.forEach(b=>{ b.hp=b.maxhp; b.dead=false; b.atkTimer=0; });
+  if(!aiLayout||aiLayout.faction!==S.aiFaction){ pickAiLayout(); aiHalfTerrain=freshAiHalfTerrain(); } // AI pantheon changed under a kept board
+  buildings.forEach(b=>{ b.maxhp=structureHp(b.faction,structureDef(b.faction,b.id)); b.hp=b.maxhp; b.dead=false; }); // maxhp too: Ptah's boost must not carry into the next match
   DECK_INITIAL = [...S.loadout, ...S.heroPick];
   DECK.length=0; DECK.push(...DECK_INITIAL);
   aiTrainT=3; aiPowerT=8; aiHeroAt=55; aiTargetRot=0; aiLastCastAt=-99; aiSaveStart=null; aiWave=null; lastLane=null;
@@ -9124,7 +9330,6 @@ function loop(now){
     if(campaign) tickCampaign(); // Legends: scripted champion + objective check
     tickFloods(dt);
     tickThundersWarning();
-    tickFortresses(dt);
     tickAI(dt);
     for(const u of S.units) updateUnit(u,dt);
     tickFormChains(); // must run BEFORE the dead-unit filter, or the corpse is gone
@@ -9167,7 +9372,7 @@ function renderSpriteGallery(){
       ctx.fillStyle="#e8d9b8"; ctx.fillText(key, p.x, p.y+cell*0.4);
     }
     S.playerFaction=faction; // drawBuilding resolves its art via factionForSide(0)===S.playerFaction
-    for(const type of ["city","temple","fortress"]){
+    for(const type of ["city","temple"]){ // the Fortress was removed 2026-11-13; its art stays on disk
       const p=nextCell();
       try{ drawBuilding({side:0,type,dead:false},p); }catch(e){}
       ctx.fillStyle="#e8d9b8"; ctx.fillText(faction+" "+type, p.x, p.y+cell*0.4);
