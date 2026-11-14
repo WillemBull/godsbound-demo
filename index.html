@@ -981,7 +981,18 @@ const POWER_HINTS = {
   tlaloc:"Flood open tiles near the target.", xipetotec:"Disable all enemy passive bonuses.",
   coatlicue:"Poison every enemy unit.", mictlantecuhtli:"Gift favor; a random myth answers.",
   coyolxauhqui:"Split an enemy into dueling copies.", ehecatl:"Greatly speed up all allies.",
-  itzpapalotl:"Damage and slow nearby enemies."
+  itzpapalotl:"Damage and slow nearby enemies.",
+  zeus:"120 damage; arcs for 60 to a nearby foe.",
+  poseidon:"90 damage to nearby enemy buildings.",
+  athena:"Nearby allies take half damage for 6s.",
+  ares:"Allies deal and take double damage: 6s.",
+  apollo:"45 damage; weaken nearby foes for 6s.",
+  hermes:"Steal up to 40 food and 40 favor.",
+  demeter:"Stop enemy food income for 8s.",
+  hades:"Raise 3 fallen warriors for 20s.",
+  dionysus:"Root nearby enemies for 4s; can fight.",
+  artemis:"Mark a foe: its allies hunt it for 8s.",
+  hephaestus:"Next 3 trained units gain 40% more HP."
 };
 /* Identity/link records only while Greece remains unavailable. Powers and unlock
    values will be designed before Greece is added to FACTIONS. */
@@ -3347,7 +3358,7 @@ function onGodTap(key){
   if(elapsed()<(st.lockedUntil||0)){ hint(`${g.name}'s power is locked!`); return; }
   if(S.favor<godPowerCost(g,0)){ hint(`Need 🔱${godPowerCost(g,0)} Favor for ${g.power}.`); return; }
   S.armedPower = (S.armedPower===key)? null : key;
-  if(S.armedPower) hint(`${g.power}: ${POWER_HINTS[key]} Tap a target.`,true);
+  if(S.armedPower) hint(`${g.power}: ${POWER_HINTS[key]||g.desc} Tap a target.`,true);
   else hint("Power cancelled.");
 }
 
