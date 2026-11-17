@@ -51,6 +51,8 @@
   #timerbox .tlabel{font-size:7.5px;letter-spacing:2px;color:#9aa0ae;font-weight:700;white-space:nowrap;}
   #timer{font-size:17px;font-weight:800;letter-spacing:1px;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05;white-space:nowrap;}
   #timer.low{color:#ff5b4d;text-shadow:0 0 8px rgba(255,91,77,.7);}
+  #timer.dusk{color:#f3c56b;text-shadow:0 0 10px rgba(243,197,107,.75);}
+  #timer.dusk.low{color:#ff5b4d;text-shadow:0 0 8px rgba(255,91,77,.7);}
   #enemyres{font-size:10px;text-align:right;color:#caa;white-space:nowrap;}
   #enemygodswrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 1 auto;min-width:0;}
   #ainame{font-size:9px;color:#e0a06a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -1261,12 +1263,12 @@ const FACTIONS = {
               economy has a shape.
               The floor is deliberate: with no passive income at all a slow opening starves
               them out of gods entirely, and they cannot buy the units that make the deaths. */
-           economy:{ favorBase:2.2, favorPerDeath:6 },
-           defaultLoadout:["macuahuitl","atlatl","jaguar","tlequauitl"], defaultHeroes:["tepoztecatl","topiltzin"],
+           economy:{ favorBase:2.0, favorPerDeath:6 }, // 2026-11-16: scaled with the 3.4 -> 3.0 base; see test_aztec's arithmetic
+           /* AI-playable since 2026-11-16 (Willem: "make the Greek and Aztec AI"): aiTitle, AI_PROFILES
+              entries, AI_POWER_CLASS and pickAiPowerHex branches for every Aztec god. */
+           aiTitle:"TLATOANI AI", defaultLoadout:["macuahuitl","atlatl","jaguar","tlequauitl"], defaultHeroes:["tepoztecatl","topiltzin"],
            defaultGodPick:["huitzilopochtli","quetzalcoatl","tezcatlipoca","mictlantecuhtli"] },
-  /* GREECE (2026-08-26). PLAYER-ONLY, the same call as Aztec: no aiTitle, no godSched, no
-     AI_POWER_CLASS and no pickAiPowerHex branch, so S.aiFaction never becomes "greek" (see
-     setPlayerFaction/setDeckFaction, whose else-branch already rolls egypt or china).
+  /* GREECE (2026-08-26). AI-playable since 2026-11-16, like Aztec (see above).
      ONLY FOUR GODS. The other seven on the mythology sheet (Zeus, Poseidon, Athena, Ares,
      Apollo, Hermes, Demeter) are NOT here on purpose: six of their designs duplicate a
      shipped god and two depend on the disabled armour triangle, so they need decisions
@@ -1276,17 +1278,31 @@ const FACTIONS = {
      loadout below is therefore shield/ranged/ranged/siege, which is a real asymmetry and
      not an oversight. */
   greek: { units:GR_UNITS, allGods:GR_GODS, name:"Greeks", label:"🏛 Greek",
-           defaultLoadout:["hoplite","toxotes","peltast","krios"], defaultHeroes:["heracles","atalanta"],
+           aiTitle:"BASILEUS AI", defaultLoadout:["hoplite","toxotes","peltast","krios"], defaultHeroes:["heracles","atalanta"],
            defaultGodPick:["artemis","hades","dionysus","hephaestus"] }
            /* 2026-08-21: Tlaloc swapped out for Mictlantecuhtli. The Weeping Rain was the one
               straight cross-faction duplicate in the set -- Long Wang's Dragon Rain floods a
               BIGGER zone and deals 40 damage on top, so Tlaloc was a strictly smaller version
               of another pantheon's power. The Bargain is unique to Aztec and is now genuinely
-              good. Keeps the patron god and the Quetzalcoatl/Tezcatlipoca rivalry intact.
-              Aztec remains PLAYER-ONLY: no godSched, no AI_POWER_CLASS, no pickAiPowerHex
-              branch is needed or wanted for any of these. */
-           /* no aiTitle: Aztec is player-only, S.aiFaction never becomes "aztec" (see 7.8's sign-off) */
+              good. Keeps the patron god and the Quetzalcoatl/Tezcatlipoca rivalry intact. */
 };
+/* Factions the AI can play: exactly those with an aiTitle (and therefore AI_PROFILES entries and
+   power targeting). The opponent for a quick match is a random one of these other than the
+   player's own pantheon (2026-11-16: all four). */
+const AI_FACTIONS=Object.keys(FACTIONS).filter(f=>FACTIONS[f].aiTitle);
+function pickAiFaction(playerFaction){
+  const pool=AI_FACTIONS.filter(f=>f!==playerFaction);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+/* The opponent when none is named: Egypt and China keep their fixed complement (the sims, the
+   exporters and most of the test suite were built on it), everyone else gets a random AI pantheon.
+   The faction tiles in setup pass pickAiFaction() explicitly, so a PLAYER always gets a random
+   opponent -- see onSetupTap. */
+function defaultAiFaction(playerFaction){
+  if(playerFaction==="egypt") return "china";
+  if(playerFaction==="china") return "egypt";
+  return pickAiFaction(playerFaction);
+}
 function factionForSide(side){ return side ? S.aiFaction : S.playerFaction; }
 /* ---- PER-FACTION ECONOMY (2026-09-06, Willem: "make the pantheons feel different") ----
    A faction with no `economy` block gets the standard economy, so adding a pantheon changes
@@ -1296,11 +1312,23 @@ function factionForSide(side){ return side ? S.aiFaction : S.playerFaction; }
 const ECONOMY_DEFAULT={
   /* 2026-11-10 (Willem): "get rid of the temple giving the favor and just make it a base
      rate." Favour is a flat per-second base; the Temple no longer affects income. */
-  favorBase:3.4,     // favour per second, before god passives
+  /* 2026-11-16 (Willem): "start with more favor to make the god choice happen faster", and
+     "maybe slow resources down a bit" to pay for DUSK (below). Base 3.4 -> 3.0/s, and every
+     side opens with a favour BANK so the first god is a decision in the opening, not a wait. */
+  favorBase:3.0,     // favour per second, before god passives
+  startFavor:50,     // favour both sides hold at 0:00 (cheapest god costs 80)
   foodMult:1,        // multiplies City food income (Egypt, China 1.10)
   favorMult:1,       // multiplies the favour base (Egypt 1.10)
   favorPerDeath:0    // favour paid to this side for ANY unit dying anywhere on the board
 };
+/* DUSK (2026-11-16, Willem's name): the last minute of a match. The gods stop watching and
+   intervene -- favour income doubles for both sides. It is the tension curve's final act,
+   the moment a losing side can still swing. Food is NOT doubled: Willem does not want the
+   midline to become a meat grinder. Timing uses elapsed(), never S.t directly. */
+const DUSK_AT=120;          // seconds elapsed when Dusk begins (1:00 left on a 180s clock)
+const DUSK_FAVOR_MULT=2;    // favour-rate multiplier during Dusk
+function duskActive(){ return !S.over && elapsed()>=DUSK_AT; }
+function duskMult(){ return duskActive() ? DUSK_FAVOR_MULT : 1; }
 function economyFor(side){
   const f=FACTIONS[factionForSide(side)];
   return Object.assign({},ECONOMY_DEFAULT,(f&&f.economy)||{});
@@ -1869,18 +1897,16 @@ function saveActiveDeck(){
   if(preset){deckPresets[S.deckSlot]=preset;persistDeckPresets();return true;}
   return false;
 }
-function setDeckFaction(faction){
+function setDeckFaction(faction,aiFaction){
   S.playerFaction=faction;
-  if(faction==="egypt")S.aiFaction="china";
-  else if(faction==="china")S.aiFaction="egypt";
-  else S.aiFaction=Math.random()<0.5?"egypt":"china";
+  S.aiFaction=aiFaction||defaultAiFaction(faction);
   S.aiGodPick=[...FACTIONS[S.aiFaction].defaultGodPick];
   syncPlayerLayout();
 }
 function applyDeckPreset(slot,useDefault=false){
   const preset=normalizeDeckPreset(deckPresets[slot])||(useDefault?defaultDeckPreset():null);
   if(!preset)return false;
-  S.deckSlot=slot; setDeckFaction(preset.faction);
+  S.deckSlot=slot; setDeckFaction(preset.faction, useDefault?undefined:pickAiFaction(preset.faction)); // PLAYING a saved deck draws a random opponent (2026-11-16); boot and deck editing keep the default rule
   // A saved player half must be preserved, but the opposing half still needs its
   // own normal terrain setup. Without this explicit refresh, first-launch Play
   // inherited aiHalfTerrain's all-plain placeholder because startMatch(true)
@@ -1979,7 +2005,7 @@ function favorRate(side){
   /* Demeter's Bounty: extra favour at half the base rate. It used to need the City standing;
      since 2026-11-13 (Willem) nothing depends on which structure stands. */
   const cityFavor = hasPassive(side,"bounty") ? 1.7*greekPairingMultiplier(side,"bounty") : 0;
-  return eco.favorBase*eco.favorMult*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor;
+  return (eco.favorBase*eco.favorMult*(1+mandateBoost(side)) + waterTileBonus(side) + cityFavor)*duskMult();
 }
 function tickEconomy(dt){
   /* 2026-11-13 (Willem): food no longer depends on a City standing -- every pantheon has a
@@ -2063,8 +2089,13 @@ function bldAdjacent(b, flying){
 /* Aztec water is Lake Texcoco. An Aztec unit receives its home-water benefits only
    while its current water hex is directly adjacent to one of its own standing
    buildings; water anywhere else stays mechanically ordinary. */
+function onOwnFactionTerrain(u,faction,tile){
+  return factionForSide(u.side)===faction && sideForRow(u.hex[1])===u.side
+    && terrain(u.hex[0],u.hex[1])===tile;
+}
+function onNile(u){ return onOwnFactionTerrain(u,"egypt","W"); }
 function onLakeTexcoco(u){
-  if(factionForSide(u.side)!=="aztec" || terrain(u.hex[0],u.hex[1])!=="W") return false;
+  if(!onOwnFactionTerrain(u,"aztec","W")) return false;
   return buildings.some(b=>b.side===u.side && !b.dead &&
     b.hexes.some(h=>hexDist(u.hex,h)===1));
 }
@@ -2260,6 +2291,11 @@ function refreshUI(){
   const m=Math.floor(Math.max(0,S.t)/60), s=Math.floor(Math.max(0,S.t)%60);
   $("timer").textContent=`${m}:${s<10?"0":""}${s}`;
   $("timer").classList.toggle("low",S.t<=30);
+  /* DUSK: the clock turns gold and the label changes; the bar's height never does. */
+  const dusk=duskActive();
+  $("timer").classList.toggle("dusk",dusk);
+  const tl=document.querySelector?document.querySelector("#timerbox .tlabel"):null; if(tl) tl.textContent=dusk?"DUSK":"TIME LEFT"; // guarded: the test DOM stub has no querySelector
+  if(dusk&&!S.duskShown){ S.duskShown=true; hint("Dusk falls. The gods intervene: favor flows twice as fast."); }
 }
 function renderPalette(){
   for(const t of ["F","M","W"]){
@@ -2274,7 +2310,7 @@ function renderPalette(){
   const nile=S.playerFaction==="egypt", texcoco=S.playerFaction==="aztec";
   $("paintbtn-W-name").textContent=nile?"The Nile":texcoco?"Lake Texcoco":"Water";
   $("paintbtn-W-desc").textContent=nile
-    ?"Egyptian units experience no speed decrease or damage taken increase while in the Nile. Also placeable only as a single contiguous, one-hex-wide line."
+    ?"Your Egyptian units experience no speed decrease or damage taken increase in the Nile on your own territory. Enemy units get no Nile protection here. Placeable only as a single contiguous, one-hex-wide line."
     :texcoco
       ?"Next to your standing buildings, Aztec units ignore the water speed penalty and take 20% less damage. Elsewhere it behaves as normal water."
       :"Slows movement by 50%. Units inside take 25% more damage.";
@@ -3307,7 +3343,7 @@ document.addEventListener("pointerdown",e=>{
     return;
   }
   const factionBtn=e.target.closest(".factionbtn");
-  if(factionBtn){ setPlayerFaction(factionBtn.dataset.faction); beginGodSelection(); return; }
+  if(factionBtn){ const f=factionBtn.dataset.faction; setPlayerFaction(f, f===S.playerFaction?undefined:pickAiFaction(f)); beginGodSelection(); return; } // a NEW faction draws a random opponent (2026-11-16); re-tapping the same tile stays a no-op
   const paint=e.target.closest(".paintbtn");
   if(paint){
     const t=paint.dataset.paint;
@@ -3882,7 +3918,7 @@ function calcDmg(att,tgt){
   }
   if(adt==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
   if(onLakeTexcoco(tgt)) d*=0.8; // Lake Texcoco beside a standing Aztec building: no water penalty, plus 20% defense
-  else if(terrain(tgt.hex[0],tgt.hex[1])==="W" && factionForSide(tgt.side)!=="egypt") d*=1.25; // ordinary water: +25% damage; Egypt's Nile is exempt
+  else if(terrain(tgt.hex[0],tgt.hex[1])==="W" && !onNile(tgt)) d*=1.25; // Only the owner's Nile exempts its Egyptian units.
   return d;
 }
 /* Theseus's Clew and Ajax's Last Stand: the two ways a unit refuses the blow that would
@@ -4145,16 +4181,13 @@ function losBlocked(a,b){
 // Same-day follow-up ("make sure the units are only invisible when in the bamboo hex"):
 // the hex itself must actually BE bamboo -- forest on a half China doesn't control is
 // ordinary forest and grants nothing, even to a Chinese unit standing in it. This is
-// deliberately NARROWER than the Nile's speed immunity, which follows the unit anywhere:
-// bamboo cover is a defensive tool in your OWN half.
+// Like Nile protection, bamboo cover belongs to the army that owns this half.
 // Ownership is asked as `sideForRow(...)===u.side` -- a player question -- not by comparing
 // the hex's faction to the unit's faction. Those two are equivalent today only because
 // setPlayerFaction forces opposite factions; in a same-faction multiplayer match the
 // faction form would have concealed a unit in the ENEMY's bamboo. See sideForRow().
 function inBamboo(u){
-  return terrain(u.hex[0],u.hex[1])==="F"
-      && sideForRow(u.hex[1])===u.side
-      && factionForSide(u.side)==="china";
+  return onOwnFactionTerrain(u,"china","F");
 }
 // Is this unit under bamboo cover at all, before asking who's looking? Split out from
 // hiddenFrom() because the render cue and the per-observer reveal need different answers.
@@ -4369,7 +4402,7 @@ function moveToward(u,pt,dt){
   // 2026-07-28 direct chat request: Egyptian units take no speed penalty on the Nile
   // (their own faction's water tiles) -- checked alongside the pre-existing full-speed
   // exemptions (flying, Clearing Wind, Cloud Somersault) rather than as a separate branch.
-  const onNile=terrain(u.hex[0],u.hex[1])==="W" && factionForSide(u.side)==="egypt";
+  const nileProtected=onNile(u);
   // Erlang Shen tamed the rivers at Guankou: water costs his side nothing. Deliberately
   // WATER-ONLY (the same shape as onNile) rather than the blanket all-terrain exemption
   // Ehecatl's Clearing Wind grants -- and it stacks with Long Wang / Gong Gong's x1.2
@@ -4379,10 +4412,10 @@ function moveToward(u,pt,dt){
   // in the bamboo... yes please make that adjustment"): Chinese units take no forest speed
   // penalty in their own bamboo. Reuses inBamboo() rather than re-deriving the condition, so
   // the movement exemption and the concealment rule can never drift apart -- both are
-  // own-half-only, unlike the Nile's exemption which follows an Egyptian unit anywhere.
+  // own-half-only, just like the Nile's exemption.
   // TINFO.F.speed is UNTOUCHED at 0.75: everyone else (and China on the enemy's forest) is
   // still slowed, exactly as the Nile leaves TINFO.W alone. Ranged cover is unaffected.
-  let terr=(u.flying||onNile||onTamedRiver||inBambooCover(u)||onLakeTexcoco(u)||hasPassive(u.side,"clearingWind")||(u.def.cat==="hero"&&hasPassive(u.side,"cloudSomersault")))?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1; // faction water exemptions / Ehecatl: Clearing Wind / Sun Wukong: Cloud Somersault
+  let terr=(u.flying||nileProtected||onTamedRiver||inBambooCover(u)||onLakeTexcoco(u)||hasPassive(u.side,"clearingWind")||(u.def.cat==="hero"&&hasPassive(u.side,"cloudSomersault")))?1:TINFO[terrain(u.hex[0],u.hex[1])].speed||1; // faction water exemptions / Ehecatl: Clearing Wind / Sun Wukong: Cloud Somersault
   // Xi Wangmu: Garden of Kunlun. Her bamboo is not merely un-slowing, it is quick ground.
   // Stacks ON TOP of the exemption above, so this is faster than open plains, not merely
   // as fast. Multiplier lives in the god def (gardenSpeed), never as a literal here.
@@ -5830,6 +5863,101 @@ function pickAiPowerHex(key){
     const home=buildings.find(b=>b.side===1&&!b.dead);
     return home? home.hexes[0] : null;
   }
+  /* ---------- AZTEC (2026-11-16). Every power has a blood price, so the AI pays it only when the
+     board gives something back; a null here IS the trigger (class "situational"). ---------- */
+  const ownHex=()=>{ const b=buildings.find(b=>b.side===1&&!b.dead); return b? b.hexes[0] : null; };
+  const live=enemyUnits.filter(u=>!enemyIgnores(u,1));
+  const strongest=(list)=>list.slice().sort((a,b)=>b.hp-a.hp)[0];
+  const fighting=aiUnits.filter(u=>u.target);
+  const centroidHex=(list)=>list.slice().sort((a,b)=>a.hex[1]-b.hex[1])[Math.floor(list.length/2)].hex;
+  if(key==="huitzilopochtli"){
+    // Solar War buffs every own unit at 15% of its HP each: worth it only with a real army engaged.
+    if(fighting.length<3) return null;
+    return centroidHex(fighting);
+  }
+  if(key==="quetzalcoatl"){
+    // Wind Serpent resets routes: only bites when several enemies are still marching on a path.
+    const marching=live.filter(u=>u.path&&!u.target);
+    return marching.length>=3 ? ownHex() : null;
+  }
+  if(key==="tezcatlipoca"||key==="coyolxauhqui"){
+    // Smoking Mirror / Dismemberment: the strongest enemy on the board, by current HP.
+    if(!live.length) return null;
+    return strongest(live).hex;
+  }
+  if(key==="tlaloc"){
+    // Weeping Rain floods open ground: aim at the densest enemy cluster standing on plains.
+    const onOpen=live.filter(u=>terrain(u.hex[0],u.hex[1])==="P");
+    return onOpen.length>=2 ? centroidHex(onOpen) : null;
+  }
+  if(key==="xipetotec"){
+    // The Flaying strips passives: only meaningful once the player has unlocked a god and fielded units.
+    const playerHasGod=Object.values(S.playerGods||{}).some(st=>st.unlocked);
+    return playerHasGod&&live.length>=2 ? ownHex() : null;
+  }
+  if(key==="coatlicue"){
+    // Serpent Skirt poisons everyone: three or more targets, else hold.
+    return live.length>=3 ? ownHex() : null;
+  }
+  if(key==="mictlantecuhtli"){
+    // The Bargain gifts the enemy 30 favour first, so only when a myth is unlocked to collect on it
+    // and the AI is not itself short.
+    if(!unlockedMyths(1).length||S.aiFavor<godPowerCost(activeAiGods.find(g=>g.key===key),1)+30) return null;
+    return buildings.some(b=>b.side===0&&!b.dead) ? ownHex() : null;
+  }
+  if(key==="ehecatl"){
+    // First Wind: a sprint for an army on the move, wasted on one standing still.
+    const moving=aiUnits.filter(u=>!u.target);
+    return moving.length>=3 ? ownHex() : null;
+  }
+  /* ---------- GREECE (2026-11-16). Gods intervene in one mortal's affairs, so most of these aim at
+     a single unit or a tight knot of them. ---------- */
+  if(key==="zeus"){
+    // Thunderbolt: the strongest enemy, preferring one with a neighbour for the arc.
+    if(!live.length) return null;
+    const paired=live.filter(u=>live.some(o=>o!==u&&hexDist(o.hex,u.hex)<=2));
+    return strongest(paired.length?paired:live).hex;
+  }
+  if(key==="poseidon"){
+    // Earthquake is the only power that damages buildings: the most damaged standing enemy structure.
+    const tgt=buildings.filter(b=>b.side===0&&!b.dead).sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0];
+    return tgt? tgt.hexes[0] : null;
+  }
+  if(key==="athena"||key==="ares"){
+    // Aegis / Bloodlust cover own units within 2 of the hex: the heart of the engaged army.
+    return fighting.length>=3 ? centroidHex(fighting) : null;
+  }
+  if(key==="apollo"||key==="dionysus"){
+    // Silver Arrows / The Vine: a knot of at least two enemies; the Vine wants them still walking.
+    const pool=key==="dionysus" ? live.filter(u=>!u.target) : live;
+    if(pool.length<2) return null;
+    const best=pool.map(u=>({u,n:pool.filter(o=>hexDist(o.hex,u.hex)<=2).length})).sort((a,b)=>b.n-a.n)[0];
+    return best.n>=2 ? best.u.hex : null;
+  }
+  if(key==="hermes"){
+    // Theft takes up to 40 favour and 40 food: only when the pocket is worth picking.
+    return (S.favor>=40||S.food>=40) ? ownHex() : null;
+  }
+  if(key==="demeter"){
+    // Blight stops the enemy's food: cast while they are fielding an army that needs feeding.
+    return live.length>=3 ? ownHex() : null;
+  }
+  if(key==="hades"){
+    // Realm of the Dead raises EITHER side's fallen: two or more corpses in the window.
+    const hwindow=hasPassive(1,"corpseWindow")?90:60;
+    const corpses=S.deadHumans.filter(d=>elapsed()-d.at<hwindow).length;
+    return corpses>=2 ? ownHex() : null;
+  }
+  if(key==="artemis"){
+    // Actaeon's End turns the quarry's own side on it: an enemy with at least two enemies in reach.
+    if(live.length<3) return null;
+    const best=live.map(u=>({u,n:live.filter(o=>o!==u&&hexDist(o.hex,u.hex)<=2).length})).sort((a,b)=>b.n-a.n)[0];
+    return best.n>=2 ? best.u.hex : null;
+  }
+  if(key==="hephaestus"){
+    // The Forge hardens the next three trainees: cast whenever the last charge is spent.
+    return (S.forge[1]||0)<=0 ? ownHex() : null;
+  }
   return null;
 }
 /* ---------------- AI POWER TRIGGERS (roadmap 8.6, 2026-07-29) ----------------
@@ -5864,13 +5992,21 @@ function pickAiPowerHex(key){
    as dead code. */
 const AI_POWER_CLASS={
   horus:"aoe", ra:"aoe", longwang:"aoe", zhurong:"aoe",
+  itzpapalotl:"aoe", tlaloc:"aoe", apollo:"aoe",
   leigong:"control",
   bastet:"support", nuwa:"support",
-  sekhmet:"buff",
+  sekhmet:"buff", ares:"buff", athena:"buff",
   // situational -- gated purely by their own pickAiPowerHex heuristics:
   jade:"situational", sunwukong:"situational", gonggong:"situational",
   erlangshen:"situational", chang:"situational", osiris:"situational",
-  isis:"situational", anubis:"situational", xiwangmu:"situational"
+  isis:"situational", anubis:"situational", xiwangmu:"situational",
+  // Aztec (2026-11-16)
+  huitzilopochtli:"situational", quetzalcoatl:"situational", tezcatlipoca:"situational",
+  xipetotec:"situational", coatlicue:"situational", mictlantecuhtli:"situational",
+  coyolxauhqui:"situational", ehecatl:"situational",
+  // Greece (2026-11-16)
+  zeus:"situational", poseidon:"situational", hermes:"situational", demeter:"situational",
+  hades:"situational", dionysus:"situational", artemis:"situational", hephaestus:"situational"
 };
 const AI_CAST_GAP=2; // seconds; one global guard shared by every god
 const AI_SAVE_MAX=25; // seconds the AI will hold out banking for a siege unit before giving up (roadmap R6)
@@ -5941,11 +6077,18 @@ let aiWave=null, lastLane=null;
 const AI_PROFILES={
   balanced:{
     china:{trainMin:2.4, trainRand:2.2, godSched:{jade:35,sunwukong:70,nuwa:110,longwang:145}, pool:["ji","ji","xbow","xbow","dao","ram"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
-    egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,osiris:145}, pool:["spear","spear","archer","archer","axe","elephant"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
+    egypt:{trainMin:2.4, trainRand:2.2, godSched:{horus:35,bastet:70,isis:110,osiris:145}, pool:["spear","spear","archer","archer","axe","elephant"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
+    /* Aztec and Greek pacing (2026-11-16) copy the balanced numbers with each pantheon's own
+       default four on the schedule and its focus humans in the pool. Balance for "AI plays
+       Aztec/Greece" is a B1 pass, not assumed from the wiring. */
+    aztec:{trainMin:2.4, trainRand:2.2, godSched:{huitzilopochtli:35,quetzalcoatl:70,tezcatlipoca:110,mictlantecuhtli:145}, pool:["macuahuitl","macuahuitl","atlatl","atlatl","jaguar","tlequauitl"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3},
+    greek:{trainMin:2.4, trainRand:2.2, godSched:{artemis:35,hephaestus:70,dionysus:110,hades:145}, pool:["hoplite","hoplite","toxotes","toxotes","peltast","krios"], mythChance:0.55, heroAt:55, powerMin:4, powerRand:3}
   },
   aggressive:{
     china:{trainMin:1.8, trainRand:1.4, godSched:{sunwukong:30,jade:75,longwang:120,nuwa:150}, pool:["ji","ji","ji","dao","dao","xbow","ram"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
-    egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,osiris:120,isis:150}, pool:["spear","spear","spear","axe","axe","archer","elephant"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
+    egypt:{trainMin:1.8, trainRand:1.4, godSched:{bastet:30,horus:75,osiris:120,isis:150}, pool:["spear","spear","spear","axe","axe","archer","elephant"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
+    aztec:{trainMin:1.8, trainRand:1.4, godSched:{huitzilopochtli:30,tezcatlipoca:75,quetzalcoatl:120,mictlantecuhtli:150}, pool:["macuahuitl","macuahuitl","macuahuitl","jaguar","jaguar","atlatl","tlequauitl"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true},
+    greek:{trainMin:1.8, trainRand:1.4, godSched:{artemis:30,dionysus:75,hephaestus:120,hades:150}, pool:["hoplite","hoplite","hoplite","peltast","peltast","toxotes","krios"], mythChance:0.4, heroAt:40, powerMin:3, powerRand:2, rushCity:true}
   }
 };
 let aiProfile=AI_PROFILES.balanced.china;
@@ -6108,7 +6251,8 @@ function tickAI(dt){
   tickAiWave();
   for(const g of activeAiGods){
     const st=S.aiGods[g.key];
-    if(!st.unlocked && elapsed()>=aiProfile.godSched[g.key] && S.aiFavor>=godUnlockCost(g,1)){
+    const at=aiProfile.godSched[g.key]??60; // a god outside the profile's schedule (a widened pick) unlocks from 60s rather than never
+    if(!st.unlocked && elapsed()>=at && S.aiFavor>=godUnlockCost(g,1)){
       S.aiFavor-=godUnlockCost(g,1); st.unlocked=true;
       banner(`Enemy unlocked ${g.name}!`,"#ff9a7a");
       fx(bldCenter(getBld(1,"temple")),"ring","#c0392b");
@@ -9291,14 +9435,12 @@ function goToTerrainStep(){
   if(S.loadout.length!==4||S.heroPick.length!==2||S.godPick.length!==4){ hint("Pick exactly 4 warriors, 2 heroes, and 4 gods before continuing."); return; }
   S.setupStep="terrain"; renderSetupStep();
 }
-function setPlayerFaction(faction){
-  if(faction===S.playerFaction) return;
+function setPlayerFaction(faction,aiFaction){
+  if(faction===S.playerFaction&&(!aiFaction||aiFaction===S.aiFaction)) return;
   S.playerFaction=faction;
-  // Aztec is player-only (see 7.8's sign-off) — the AI still only ever plays Egypt or China,
-  // picked at random when the player picks Aztec; otherwise it's the simple binary complement.
-  if(faction==="egypt") S.aiFaction="china";
-  else if(faction==="china") S.aiFaction="egypt";
-  else S.aiFaction = Math.random()<0.5 ? "egypt" : "china";
+  // `aiFaction` pins the opponent (Legends levels, festivals, the setup tiles, tests); without
+  // it the default rule above applies.
+  S.aiFaction = aiFaction||defaultAiFaction(faction);
   // Keep valid defaults internally until the player enters the first selection page;
   // beginGodSelection() clears all three trays together so the visible choice flow
   // always starts empty without breaking non-UI match/simulation setup.
@@ -9313,7 +9455,8 @@ function setPlayerFaction(faction){
 function startMatch(keepTerrain){
   applyFactionUI();
   S.t=180; S.over=false;
-  S.food=0; S.favor=0; S.aiFood=0; S.aiFavor=0;
+  S.food=0; S.favor=economyFor(0).startFavor; S.aiFood=0; S.aiFavor=economyFor(1).startFavor; // 2026-11-16: opening favour bank
+  S.duskShown=false;
   S.units.length=0; S.effects.length=0; S.wards.length=0; S.deadHumans.length=0; S.training.length=0; S.powerFx.length=0;
   S.ptahCharge=[false,false];
   S.hunt=[null,null];
