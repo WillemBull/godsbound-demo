@@ -115,6 +115,7 @@
   .paintbtn,.factionbtn{font-size:15px;padding:5px 9px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
   #terrainpalette .paintbtn{width:100%;min-height:46px;padding:3px 6px;text-align:left;gap:7px;}
   .terrainhex{width:46px;min-width:46px;height:40px;object-fit:cover;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);pointer-events:none;}
+  .terrainhex-vec{display:inline-block;} /* P2: Deep Ocean / Volcano thumbnails are flat colour until art lands */
   .terraincopy{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px;pointer-events:none;}
   .terrainname{display:flex;align-items:center;justify-content:space-between;color:#f0dca7;font-size:11px;line-height:1;letter-spacing:.4px;text-transform:uppercase;}
   .terraindesc{color:#bcc3d1;font-size:9px;line-height:1.15;font-weight:500;}
@@ -463,6 +464,7 @@
             <button class="factionbtn" id="factionbtn-china" data-faction="china">⛩ Chinese</button>
             <button class="factionbtn" id="factionbtn-aztec" data-faction="aztec">🐆 Aztecs</button>
             <button class="factionbtn" id="factionbtn-greek" data-faction="greek">🏛 Greeks</button>
+            <button class="factionbtn" id="factionbtn-polynesian" data-faction="polynesian">🌊 Polynesians</button>
           </div>
           <div class="setupnav"><button id="factionback" class="setupback" onclick="goToDeckStep()">← Decks</button><button id="btnnextfaction" class="setupnext" onclick="beginGodSelection()">Next: Gods →</button></div>
         </div>
@@ -503,6 +505,8 @@
           <div id="terrainpalette">
             <button class="paintbtn" id="paintbtn-F" data-paint="F"><img class="terrainhex" id="paintbtn-F-img" src="assets/sprites/terrain_shared_forest.png" alt="Forest hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-F-name">Forest</span> <span class="pcount" id="paintbtn-F-count"></span></span><span class="terraindesc" id="paintbtn-F-desc">Slows movement by 25%. Units inside take 25% less ranged damage.</span></span></button>
             <button class="paintbtn" id="paintbtn-M" data-paint="M"><img class="terrainhex" src="assets/sprites/terrain_shared_mountain.png" alt="Mountain hex"><span class="terraincopy"><span class="terrainname">Mountain <span class="pcount" id="paintbtn-M-count"></span></span><span class="terraindesc">Impassable to ground units and blocks ranged line of sight.</span></span></button>
+            <button class="paintbtn" id="paintbtn-O" data-paint="O" style="display:none"><span class="terrainhex terrainhex-vec" style="background:#1d3f6e"></span><span class="terraincopy"><span class="terrainname">Deep Ocean <span class="pcount" id="paintbtn-O-count"></span></span><span class="terraindesc">Only your pantheon crosses it (at 70% speed); every other ground unit is stopped at its edge. Fighting in it is ordinary.</span></span></button>
+            <button class="paintbtn" id="paintbtn-V" data-paint="V" style="display:none"><span class="terrainhex terrainhex-vec" style="background:#3a2f2c"></span><span class="terraincopy"><span class="terrainname">Volcano <span class="pcount" id="paintbtn-V-count"></span></span><span class="terraindesc">Impassable to everyone and inert on its own. Only a god can wake it.</span></span></button>
             <button class="paintbtn" id="paintbtn-W" data-paint="W"><img id="paintbtn-W-img" class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-W-name">Water</span> <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc" id="paintbtn-W-desc">Slows movement by 50%. Units inside take 25% more damage.</span></span></button>
           </div>
           <div id="stepterrainbtns">
@@ -682,12 +686,39 @@ const TINFO = {
   P:{name:"Plains",   speed:1.0, fill:"#6f8a41", fill2:"#647d3a"},
   F:{name:"Forest",   speed:0.75,fill:"#46672f", fill2:"#3e5d2b", cover:0.8},
   M:{name:"Mountain", speed:0,   fill:"#7b766d", fill2:"#6e6961", block:true},
-  W:{name:"Water",    speed:0.5, fill:"#2f7391", fill2:"#2a6884"}
+  W:{name:"Water",    speed:0.5, fill:"#2f7391", fill2:"#2a6884"},
+  /* P2 (2026-11-16, Polynesian spec §3). Deep Ocean blocks everyone except a faction whose
+     `terrain.crossesOcean` is set, who cross it at 0.7 -- the one tile whose passability depends
+     on WHO is walking (passable/routeOK/findPath take an optional side for it). Flying units
+     cross it like everything else. Combat in it is ordinary. */
+  O:{name:"Deep Ocean", speed:0.7, fill:"#1d3f6e", fill2:"#183659", block:true, deep:true},
+  /* One per Polynesian half, placed in setup outside the budget, inert until a god wakes it. */
+  V:{name:"Volcano",  speed:0,   fill:"#3a2f2c", fill2:"#2e2523", block:true, volcano:true},
+  /* Lava only ever exists as a TEMPORARY overlay (floodedHexes, to:"L"); never painted, never saved. */
+  L:{name:"Lava",     speed:0,   fill:"#c2401a", fill2:"#9e3012", block:true, lava:true}
 };
 /* A deck saved before that change still carries D tiles. They load as Plains rather than
    being rejected, which is what they always were in play. */
 const TERRAIN_MIGRATE = ch => ch==="D" ? "P" : ch;
-const passable = (c,r,flying)=> flying ? true : !TINFO[terrain(c,r)].block;
+/* Does this side's pantheon cross Deep Ocean? Read from FACTIONS[f].terrain, declaratively, so the
+   movement code never names a faction. `side` undefined (setup validation, the AI's own layout
+   checks) means "a walker who cannot": that is what makes every structure reachable on foot. */
+function crossesOcean(side){
+  if(side===undefined||side===null) return false;
+  const f=FACTIONS[factionForSide(side)];
+  return !!(f&&f.terrain&&f.terrain.crossesOcean);
+}
+/* The walker is either a side number or a unit-like {side, def}. A unit whose def carries `climbs`
+   (P3, Tawhaki) also crosses Mountains and Deep Ocean -- never a Volcano or Lava. */
+const walkerSide = w => (w!==null && typeof w==="object") ? w.side : w;
+const walkerClimbs = w => !!(w!==null && typeof w==="object" && w.def && w.def.climbs);
+const passable = (c,r,flying,walker)=>{
+  if(flying) return true;
+  const ch=terrain(c,r), t=TINFO[ch];
+  if(!t.block) return true;
+  if(walkerClimbs(walker) && (ch==="M"||t.deep)) return true;
+  return !!t.deep && crossesOcean(walkerSide(walker));
+};
 
 /* ---------------- UNIT DATA ---------------- */
 const EG_UNITS = {
@@ -914,6 +945,45 @@ const GR_UNITS = {
 };
 
 /* ---------------- GODS ---------------- */
+/* POLYNESIA (P3, 2026-11-16 spec, approved). The voyagers: the only pantheon the sea belongs to.
+   Playable from P4 (faction picker); no AI until P5; `artPending` until P6 (vector fallbacks).
+   Every name, story and depiction here waits on the Hawaiian- and Maori-tradition consultants (P6).
+   Six humans, every one a distinct (delivery, target, rhythm) triple -- test_polynesia asserts it.
+   Departure from the spec: the spec gave the Ma'a slinger and the Leiomano raider the SAME triple
+   (single / everything / fast), so the Leiomano raider is the splash raider -- shark-tooth blades cut
+   wide. Polynesian fighters did not stand behind shields, so no unit here is "shielded". */
+const PO_UNITS = {
+  toa:      {name:"Toa",               emoji:"🪵", cost:{f:20}, cat:"human", armor:"light", dtype:"melee",   hp:115, dmg:13, as:1.0, range:1, speed:0.516375, size:1, train:1},
+  tao:      {name:"Tao Spearman",      emoji:"🔱", cost:{f:25}, cat:"human", armor:"light", dtype:"melee",   hp:100, dmg:18, as:0.7, range:2, speed:0.516375, size:1, train:1}, // the long thrusting spear: reach, slow
+  maa:      {name:"Maʻa Slinger",      emoji:"🪨", cost:{f:30}, cat:"human", armor:"light", dtype:"ranged",  hp:70,  dmg:8,  as:1.4, range:2, speed:0.516375, size:1, train:1}, // fast, light chip damage
+  leiomano: {name:"Leiomano Raider",   emoji:"🦈", cost:{f:35}, cat:"human", armor:"light", dtype:"melee",   hp:85,  dmg:12, as:1.3, range:1, speed:1.03275,  size:1, train:2, splash:0.5},
+  /* The war canoe's crew is the siege unit, and the one human that is AT HOME in the water:
+     `seafaring` = full speed in Water and Deep Ocean (read in moveToward), slow on land. */
+  waka:     {name:"Waka Crew",         emoji:"🛶", cost:{f:55}, cat:"human", armor:"heavy", dtype:"crushing",hp:280, dmg:20, as:0.6, range:1, speed:0.40,     size:2, train:2, siege:true, targetsBuildings:true, splash:0.5, seafaring:true},
+  tohunga:  {name:"Tohunga",           emoji:"🌿", cost:{f:45}, cat:"human", armor:"light", dtype:"ranged",  hp:65,  dmg:6,  as:0.7, range:2, speed:0.459,    size:1, train:1, heal:5},
+  /* Heroes: fame from supernatural deeds, none historical. Each ability is a GENERIC def flag.
+     Two halves wait for P4, which builds the systems they read: Tawhaki's powerResist (god-power
+     damage has no single hook yet) and Hi'iaka's lavaImmune (Eruption is P4's). */
+  maui:     {name:"Māui",              emoji:"🪝", cost:{f:40,v:10}, cat:"hero", armor:"heavy", dtype:"melee",  hp:280, dmg:22, as:1.0, range:1, speed:0.57375, size:1, train:2, hero:true, slowAuraRange:2, slowAuraMult:0.7},
+  tawhaki:  {name:"Tāwhaki",           emoji:"⚡", cost:{f:40,v:10}, cat:"hero", armor:"light", dtype:"melee",  hp:260, dmg:22, as:1.0, range:1, speed:0.6,     size:1, train:2, hero:true, climbs:true, powerResist:0.5},
+  hiiaka:   {name:"Hiʻiaka",           emoji:"🌺", cost:{f:40,v:10}, cat:"hero", armor:"light", dtype:"ranged", hp:220, dmg:14, as:0.9, range:2, speed:0.57375, size:1, train:2, hero:true, heal:8, lavaImmune:true},
+  /* Myths, one per god, on the shipped myth band. P4 (2026-11-19) gave each its signature as a
+     GENERIC def flag: forestArmor (Tipua), growsOnKill/growsOnKillCap (Aitu), mendsStructures
+     (Manaia), duskRange (Moon Hound), pullsEvery (He'e), spawnCount + duskDmg (Ponaturi, reusing
+     Ptah's multi-spawn plumbing), lavaTrail (Lava-born: an owner-scoped hazard, never a wall).
+     Names are placeholders where no single attested creature fits -- the consultant pass decides. */
+  taniwha:     {name:"Taniwha",           emoji:"🐉", cost:{v:70}, cat:"myth", armor:"heavy", dtype:"melee",   hp:340, dmg:26, as:0.9, range:1, speed:0.6,   size:2, train:2, ambushInWater:true, god:"tangaroa"},
+  hee:         {name:"Heʻe",              emoji:"🐙", cost:{v:60}, cat:"myth", armor:"heavy", dtype:"melee",   hp:300, dmg:22, as:1.0, range:2, speed:0.7,   size:2, train:2, ambushInWater:true, pullsEvery:3, god:"kanaloa"}, // range 2: its arms reach, then pull
+  tipua:       {name:"Tipua",             emoji:"🌳", cost:{v:75}, cat:"myth", armor:"heavy", dtype:"crushing",hp:360, dmg:26, as:0.8, range:1, speed:0.5,   size:2, train:2, forestArmor:0.25, god:"tane"},
+  aitu:        {name:"Aitu",              emoji:"👺", cost:{v:60}, cat:"myth", armor:"light", dtype:"melee",   hp:230, dmg:30, as:1.1, range:1, speed:0.86,  size:1, train:2, growsOnKill:0.1, growsOnKillCap:5, god:"tu"},
+  manaia:      {name:"Manaia",            emoji:"🪶", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",   hp:200, dmg:18, as:1.1, range:1, speed:0.95,  size:1, train:2, flying:true, mendsStructures:4, god:"rongo"},
+  moonhound:   {name:"Moon Hound",        emoji:"🐕", cost:{v:55}, cat:"myth", armor:"light", dtype:"ranged",  hp:200, dmg:22, as:1.0, range:2, speed:0.86,  size:1, train:2, duskRange:1, god:"hina"},
+  windchild:   {name:"Child of the Winds",emoji:"🌬️", cost:{v:45}, cat:"myth", armor:"light", dtype:"melee",   hp:160, dmg:20, as:1.3, range:1, speed:1.2,   size:1, train:2, flying:true, god:"tawhirimatea"},
+  ponaturi:    {name:"Ponaturi",          emoji:"🌑", cost:{v:55}, cat:"myth", armor:"light", dtype:"melee",   hp:90,  dmg:11, as:1.2, range:1, speed:0.86,  size:1, train:2, spawnCount:3, duskDmg:1.5, god:"hinenuitepo"}, // a swarm of three, stronger in the Dusk
+  lavaborn:    {name:"Lava-born",         emoji:"🌋", cost:{v:85}, cat:"myth", armor:"heavy", dtype:"crushing",hp:420, dmg:28, as:0.7, range:1, speed:0.42,  size:2, train:2, siege:true, lavaTrail:10, god:"pele"},
+  forestspirit:{name:"Forest Spirit",     emoji:"🍃", cost:{v:50}, cat:"myth", armor:"light", dtype:"ranged",  hp:190, dmg:18, as:1.1, range:2, speed:0.8,   size:1, train:2, god:"laka"} // placeholder: the spec named no creature for Laka
+};
+
 const EG_GODS = [
   // Realigned 2026-07-23 to match mythology_game_design.xlsx (direct chat request);
   // 5 new gods added (set, thoth, sekhmet, nephthys, ptah). See HANDOFF.md for the
@@ -968,6 +1038,12 @@ const AZ_GODS = [
    short enough for #hint's fixed two-line, 26px box on a phone. The full descriptions
    remain in the god-selection list; these are targeting reminders, not replacements. */
 const POWER_HINTS = {
+  // Polynesia (P3): powers are wired in P4
+  tangaroa:"Water near target becomes deep ocean.", kanaloa:"Drag enemies toward your ocean.",
+  tane:"Shove every unit away from target.", tu:"Your nearby units sprint.",
+  rongo:"Halt enemies; heal yours.", hina:"Open a sea-road toward the enemy.",
+  tawhirimatea:"Blow every enemy back.", hinenuitepo:"Seal enemies; raise one fallen.",
+  pele:"Wake your volcano.", laka:"Next 3 units arrive elsewhere.",
   horus:"70 damage across the target row.", bastet:"Make a building invulnerable.",
   osiris:"Revive up to 3 fallen warriors.", isis:"Lock an enemy god power.",
   ra:"Burns the target's column.", anubis:"Death chance = damage taken, min 20%.",
@@ -1114,7 +1190,64 @@ const GR_GODS = [
 ];
 
 /* Square, mobile-optimized god portraits shared by the setup picker and both battle UIs. */
+/* Polynesian gods (P3 data, P4 powers). Grammar: every power moves something or changes the sea;
+   Pele -- fire and land -- is the one earned exception. One primary tradition per god, no composites.
+   applyGodPower has no branch for these yet, so a cast returns false (P4). `awakenLine` is the one
+   sentence G1 shows at the awakening. */
+const PO_GODS = [
+  {key:"tangaroa", name:"Tangaroa", emoji:"🌊", cost:80,  power:"Rising Tide", pcost:40, cd:20, myth:"taniwha",
+   desc:"Every water tile within 3 hexes of target becomes deep ocean for 8s — your units cross it, theirs are stopped at its edge",
+   passiveKey:"seaLord", passive:"Sea-Lord: +0.05 favor per second for each water tile on your half",
+   awakenLine:"Tangaroa's children fled to the sea when the sky was pushed from the earth, and the sea has been his."},
+  {key:"kanaloa", name:"Kanaloa", emoji:"🐙", cost:120, power:"Undertow", pcost:40, cd:20, myth:"hee",
+   desc:"A current drags every enemy unit within 2 hexes of target one hex toward your nearest ocean tile",
+   passiveKey:"deepCompanion", passive:"Deep Companion: your units in deep ocean take 15% less damage",
+   awakenLine:"Kanaloa is lord of the deep sea, Kāne's companion, who travelled with him and opened springs of fresh water."},
+  {key:"tane", name:"Tāne", emoji:"🌳", cost:120, power:"Pushed the Sky", pcost:40, cd:20, myth:"tipua",
+   desc:"Every unit within 2 hexes of target, yours and theirs, is shoved one hex directly away from it",
+   passiveKey:"forestFather", passive:"Forest Father: your units move at full speed in forest",
+   awakenLine:"Tāne lay on his back and pushed with his feet until sky and earth were parted and light came in."},
+  {key:"tu", name:"Tū", emoji:"⚔️", cost:150, power:"War Stride", pcost:50, cd:25, myth:"aitu",
+   desc:"Your units within 2 hexes of target move at double speed for 5s and ignore terrain penalties",
+   passiveKey:"eaterOfBrothers", passive:"Eater of Brothers: your units deal 10% more damage to myth units",
+   awakenLine:"When his brothers would not stand against the wind, Tū alone fought on, and overcame their children."},
+  {key:"rongo", name:"Rongo", emoji:"🍠", cost:120, power:"Harvest Calm", pcost:40, cd:20, myth:"manaia",
+   desc:"Enemy units within 2 hexes of target lose their route and stop for 3s; your units there heal 15%",
+   passiveKey:"peaceOfRongo", passive:"Peace of Rongo: food +10%",
+   awakenLine:"Rongo keeps the kūmara. Peace, and the planted field, are his."},
+  {key:"hina", name:"Hina", emoji:"🌕", cost:120, power:"Moon Road", pcost:40, cd:20, myth:"moonhound",
+   desc:"A straight line of 5 hexes from target toward the enemy becomes a sea-road for 6s that only your units travel, at 1.5x speed",
+   passiveKey:"hinasLight", passive:"Hina's Light: during Dusk your units see concealed enemies",
+   awakenLine:"Hina beat tapa until she tired of the world, and climbed to the moon, where she beats it still."},
+  {key:"tawhirimatea", name:"Tāwhirimātea", emoji:"🌪️", cost:150, power:"Storm Wind", pcost:50, cd:25, myth:"windchild",
+   desc:"Every enemy unit on the board is blown one hex toward its own half; flying units two",
+   passiveKey:"lordOfWinds", passive:"Lord of Winds: your flying units move 20% faster",
+   awakenLine:"Tāwhirimātea alone sided with the sky, and sends his children, the winds, against his brothers still."},
+  {key:"hinenuitepo", name:"Hine-nui-te-pō", emoji:"🌑", cost:150, power:"Gate of Night", pcost:50, cd:25, myth:"ponaturi",
+   desc:"Enemy units within 2 hexes of target cannot be healed, resurrected or buffed for 10s; one of your fallen from the last 60s rises at your nearest structure",
+   passiveKey:"keeperOfTheDead", passive:"Keeper of the Dead: your fallen pay no favor to the enemy",
+   awakenLine:"Hine-tītama fled into the night when she learned her husband Tāne was also her father; as Hine-nui-te-pō she waits there for all her children."},
+  {key:"pele", name:"Pele", emoji:"🌋", cost:200, power:"Eruption", pcost:60, cd:30, myth:"lavaborn", requires:"volcano",
+   desc:"Your volcano wakes: 90 damage to every unit within 2 hexes of it and lava on every open tile within 1 for 8s",
+   passiveKey:"fireBorn", passive:"Fire-Born: your units next to a volcano or lava deal 25% more damage",
+   awakenLine:"Pele crossed the sea by canoe, digging with her staff for a home, until she found the fire pit where she lives."},
+  {key:"laka", name:"Laka", emoji:"🌸", cost:80,  power:"Hula of Arrival", pcost:40, cd:20, myth:"forestspirit",
+   desc:"Your next 3 trained units arrive at the structure nearest to target instead of their own",
+   passiveKey:"patronOfDance", passive:"Patron of the Dance: your units train 15% faster",
+   awakenLine:"Laka gave the people the hula; the dance is a prayer, and the forest is her body."}
+];
+
 const GOD_PORTRAITS = {
+  laka:"assets/sprites/god_laka.jpg",
+  pele:"assets/sprites/god_pele.jpg",
+  hinenuitepo:"assets/sprites/god_hinenuitepo.jpg",
+  tawhirimatea:"assets/sprites/god_tawhirimatea.jpg",
+  hina:"assets/sprites/god_hina.jpg",
+  rongo:"assets/sprites/god_rongo.jpg",
+  tu:"assets/sprites/god_tu.jpg",
+  tane:"assets/sprites/god_tane.jpg",
+  kanaloa:"assets/sprites/god_kanaloa.jpg",
+  tangaroa:"assets/sprites/god_tangaroa.jpg",
   horus:"assets/sprites/god_horus.jpg", bastet:"assets/sprites/god_bastet.jpg",
   osiris:"assets/sprites/god_osiris.jpg", isis:"assets/sprites/god_isis.jpg",
   ra:"assets/sprites/god_ra.jpg", anubis:"assets/sprites/god_anubis.jpg",
@@ -1153,6 +1286,18 @@ const godPortrait=g=>GOD_PORTRAITS[g.key]
    wired into FACTIONS yet, so they have no entry here either -- add one if/when that
    pantheon ships. Keyed the same flat, cross-faction way GOD_PORTRAITS already is. */
 const GOD_LEGEND={
+  /* Polynesia (P3). Concise and conservative; each names its primary tradition. All of it waits
+     on the consultant review (P6) before it ships. */
+  tangaroa:"In the Māori account, Tangaroa is one of the children of Ranginui, the sky, and Papatūānuku, the earth. When Tāne forced their parents apart, Tāwhirimātea attacked his brothers with the winds, and Tangaroa's children fled into the sea, where he became its lord. Across Polynesia the same god is known as Tangaloa, Taʻaroa and Kanaloa, with stories that differ from island to island. Rising Tide is the sea answering its lord.",
+  kanaloa:"In Hawaiian tradition Kanaloa is god of the deep ocean and of voyaging, the companion of Kāne. The two are remembered travelling together, and where Kāne thrust his staff into the ground, fresh water sprang up for them. Kanaloa is a cognate of the Māori Tangaroa; here he is the Hawaiian god, and the Undertow is the deep pulling at whatever stands near it.",
+  tane:"In the Māori account the children of Ranginui and Papatūānuku lived cramped in darkness between their parents. Tāne, god of the forest and of birds, lay on his back and pushed with his feet until sky and earth were parted and light entered the world. Pushed the Sky is that single act: whatever stands near is forced apart.",
+  tu:"Tūmatauenga is the Māori god of war and of people. When Tāwhirimātea attacked his brothers with storms, only Tū stood against him. Angry that his brothers had not helped, Tū turned on their children — the fish, the birds, the plants — and so people may hunt, fish and harvest them. War Stride is his readiness to go where the fighting is.",
+  rongo:"Rongo, Rongo-mā-Tāne in Māori tradition, is god of cultivated food — above all the kūmara — and of peace. Where Tū is war, Rongo is the planted field and the agreement that ends a fight. Harvest Calm halts the enemy's march and mends your own.",
+  hina:"Hina is the woman in the moon across much of Polynesia. In a Hawaiian telling she wearied of beating tapa cloth beneath the hot sun and of the work of the house, and climbed to the moon, where on clear nights she can still be seen at her tapa. Moon Road is a path of moonlight across the water.",
+  tawhirimatea:"Tāwhirimātea, Māori god of the winds and storms, was the one child who refused to separate the sky and the earth. When Tāne pushed them apart, Tāwhirimātea went up to his father and made war on his brothers with his children, the winds and the clouds, and he makes it still. Storm Wind drives every enemy back toward its own shore.",
+  hinenuitepo:"In the Māori account Hine-tītama was the daughter of Tāne. When she learned that her husband was also her father, she fled to the underworld and became Hine-nui-te-pō, the great woman of the night, who receives all her descendants at death. Māui later tried to win immortality by passing through her body while she slept, and failed. Gate of Night closes the way back for the enemy.",
+  pele:"In Hawaiian tradition Pele is the goddess of fire and volcanoes. She came across the sea by canoe from Kahiki with her family, digging into the islands with her staff for a home where her fire would not be quenched by her sister, the sea goddess Nāmaka, until she found the crater where she lives. Eruption wakes the mountain she lives in.",
+  laka:"Laka is the Hawaiian goddess of the hula and of the forest. The hula is offered to her, and the plants gathered from the uplands for the hula altar are her body. Hula of Arrival is the dance that brings the people where they are needed.",
   zeus:"Zeus is the king of the Olympian gods, ruler of the sky and lightning, enforcer of divine law. His myths are filled with thunderbolt judgment delivered from above — the most recognizable divine weapon in all of mythology. He is also a god of transformation, becoming a swan, a bull, an eagle, and a shower of gold in various myths. Most significantly, he is the enforcer of xenia — the sacred law of hospitality — and punishes those who violate the relationship between host and guest with divine retribution. Thunderbolt is mythologically irreplaceable as his signature power. The Eagle is his sacred animal, his messenger, and the instrument that delivered Prometheus's daily punishment — the embodiment of Zeus's swift, relentless will.",
   poseidon:"Poseidon is the god of the sea, earthquakes, and horses — an unusual combination that reflects his ancient pre-Olympian origins as a chthonic earth deity. He strikes his trident to cause earthquakes and tsunamis, creates horses from seafoam, and sends sea monsters to terrorize coastal kingdoms. He flooded entire regions when he lost divine contests — most famously losing Athens to Athena when the city's citizens preferred her gift of the olive tree over his salt spring. Earthquake is specifically anti-structure because Poseidon's power cracks the earth and topples what mortals build — his is not the power of combat but of geological destruction. The Hippocampus embodies his dual domain over sea and horse.",
   athena:"Athena is the goddess of wisdom and strategic warfare — not bloodlust or chaos, but calculated military thinking and disciplined excellence. She enables rather than destroys directly: giving Perseus a mirrored shield to defeat Medusa, giving Bellerophon the bridle for Pegasus, guiding Odysseus through every crisis of his decade-long journey home. She is the divine patron of heroes who think as well as fight. The Aegis is the divine shield originally belonging to Zeus, repurposed by Athena as protective enabling power. The Griffin is sacred to Athena as the guardian of wisdom and hidden treasure — watchful, strategic, positioned to protect rather than to charge blindly into combat.",
@@ -1200,6 +1345,10 @@ const GOD_LEGEND={
 /* Player-facing stories for the nine playable heroes. These deliberately present
    the legends directly, without scholarly discussion of historicity or sourcing. */
 const HERO_LEGEND={
+  /* Polynesia (P3); consultant review in P6. */
+  maui:"Māui, the demigod trickster, is known across Polynesia, and his deeds differ from island to island. He was born early and cast into the sea by his mother, then raised by the sky before he found his family again. The sun moved so fast across the sky that there was no time to work or to let food dry, so Māui and his brothers took ropes to the pit where it rose, snared it, and beat it until it agreed to go slowly. With a fishhook made from his grandmother's jawbone he hauled land up out of the sea. In the end he tried to win immortality for all people by passing through the body of Hine-nui-te-pō while she slept; a bird laughed, she woke, and he died. Snared Sun is the sun slowed: enemies near him move slower.",
+  tawhaki:"Tāwhaki is a Māori hero of great beauty and strength, a figure of thunder and lightning. When his father was killed and his bones carried off, Tāwhaki went to avenge him. Later, seeking his wife Tangotango, who had returned to the heavens, he climbed into the sky by a vine, passing level after level of the heavens, a journey that set him apart from every other mortal. Climbed the Vine is that ascent: no mountain or sea stops him.",
+  hiiaka:"Hiʻiaka is the youngest and most beloved sister of Pele in Hawaiian tradition, often said to have been carried from Kahiki as an egg. When Pele, dreaming, fell in love with the chief Lohiʻau, she sent Hiʻiaka on the long journey across the islands to fetch him. On the way Hiʻiaka fought monsters, healed the sick and brought Lohiʻau back from death, and she is remembered as a healer and a goddess of the forest and of hula. The Long Journey is that road: those she passes are healed.",
   houyi:"Hou Yi is China's supreme mythological archer. Ten solar birds—children of a heavenly ruler—were supposed to cross the sky one at a time. One day, all ten appeared together. Their combined heat scorched the earth, dried the rivers, destroyed crops, and threatened humanity with extinction. Yi climbed to a high vantage point and shot nine suns from the sky, leaving one to illuminate and warm the world. In some tellings, the final arrow was taken from him so that his anger would not plunge creation into darkness. Yi subsequently travelled across the suffering world, destroying creatures that preyed upon humanity. His enemies included a giant serpent, a monstrous boar, a many-headed water beast, and other horrors infesting the wilderness. Wherever ordinary weapons and warriors failed, Yi's supernatural archery restored safety. Although he saved humanity, shooting the celestial ruler's children brought consequences. Yi and his wife Chang'e lost their place in Heaven and became mortal. Hoping to reverse their fate, Yi acquired an elixir of immortality. Chang'e ultimately consumed it and ascended alone to the moon, leaving Yi behind. Hou Yi's legend is defined by an extraordinary act of defiance: when the powers of Heaven endangered the mortal world, he raised his bow against them and restored balance beneath a single sun.",
   nezha:"Nezha is a miraculous child warrior. His mother carried him for an unnaturally long pregnancy before giving birth to a ball of flesh. When his father cut it open, Nezha emerged as a fully formed child. A divine master recognized his power and armed him with magical weapons, especially the Universe Ring and Armillary Sash. While still young, Nezha fought beings associated with the Eastern Sea. After killing Ao Bing, a son of the Dragon King, he brought the Dragon Kings' anger upon his family and community. To end their threatened retaliation, Nezha took responsibility in the most extreme way: he surrendered his flesh and bones to repay the life his parents had given him and killed himself. His spirit survived, however. His teacher eventually constructed a new body for him from lotus roots and leaves, resurrecting Nezha in a stronger supernatural form. The reborn Nezha gained a fire-tipped spear and Wind-Fire Wheels that allowed him to race through the sky. He became a formidable divine warrior, fighting demons, dragons, and sometimes his own father before they were reconciled. Nezha's story concerns responsibility, rebellion against authority, voluntary death, and the creation of a new identity independent of his original body.",
   liji:"Li Ji lived near a mountain cave inhabited by a gigantic serpent. The creature repeatedly demanded that nearby communities sacrifice young girls to it. Officials and ritual specialists failed to destroy the monster, so families were bribed into surrendering unwanted daughters. Nine girls had already been devoured when another sacrifice was demanded. Li Ji, the youngest daughter of a large and impoverished family, volunteered despite her parents' objections. She requested a sharp sword and a skilled hunting dog, then prepared rice cakes sweetened with malt. At the serpent's cave, she placed the cakes outside as bait. When the creature emerged and became distracted by the food, Li Ji released the dog to attack it. She followed with her sword, striking repeatedly until the giant serpent was dead. Entering its cave, Li Ji discovered the remains of the nine previous victims. Rather than celebrating herself, she lamented that they had died because they lacked the means to resist. Her victory ended the sacrifices and liberated the surrounding region. The local ruler rewarded Li Ji and elevated her family. Unlike many champions, Li Ji possesses no divine ancestry, immortality, or magical weapon. She triumphs through preparation, courage, clever bait, an ordinary blade, and cooperation with her dog.",
@@ -1279,7 +1428,17 @@ const FACTIONS = {
      not an oversight. */
   greek: { units:GR_UNITS, allGods:GR_GODS, name:"Greeks", label:"🏛 Greek",
            aiTitle:"BASILEUS AI", defaultLoadout:["hoplite","toxotes","peltast","krios"], defaultHeroes:["heracles","atalanta"],
-           defaultGodPick:["artemis","hades","dionysus","hephaestus"] }
+           defaultGodPick:["artemis","hades","dionysus","hephaestus"] },
+  /* POLYNESIA (P3/P4, 2026-11-19). Playable since P4 (on the faction picker); no aiTitle until P5, so
+     the opponent draw never picks it. `artPending` until P6: its units draw vector fallbacks and the
+     approved-art invariants skip it. The economy is the VOYAGE:
+     favour for every hex a unit steps into (x2 in deep ocean, x1.5 on the enemy half), paid from
+     enterHex(). The terrain block is what makes Deep Ocean theirs (P2). */
+  polynesian: { units:PO_UNITS, allGods:PO_GODS, name:"Polynesians", label:"🌊 Polynesian", artPending:true,
+           economy:{ favorBase:2.0, favorPerStep:0.6, oceanStepMult:2, enemyHalfStepMult:1.5 },
+           terrain:{ crossesOcean:true, budget:{F:5,O:6,W:5,V:1} },
+           defaultLoadout:["toa","tao","maa","waka"], defaultHeroes:["maui","hiiaka"],
+           defaultGodPick:["tangaroa","hina","tu","pele"] }
            /* 2026-08-21: Tlaloc swapped out for Mictlantecuhtli. The Weeping Rain was the one
               straight cross-faction duplicate in the set -- Long Wang's Dragon Rain floods a
               BIGGER zone and deals 40 damage on top, so Tlaloc was a strictly smaller version
@@ -1319,7 +1478,10 @@ const ECONOMY_DEFAULT={
   startFavor:50,     // favour both sides hold at 0:00 (cheapest god costs 80)
   foodMult:1,        // multiplies City food income (Egypt, China 1.10)
   favorMult:1,       // multiplies the favour base (Egypt 1.10)
-  favorPerDeath:0    // favour paid to this side for ANY unit dying anywhere on the board
+  favorPerDeath:0,   // favour paid to this side for ANY unit dying anywhere on the board
+  favorPerStep:0,    // P3: favour for every hex one of this side's units steps into (the voyage)
+  oceanStepMult:1,   // ...multiplied when the hex is Deep Ocean
+  enemyHalfStepMult:1 // ...and when it is on the enemy half (both can apply)
 };
 /* DUSK (2026-11-16, Willem's name): the last minute of a match. The gods stop watching and
    intervene -- favour income doubles for both sides. It is the tension curve's final act,
@@ -1410,6 +1572,15 @@ const STRUCTURE_LAYOUTS={
     {id:"athens", type:"city",name:"Athens", emoji:"🏛",shape:"pair",at:[6,2]},
     {id:"sparta", type:"city",name:"Sparta", emoji:"🏛",shape:"pair",at:[4,4]},
     {id:"corinth",type:"city",name:"Corinth",emoji:"🏛",shape:"pair",at:[1,4]}
+  ],
+  /* Polynesia (P3): four villages on four islands -- the most spread-out layout in the game (8
+     hexes). Names are TYPES, never real places: a pa is a fortified village, a marae the sacred
+     meeting ground. 1680 / 8 hexes = 210 per hex, 420 per structure. */
+  polynesian:[
+    {id:"pa1",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[1,4]},
+    {id:"pa2",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[7,4]},
+    {id:"pa3",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[4,2]},
+    {id:"marae",type:"temple",name:"Marae", emoji:"🗿",shape:"pair",at:[4,5]}
   ]
 };
 /* A def's shape for a side: `aiShape` (if any) on side 1. A built structure stores its resolved
@@ -1573,7 +1744,8 @@ function pickAiLayout(){
     layout=makeAiLayout(S.aiFaction,true);
     applyAiLayout(layout);
     aiPendingTerrain=generateAiTerrain();
-    if(["F","M","W"].every(k=>aiPendingTerrain[k].length===TERRAIN_BUDGET[k])) break;
+    const b=terrainBudgetFor(S.aiFaction);
+    if(Object.keys(b).every(k=>(aiPendingTerrain[k]||[]).length===b[k])) break;
   }
   return layout;
 }
@@ -1610,9 +1782,10 @@ function withAiLayout(layout,fn){
   try{return fn();}finally{TMAP=oldMap;S.setupStep=oldSetup;aiHalfTerrain=oldHalf;}
 }
 function aiTerrainLayoutValid(layout){
-  if(["F","M","W"].some(t=>layout[t].length!==TERRAIN_BUDGET[t])) return false;
+  const budget=terrainBudgetFor(S.aiFaction);
+  if(Object.keys(budget).some(t=>(layout[t]||[]).length!==budget[t])) return false;
   const blocked=aiTerrainBlockedHexes(), used=new Set();
-  for(const type of ["F","M","W"]) for(const [c,r] of layout[type]){
+  for(const type of Object.keys(budget)) for(const [c,r] of layout[type]){
     const k=c+","+r;
     if(r===0||r<0||r>=AI_ROWS||c<0||c>=COLS||blocked.has(k)||used.has(k)) return false;
     used.add(k);
@@ -1628,10 +1801,22 @@ function aiTerrainLayoutValid(layout){
 function generateAiTerrain(validator=aiTerrainLayoutValid){
   const blocked=aiTerrainBlockedHexes();
   const legal=(c,r,used)=>r>0&&r<AI_ROWS&&c>=0&&c<COLS&&!blocked.has(c+","+r)&&!used.has(c+","+r);
+  /* P2: the AI's pantheon decides the budget. A pantheon with Deep Ocean instead of Mountains puts
+     its ocean where the mountains would have gone (the same lane-constricting scores); a Volcano
+     goes on the back row, clear of its structures, before anything else is placed. */
+  const BUDGET=terrainBudgetFor(S.aiFaction);
+  const blockKey=("O" in BUDGET)?"O":"M";
   for(let attempt=0;attempt<25;attempt++){
     const openLane=Math.floor(Math.random()*AI_LANES.length);
     const constricted=[0,1,2].filter(i=>i!==openLane);
-    const layout={F:[],M:[],W:[]}, used=new Set();
+    const layout={}, used=new Set();
+    for(const k of Object.keys(BUDGET)) layout[k]=[];
+    if(BUDGET.V){
+      const vPool=[]; for(let c=2;c<=6;c++) if(legal(c,1,used)) vPool.push([c,1]);
+      if(!vPool.length) continue;
+      const v=vPool[Math.floor(Math.random()*vPool.length)];
+      layout.V.push(v); used.add(v.join(","));
+    }
 
     const mountainPool=[];
     for(let r=2;r<=4;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)){
@@ -1639,8 +1824,8 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
       mountainPool.push({h:[c,r],score:(constricted.includes(lane)?20:0)+(r===3?3:0)+Math.random()*8});
     }
     mountainPool.sort((a,b)=>b.score-a.score);
-    for(const {h} of mountainPool.slice(0,TERRAIN_BUDGET.M)){layout.M.push(h);used.add(h.join(","));}
-    if(layout.M.length!==TERRAIN_BUDGET.M) continue;
+    for(const {h} of mountainPool.slice(0,BUDGET[blockKey])){layout[blockKey].push(h);used.add(h.join(","));}
+    if(layout[blockKey].length!==BUDGET[blockKey]) continue;
 
     if(S.aiFaction==="egypt"){
       const starts=[];
@@ -1649,7 +1834,7 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
       starts.sort((a,b)=>b.score-a.score);
       if(!starts.length) continue;
       layout.W.push(starts[0].h); used.add(starts[0].h.join(","));
-      while(layout.W.length<TERRAIN_BUDGET.W){
+      while(layout.W.length<BUDGET.W){
         const next=shuffled(layout.W.flatMap(([c,r])=>neighbors(c,r)))
           .filter(([c,r])=>legal(c,r,used)&&aiWaterLineOK(c,r,layout.W))
           .sort((a,b)=>(AI_LANES[openLane].includes(b[0])?1:0)-(AI_LANES[openLane].includes(a[0])?1:0))[0];
@@ -1673,20 +1858,20 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
       for(let r=1;r<AI_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)&&!protectedRoutes.has(c+","+r))
         waterPool.push({h:[c,r],score:(r>=4?15:0)+(AI_LANES[openLane].includes(c)?12:0)+Math.random()*8});
       waterPool.sort((a,b)=>b.score-a.score);
-      for(const {h} of waterPool.slice(0,TERRAIN_BUDGET.W)){layout.W.push(h);used.add(h.join(","));}
+      for(const {h} of waterPool.slice(0,BUDGET.W)){layout.W.push(h);used.add(h.join(","));}
     }
-    if(layout.W.length!==TERRAIN_BUDGET.W) continue;
+    if(layout.W.length!==BUDGET.W) continue;
 
     const forestPool=[];
     for(let r=1;r<AI_ROWS;r++) for(let c=0;c<COLS;c++) if(legal(c,r,used)){
       const nearBld=buildings.filter(b=>b.side===1).some(b=>b.hexes.some(h=>hexDist([c,r],h)<=2));
-      const nearM=layout.M.some(h=>hexDist([c,r],h)===1);
+      const nearM=layout[blockKey].some(h=>hexDist([c,r],h)===1);
       const chinaFunnel=S.aiFaction==="china"&&AI_LANES[openLane].includes(c);
       forestPool.push({h:[c,r],score:(nearBld?12:0)+(nearM?8:0)+(chinaFunnel?10:0)+Math.random()*7});
     }
     forestPool.sort((a,b)=>b.score-a.score);
-    for(const {h} of forestPool.slice(0,TERRAIN_BUDGET.F)){layout.F.push(h);used.add(h.join(","));}
-    if(layout.F.length===TERRAIN_BUDGET.F&&validator(layout)) return layout;
+    for(const {h} of forestPool.slice(0,BUDGET.F)){layout.F.push(h);used.add(h.join(","));}
+    if(layout.F.length===BUDGET.F&&validator(layout)) return layout;
   }
   /* 8.7: the hardcoded fallback was authored against layout 0 only -- several of its
      hexes ([7,1], [6,1]) sit on top of the city/temple in layouts 1 and 2. Drop anything
@@ -1697,7 +1882,11 @@ function generateAiTerrain(validator=aiTerrainLayoutValid){
      over-prune this hand-authored fallback. */
   const fbOnBuilding=new Set(buildings.filter(b=>b.side===1).flatMap(b=>b.hexes.map(h=>h.join(","))));
   const fbClean=t=>AI_TERRAIN_LAYOUT[t].filter(h=>!fbOnBuilding.has(h.join(","))).map(h=>[...h]);
-  return {F:fbClean("F"),M:fbClean("M"),W:fbClean("W")};
+  const fb={F:fbClean("F")};
+  fb[blockKey]=fbClean("M"); // a voyager's fallback puts its ocean where the mountains were (F, M|O, W: the fixed layout's own key order)
+  fb.W=fbClean("W");
+  if(BUDGET.V){ const v=[2,3,4,5,6].map(c=>[c,1]).find(h=>!fbOnBuilding.has(h.join(","))&&!fb.F.concat(fb.W,fb[blockKey]).some(x=>x[0]===h[0]&&x[1]===h[1])); fb.V=v?[v]:[]; }
+  return fb;
 }
 function freshAiHalfTerrain(){
   const t=aiPendingTerrain||generateAiTerrain();
@@ -1771,7 +1960,7 @@ function canPlaceBuilding(b, hexes){
   return true;
 }
 
-const routeOK = (c,r,flying)=> inBounds(c,r) && passable(c,r,flying) && !bldAt(c,r);
+const routeOK = (c,r,flying,side)=> inBounds(c,r) && passable(c,r,flying,side) && !bldAt(c,r);
 
 /* ---------------- GAME STATE ---------------- */
 const elapsed = ()=>180-S.t;
@@ -1801,6 +1990,7 @@ const S = {
                     // plus an optional per-hex damage tick, all reverted/applied in tickFloods()
   blightUntil:[0,0], // Demeter's Blight: that side generates no food while this stands
   forge:[0,0], // Hephaestus's The Forge: how many more units that side reinforces
+  hula:[null,null], // P4 Laka's Hula of Arrival: {bldId,left} -- the next units that side trains arrive at that structure
   hunt:[null,null], // Artemis's The Hunt: {id,until} per side -- the quarry that side has marked
   trueSightUntil:[0,0], // Erlang Shen's "Third Eye": blocks a side from casting Nephthys-style invisibility for a duration
   veilUntil:0 // Nephthys's Twilight Veil: no-man's land is dark until this time. ONE number, not per-side --
@@ -1869,10 +2059,11 @@ function normalizeDeckPreset(raw,festivalKey){
   if(!validPick(raw.loadout,4,humans)||!validPick(raw.heroes,2,heroes)||!validPick(raw.gods,4,gods)) return null;
   if(!Array.isArray(raw.terrain)||raw.terrain.length!==PLAYER_ROWS) return null;
   const terrain=raw.terrain.map(row=>(typeof row==="string"?[...row]:Array.isArray(row)?[...row]:[]).map(TERRAIN_MIGRATE));
-  if(terrain.some(row=>row.length!==COLS||row.some(ch=>!["P","F","M","W"].includes(ch)))) return null;
-  const counts={F:0,M:0,W:0};
+  const budget=terrainBudgetFor(faction);
+  if(terrain.some(row=>row.length!==COLS||row.some(ch=>ch!=="P"&&!(ch in budget)))) return null; // a code this pantheon cannot paint (Lava included) is rejected
+  const counts={}; for(const k of Object.keys(budget)) counts[k]=0;
   terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
-  if(Object.keys(counts).some(k=>counts[k]>TERRAIN_BUDGET[k])) return null;
+  if(Object.keys(counts).some(k=>counts[k]>budget[k])) return null;
   const buildings=normalizePresetStructures(faction,raw.buildings,terrain);
   if(!buildings) return null;
   return {faction,loadout:[...raw.loadout],heroes:[...raw.heroes],gods:[...raw.gods],terrain,buildings};
@@ -1922,8 +2113,8 @@ function applyDeckPreset(slot,useDefault=false){
   S.loadout=[...preset.loadout]; S.heroPick=[...preset.heroes]; S.godPick=[...preset.gods];
   playerHalf.terrain=preset.terrain.map(row=>[...row]);
   setPlayerStructures(preset.faction,preset.buildings);
-  S.paintMap={};S.painted={F:0,M:0,W:0};
-  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
+  S.paintMap={};S.painted=paintedZero();
+  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in S.painted){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
   persistDeckPresets();
   return true;
 }
@@ -1987,7 +2178,7 @@ function mandateBoost(side){
 // Long Wang: Lord of the Four Seas -- water tiles on your OWN half generate a small
 // amount of extra favor per second, scaling with how many you have.
 function waterTileBonus(side){
-  if(!hasPassive(side,"lordOfFourSeas")) return 0;
+  if(!hasPassive(side,"lordOfFourSeas")&&!hasPassive(side,"seaLord")) return 0; // Long Wang / Tangaroa's Sea-Lord: the same rule
   /* 2026-09-16 (Willem): the rows are DERIVED from the board layout. The old literal
      [6..11] predated NEUTRAL_ROWS 0 -> 1, so it paid for water in no-man's land and ignored
      the player's back row. */
@@ -2019,10 +2210,10 @@ function tickEconomy(dt){
   const pMorning = hasPassive(0,"morningStar") ? MORNING_STAR_BONUS : 0;
   const aMorning = hasPassive(1,"morningStar") ? MORNING_STAR_BONUS : 0;
   if(elapsed()<(S.blightUntil[0]||0)) { /* Demeter's Blight: nothing grows */ } else
-  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(hasPassive(0,"cityFoodBoost")?6:5)*pFood*(1+pMorning)*(1+mandateBoost(0)));
+  S.food  = Math.min(S.FOOD_CAP,  S.food  + dt*FOOD_RATE_MULT*(hasPassive(0,"cityFoodBoost")?6:5)*pFood*(1+pMorning)*(1+mandateBoost(0))*(hasPassive(0,"peaceOfRongo")?1.1:1)); // Rongo: Peace of Rongo
   S.favor = Math.min(S.FAVOR_CAP, S.favor + dt*favorRate(0));
   if(elapsed()<(S.blightUntil[1]||0)) { /* Demeter's Blight */ } else
-  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(hasPassive(1,"cityFoodBoost")?6:5)*aFood*(1+aMorning)*(1+mandateBoost(1)));
+  S.aiFood  = Math.min(S.FOOD_CAP,  S.aiFood  + dt*FOOD_RATE_MULT*(hasPassive(1,"cityFoodBoost")?6:5)*aFood*(1+aMorning)*(1+mandateBoost(1))*(hasPassive(1,"peaceOfRongo")?1.1:1));
   S.aiFavor = Math.min(S.FAVOR_CAP, S.aiFavor + dt*favorRate(1));
 }
 
@@ -2054,7 +2245,7 @@ function hexLoad(c,r,except,flying){
 }
 
 /* ---------------- AI PATHFINDING ---------------- */
-function findPath(start, goals, flying){
+function findPath(start, goals, flying, side){
   const goalSet = new Set(goals.map(g=>g[0]+","+g[1]));
   const dist={}, prev={}, key=(c,r)=>c+","+r;
   const pq=[[0,start]];
@@ -2069,7 +2260,7 @@ function findPath(start, goals, flying){
       return path;
     }
     for(const n of neighbors(h[0],h[1])){
-      if(!routeOK(n[0],n[1],flying)) continue;
+      if(!routeOK(n[0],n[1],flying,side)) continue;
       const sp = flying?1:TINFO[terrain(n[0],n[1])].speed;
       const nd = d + 1/Math.max(sp,0.3) + Math.random()*0.05;
       const nk = key(n[0],n[1]);
@@ -2078,11 +2269,11 @@ function findPath(start, goals, flying){
   }
   return null;
 }
-function bldAdjacent(b, flying){
+function bldAdjacent(b, flying, side){
   const out=[], seen=new Set();
   for(const h of b.hexes) for(const n of neighbors(h[0],h[1])){
     const k=n[0]+","+n[1];
-    if(!seen.has(k) && routeOK(n[0],n[1],flying)){ seen.add(k); out.push(n); }
+    if(!seen.has(k) && routeOK(n[0],n[1],flying,side)){ seen.add(k); out.push(n); }
   }
   return out;
 }
@@ -2101,7 +2292,16 @@ function onLakeTexcoco(u){
 }
 
 /* ---------------- TERRAIN PAINTING (setup phase) ---------------- */
-const TERRAIN_BUDGET={F:5,M:6,W:5};
+const TERRAIN_BUDGET={F:5,M:6,W:5}; // the standard allowance; a pantheon may carry its own in FACTIONS[f].terrain.budget
+/* P2 (2026-11-16): the budget is per pantheon. Polynesia trades its mountains for Deep Ocean and
+   places one Volcano outside the budget ({F:5,O:6,W:5,V:1}); everyone else keeps the standard set.
+   Read it through here, never TERRAIN_BUDGET directly, where the faction is known. */
+function terrainBudgetFor(faction){
+  const f=FACTIONS[faction];
+  return (f&&f.terrain&&f.terrain.budget)||TERRAIN_BUDGET;
+}
+const PAINTABLE=["F","M","W","O","V"]; // every code a palette can offer, in button order
+function paintedZero(){ const z={}; for(const t of PAINTABLE) z[t]=0; return z; }
 function playerBldsReachGate(){
   return playerHalf.buildings
     .every(b=>bldAdjacent(b,false).some(h=>findPath(h,[[4,0]],false)!==null));
@@ -2153,19 +2353,20 @@ function paintTerrain(c,r,type){
     return true;
   }
 
-  if(!(type in TERRAIN_BUDGET)) return false;
+  const budget=terrainBudgetFor(S.playerFaction);
+  if(!(type in budget)) return false; // not a brush this pantheon has
   if(prevType===type) return true; // already painted this type here
 
   if(prevType!==undefined) S.painted[prevType]--; // tentative refund of the old paint
-  if(S.painted[type]>=TERRAIN_BUDGET[type]){
+  if(S.painted[type]>=budget[type]){
     if(prevType!==undefined) S.painted[prevType]++; // undo refund; budget rejected the paint
     return false;
   }
 
   const oldChar=TMAP[r][c];
   TMAP[r][c]=type;
-  if(type==="M" && !playerBldsReachGate()){
-    TMAP[r][c]=oldChar; // revert: this mountain would wall off a player building
+  if(TINFO[type].block && !playerBldsReachGate()){
+    TMAP[r][c]=oldChar; // revert: this mountain / ocean / volcano would wall off a player building (the gate walks as a non-crosser: every structure stays reachable on foot)
     if(prevType!==undefined) S.painted[prevType]++; // undo refund
     return false;
   }
@@ -2298,10 +2499,14 @@ function refreshUI(){
   if(dusk&&!S.duskShown){ S.duskShown=true; hint("Dusk falls. The gods intervene: favor flows twice as fast."); }
 }
 function renderPalette(){
-  for(const t of ["F","M","W"]){
-    $("paintbtn-"+t).classList.toggle("selected", S.paintSelected===t);
-    $("paintbtn-"+t+"-count").textContent=(TERRAIN_BUDGET[t]-S.painted[t])+"/"+TERRAIN_BUDGET[t];
+  const budget=terrainBudgetFor(S.playerFaction);
+  for(const t of PAINTABLE){
+    const btn=$("paintbtn-"+t);
+    btn.style.display = (t in budget) ? "" : "none"; // a pantheon only sees the brushes it owns
+    btn.classList.toggle("selected", S.paintSelected===t);
+    if(t in budget) $("paintbtn-"+t+"-count").textContent=(budget[t]-S.painted[t])+"/"+budget[t];
   }
+  if(S.paintSelected && !(S.paintSelected in budget)) S.paintSelected=null;
   // 2026-07-28 direct chat request: Egypt's water tiles are "the Nile" -- renamed and
   // re-described (immune to the speed penalty and the water damage bonus, see
   // moveToward/calcDmg) only while playing Egypt; every other faction keeps the plain
@@ -2398,6 +2603,9 @@ function heroSignatureDescription(u){
   if(u.teachRange) return `Human soldiers within ${u.teachRange} hexes deal ${pct(u.teachDmg-1)}% more damage.`;
   if(u.summonsEvery) return `Summons a shade every ${u.summonsEvery}s when an adjacent hex is available.`;
   if(u.generatesFood) return `Generates ${u.generatesFood} food per second while alive.`;
+  if(u.slowAuraRange) return `Snared Sun: enemy units within ${u.slowAuraRange} hexes of him move ${pct(1-u.slowAuraMult)}% slower.`;
+  if(u.climbs) return `Climbed the Vine: crosses mountains and deep ocean on foot${u.powerResist?`, and takes ${pct(1-u.powerResist)}% less damage from god powers`:""}.`;
+  if(u.hero && u.heal) return `The Long Journey: heals the most wounded ally within 1 hex by ${u.heal} every second she is not fighting${u.lavaImmune?"; untouched by lava":""}.`;
   if(u.hero && u.cat==="form") return "Reborn in a stronger final form. Cannot transform again.";
   return "";
 }
@@ -3022,8 +3230,8 @@ function applyFestivalLayout(deck){
   S.loadout=[...deck.loadout]; S.heroPick=[...deck.heroes]; S.godPick=[...deck.gods];
   playerHalf.terrain=deck.terrain.map(r=>[...r]);
   setPlayerStructures(deck.faction,deck.buildings);
-  S.paintMap={};S.painted={F:0,M:0,W:0};
-  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in TERRAIN_BUDGET){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
+  S.paintMap={};S.painted=paintedZero();
+  playerHalf.terrain.forEach((row,r)=>row.forEach((ch,c)=>{if(ch in S.painted){S.paintMap[c+","+r]=ch;S.painted[ch]++;}}));
   S.selectionFaction=deck.faction;
 }
 function savedFestivalDeck(){
@@ -3161,8 +3369,8 @@ function unitsFor(side){ return FACTIONS[factionForSide(side)].units; }
    Greek is included deliberately even though nothing offers it yet: GR_UNITS/GR_GODS are
    written but wired into no faction, so registering them costs nothing, is inert, and means
    the Greek wiring step is only about making them SELECTABLE. */
-const ALL_UNITS = Object.assign({}, EG_UNITS, CN_UNITS, AZ_UNITS, GR_UNITS);
-const ALL_GODS  = [].concat(EG_GODS, CN_GODS, AZ_GODS, GR_GODS);
+const ALL_UNITS = Object.assign({}, EG_UNITS, CN_UNITS, AZ_UNITS, GR_UNITS, PO_UNITS);
+const ALL_GODS  = [].concat(EG_GODS, CN_GODS, AZ_GODS, GR_GODS, PO_GODS);
 /* Which pantheon a key came from -- for a festival UI that wants to say where a god is from,
    and for the uniqueness test's error message. */
 const UNIT_HOME = {}, GOD_HOME = {};
@@ -3248,7 +3456,7 @@ function queueTrain(side,key,path,src,duty,readyAt,goal){
      the DEFAULT ready time only -- a caller that passes an explicit readyAt (Mictlantecuhtli's
      delayed summon, the tests) is stating exactly when it wants the unit and is left alone. */
   const baseReady = readyAt!==undefined ? readyAt
-    : elapsed()+def.train*(hasPassive(side,"messenger")?1-0.25*greekPairingMultiplier(side,"messenger"):1);
+    : elapsed()+def.train*(hasPassive(side,"messenger")?1-0.25*greekPairingMultiplier(side,"messenger"):1)*(hasPassive(side,"patronOfDance")?0.85:1); // Laka: Patron of the Dance
   S.training.push({side,key,path,src,duty,goal:goal||null,spawnCount:doubled?2:undefined,readyAt:baseReady});
   if(drill&&side===0) drillEvent("train"); // hands-on drill objective 1
 }
@@ -3258,7 +3466,16 @@ function tickTraining(){
     if(elapsed()>=t.readyAt){
       const h=t.path[0];
       let at=h;
-      if(hexLoad(h[0],h[1],undefined,unitDef(t.key,t.side).flying)>=HEX_CAPACITY){ // exit hex blocked: emerge on top of a standing building
+      /* Laka's Hula of Arrival: the unit walks out of the chosen structure instead, free to march
+         from there (its drawn route started somewhere else). A charge is spent only on success. */
+      let hula=null;
+      const hs=S.hula&&S.hula[t.side];
+      if(hs&&hs.left>0){
+        const hb=bldById(t.side,hs.bldId), fl=unitDef(t.key,t.side).flying;
+        const spot=hb&&!hb.dead&&bldAdjacent(hb,fl,t.side).find(x=>hexLoad(x[0],x[1],undefined,fl)<HEX_CAPACITY);
+        if(spot){ hula=spot; at=spot; hs.left--; if(!hs.left) S.hula[t.side]=null; }
+      }
+      if(!hula && hexLoad(h[0],h[1],undefined,unitDef(t.key,t.side).flying)>=HEX_CAPACITY){ // exit hex blocked: emerge on top of a standing building
         const src=(t.src&&!t.src.dead)? t.src
           : buildings.filter(b=>b.side===t.side&&!b.dead)
               .sort((a,b)=>hexDist(a.hexes[0],h)-hexDist(b.hexes[0],h))[0];
@@ -3277,7 +3494,8 @@ function tickTraining(){
       // plumbing this comment block describes. Either can drive a multi-spawn.
       const spawnN=t.spawnCount||unitDef(t.key,t.side).spawnCount||1;
       for(let k=0;k<spawnN;k++){
-        const u=makeUnit(t.side,t.key,at,k===0?t.path:null);
+        const u=makeUnit(t.side,t.key,at,(k===0&&!hula)?t.path:null);
+        if(hula){ u.free=true; fx(u.pos,"ring","#f2a7c0"); }
         /* Hephaestus's The Forge: a charge spent one unit at a time, like Ptah's. Applied at
            CREATION rather than as a timed buff, so a reinforced unit stays reinforced. */
         if(S.forge[t.side]>0){
@@ -3447,11 +3665,11 @@ document.addEventListener("pointermove",e=>{
   const idx=d.path.findIndex(q=>q[0]===h[0]&&q[1]===h[1]);
   if(idx>=0){ d.path.length=idx+1; return; }               // drew over the route: rewind to that point
   if(onBld) return;                                        // other buildings: ignore
-  if(!routeOK(h[0],h[1],d.def.flying)) return;             // mountains etc: ignore, keep drawing
+  if(!routeOK(h[0],h[1],d.def.flying,{side:0,def:d.def})) return;           // mountains etc: ignore, keep drawing (side 0: the player may cross Deep Ocean if their pantheon does)
   const last=d.path[d.path.length-1];
   if(!last){
     if(d.spawnBld.hexes.some(bh=>hexDist(bh,h)===1)){ d.path.push(h); return; }
-    const br=neighbors(h[0],h[1]).find(n=>routeOK(n[0],n[1],d.def.flying)
+    const br=neighbors(h[0],h[1]).find(n=>routeOK(n[0],n[1],d.def.flying,{side:0,def:d.def})
       && d.spawnBld.hexes.some(bh=>hexDist(bh,n)===1));    // lenient start: auto-bridge to the building
     if(br) d.path.push(br,h);
     return;
@@ -3460,7 +3678,7 @@ document.addEventListener("pointermove",e=>{
   if(dist===1){ d.path.push(h); return; }
   if(dist===2){
     const bridge=neighbors(last[0],last[1]).find(n=>hexDist(n,h)===1
-      && routeOK(n[0],n[1],d.def.flying) && !bldAt(n[0],n[1])
+      && routeOK(n[0],n[1],d.def.flying,{side:0,def:d.def}) && !bldAt(n[0],n[1])
       && !d.path.some(q=>q[0]===n[0]&&q[1]===n[1]));
     if(bridge) d.path.push(bridge,h);
     return;
@@ -3669,7 +3887,7 @@ function tickFormChains(){
        TIMER on the form itself (Nezha's lotus, which nobody has to earn). becomesAfter is
        measured from the unit's own bornAt, so it is per-body and survives being spawned
        mid-match. */
-    const byDeath = u.dead && u.def.becomesOnDeath;
+    const byDeath = u.dead && u.def.becomesOnDeath && !sealed(u); // Gate of Night: a sealed death is final
     const byTimer = !u.dead && u.def.becomesAfter && elapsed()-(u.bornAt||0)>=u.def.becomesAfter;
     if(!byDeath && !byTimer) continue;
     u.formed=true;
@@ -3680,7 +3898,7 @@ function tickFormChains(){
        catches a genuinely unknown key. */
     if(!unitDef(key,u.side)) continue;
     const here=hexLoad(u.hex[0],u.hex[1],undefined,false)<HEX_CAPACITY ? u.hex
-      : (neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],false)&&hexLoad(n[0],n[1],undefined,false)<HEX_CAPACITY)||u.hex);
+      : (neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],false,u)&&hexLoad(n[0],n[1],undefined,false)<HEX_CAPACITY)||u.hex);
     const next=makeUnit(u.side,key,here,null);
     next.free=true;
     S.units.push(next);
@@ -3731,7 +3949,7 @@ function advanceSwallows(){
     const def=unitDef(w.key,w.side);
     if(!def) continue;
     const spot=hexLoad(w.hex[0],w.hex[1],undefined,false)<HEX_CAPACITY ? w.hex
-      : (neighbors(w.hex[0],w.hex[1]).find(n=>routeOK(n[0],n[1],false)&&hexLoad(n[0],n[1],undefined,false)<HEX_CAPACITY)||w.hex);
+      : (neighbors(w.hex[0],w.hex[1]).find(n=>routeOK(n[0],n[1],false,w.side)&&hexLoad(n[0],n[1],undefined,false)<HEX_CAPACITY)||w.hex);
     const back=makeUnit(w.side,w.key,spot,null);
     back.free=true; back.hp=back.maxhp*0.5;
     back.swallowedByMythUsed=true; // once per life: he is not an infinite loop of rebirths
@@ -3789,13 +4007,36 @@ function unlockedMyths(side){
    Called from killUnit and from every death site. If a death path is ever added that does
    not reach here, both mechanics silently under-count -- which is exactly what was happening
    at seven sites before this change. */
+/* THE ONE place a moving unit changes hex (route steps and both sidestep paths call it), and so
+   the one place the voyage pays (P3). Declarative: it reads economyFor(side), never a faction name
+   (test_polynesia asserts it). Spawning or teleporting a unit is not a step and pays nothing. Pacing
+   cannot farm it: a drawn route that crosses itself is cut at the overlap. */
+function enterHex(u,h){
+  /* The Lava-born leaves the hex it walks off smouldering for 4s: a hazard that burns the enemy,
+     not a wall (terrain unchanged, so its own column is never blocked behind it). */
+  if(u.def.lavaTrail){
+    const [c,r]=u.hex, t=terrain(c,r);
+    if(!TINFO[t].block && !bldAt(c,r)) S.floodedHexes.push({c,r,orig:t,to:t,lava:true,owner:u.side,dmgPerSec:u.def.lavaTrail,expiresAt:elapsed()+4});
+  }
+  u.hex=[h[0],h[1]];
+  const eco=economyFor(u.side);
+  if(!eco.favorPerStep) return;
+  let amt=eco.favorPerStep;
+  if(TINFO[terrain(h[0],h[1])].deep) amt*=eco.oceanStepMult;
+  const enemyHalf = u.side ? h[1]>=PLAYER_ROW0 : h[1]<AI_ROWS; // the neutral row is nobody's half
+  if(enemyHalf) amt*=eco.enemyHalfStepMult;
+  amt*=duskMult();
+  if(u.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+amt); else S.favor=Math.min(S.FAVOR_CAP,S.favor+amt);
+}
 function favorOnDeath(deadSide){
   const grant=(sd,amt)=>{ if(sd) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+amt);
                           else   S.favor  =Math.min(S.FAVOR_CAP,S.favor  +amt); };
   if(hasPassive(deadSide,"ferrymansToll")) grant(deadSide,2*greekPairingMultiplier(deadSide,"ferrymansToll"));
   const opp=deadSide?0:1;
-  if(hasPassive(opp,"inevitable")) grant(opp,1); // Mictlantecuhtli
+  const kept=hasPassive(deadSide,"keeperOfTheDead"); // Hine-nui-te-po: your fallen pay the enemy nothing
+  if(hasPassive(opp,"inevitable") && !kept) grant(opp,1); // Mictlantecuhtli
   for(const sd of [0,1]){
+    if(sd===opp && kept) continue;
     const per=economyFor(sd).favorPerDeath;
     if(per) grant(sd,per);
   }
@@ -3812,10 +4053,19 @@ function effSpeed(u){
   if(elapsed()<u.stunUntil) return 0;
   let sp=u.def.speed*0.9; // 2026-07-29 direct request: all units move 10% slower
   if(elapsed()<(u.rootUntil||0)) return 0; // Dionysus's The Vine: it may still fight, it just cannot move
-  if(elapsed()<u.buffUntil) sp*=u.buffSpd;
+  if(elapsed()<u.buffUntil && !sealed(u)) sp*=u.buffSpd;
   if(elapsed()<u.slowUntil) sp*=0.65;
   if(hasPassive(u.side,"moveSpeed10")) sp*=1.1;
   if(hasPassive(u.side,"moonsGlow")) sp *= 1+MOONLIGHT_BONUS; // Chang'e: Moon's Glow
+  if(u.flying && hasPassive(u.side,"lordOfWinds")) sp*=1.2; // Tawhirimatea: Lord of Winds
+  /* P3 Maui: Snared Sun. A living enemy carrying slowAuraRange slows every unit within it.
+     Generic: the strongest single aura applies, auras never stack. */
+  let aura=1;
+  for(const o of S.units){
+    if(o.dead||o.side===u.side||!o.def.slowAuraRange) continue;
+    if(hexDist(o.hex,u.hex)<=o.def.slowAuraRange) aura=Math.min(aura,o.def.slowAuraMult);
+  }
+  sp*=aura;
   return sp;
 }
 /* A unit's damage type is normally just def.dtype. Atalanta is the exception: she switches
@@ -3832,7 +4082,7 @@ function effDtype(att,tgt){
 function calcDmg(att,tgt){
   if(elapsed()<(tgt.invulnUntil||0)) return 0; // complete invulnerability, skips every other modifier. Set by the Greek retreat/Last Stand paths -- Xi Wangmu stopped granting it 2026-08-28 (F2)
   let d=att.def.dmg;
-  if(elapsed()<att.buffUntil) d*=att.buffDmg;
+  if(elapsed()<att.buffUntil && !sealed(att)) d*=att.buffDmg; // Gate of Night: a sealed unit's buffs do nothing
   if(att.def.rageDmg && elapsed()<att.frenzyUntil) d*=att.def.rageDmg; // Heracles: the madness hits harder than the man
   /* Achilles: Divine Armor. Melee does almost nothing; RANGED is untouched, which is the
      heel -- the whole point is that he has exactly one way to be killed. */
@@ -3868,7 +4118,7 @@ function calcDmg(att,tgt){
   if(hasPassive(att.side,"moonlight")) d *= 1+MOONLIGHT_BONUS; // Coyolxauhqui: Moonlight
   if(att.def.surpriseAttack && !att.ambushUsed) d*=att.def.surpriseAttack; // Nagual: disguised until it strikes
   if(hasPassive(att.side,"razorWings") && att.free && !att.ambushUsed) d*=1.5; // Itzpapalotl: Razor Wings
-  if(att.def.ambushInWater && terrain(att.hex[0],att.hex[1])==="W") d*=1.5; // Ahuizotl: lurks in water tiles
+  if(att.def.ambushInWater && (terrain(att.hex[0],att.hex[1])==="W"||terrain(att.hex[0],att.hex[1])==="O")) d*=1.5; // Ahuizotl / Taniwha / He'e: lurks in water and deep ocean
   if(hasPassive(att.side,"waterDamageBonus") && (terrain(att.hex[0],att.hex[1])==="W" || neighbors(att.hex[0],att.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) d*=1.2; // Tlaloc: Storm Lord
   if(att.def.strongerAsBuildingsFall){ // Tzitzimitl: stronger as its own side's buildings crumble
     const own=buildings.filter(b=>b.side===att.side);
@@ -3917,6 +4167,18 @@ function calcDmg(att,tgt){
     else if(DMG_WEAK[adt]===tgt.def.armor) d*=0.7;
   }
   if(adt==="ranged" && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=0.75;
+  /* P4 Polynesia, attacker and target modifiers. All read data (passive keys, def flags). */
+  if(tgt.def){
+    if(hasPassive(tgt.side,"deepCompanion") && terrain(tgt.hex[0],tgt.hex[1])==="O") d*=0.85; // Kanaloa
+    if(tgt.def.forestArmor && terrain(tgt.hex[0],tgt.hex[1])==="F") d*=1-tgt.def.forestArmor; // Tipua
+    if(tgt.def.cat==="myth" && hasPassive(att.side,"eaterOfBrothers")) d*=1.1; // Tu
+  }
+  if(hasPassive(att.side,"fireBorn")){ // Pele: Fire-Born, beside a volcano or lava
+    const hot=h=>{ const t=terrain(h[0],h[1]); return t==="V"||t==="L"; };
+    if(hot(att.hex)||neighbors(att.hex[0],att.hex[1]).some(hot)) d*=1.25;
+  }
+  if(att.def.growsOnKill) d*=1+att.def.growsOnKill*Math.min(att.killStacks||0,att.def.growsOnKillCap||5); // Aitu
+  if(att.def.duskDmg && duskActive()) d*=att.def.duskDmg; // Ponaturi: creatures of the night
   if(onLakeTexcoco(tgt)) d*=0.8; // Lake Texcoco beside a standing Aztec building: no water penalty, plus 20% defense
   else if(terrain(tgt.hex[0],tgt.hex[1])==="W" && !onNile(tgt)) d*=1.25; // Only the owner's Nile exempts its Egyptian units.
   return d;
@@ -3950,7 +4212,7 @@ function beginLastStand(u){
    It does NOT go through dealDamage: there is no attacker, and none of the on-kill passives
    (Blood Debt, razorWings, the ambush flags) should fire for a unit nobody killed. */
 function tryMythResurrection(u){
-  if(u.def.cat!=="myth" || u.hasRevived || !hasPassive(u.side,"resurrection")) return false;
+  if(u.def.cat!=="myth" || u.hasRevived || !hasPassive(u.side,"resurrection") || sealed(u)) return false;
   u.hasRevived=true; u.hp=u.maxhp*0.4*greekPairingMultiplier(u.side,"resurrection");
   fx(u.pos,"ring","#ffb020");
   return true;
@@ -3960,7 +4222,7 @@ function killUnit(u,color){
   if(tryMythResurrection(u)) return false;
   u.dead=true; u.hp=0;
   fx(u.pos,"boom",color||(u.side?"#c0392b":"#e8b84b"));
-  if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side});
+  if(u.def.cat==="human") S.deadHumans.push({key:u.key,at:elapsed(),hex:[...u.hex],side:u.side,sealed:sealed(u)});
   favorOnDeath(u.side);
   return true;
 }
@@ -4034,16 +4296,19 @@ function dealDamage(att,tgt){
     if(att.def.poisons){ tgt.poisonUntil=elapsed()+(att.def.poisonDur||4); tgt.poisonDps=att.def.poisonDps||8; }
     if(hasPassive(att.side,"pestilence")) tgt.weakenUntil=elapsed()+3; // Sekhmet: Pestilence
     if(att.def.disruptsRoute && !tgt.dead){ tgt.path=null; tgt.pathIdx=0; tgt.free=true; tgt.target=null; } // Ehecatotontin: chaotic movement disrupts the target's route
+    if(att.def.pullsEvery && !tgt.dead && elapsed()>=(att.pullReadyAt||0) && hexDist(att.hex,tgt.hex)>1){ // He'e: drags its prey in, at most every pullsEvery seconds
+      if(shoveUnit(tgt,shoveStep(tgt,att.hex,false))){ att.pullReadyAt=elapsed()+att.def.pullsEvery; fx(tgt.pos,"ring","#2f7391"); }
+    }
     if(tgt.hp<=0 && !tgt.dead){
       /* Theseus: The Clew. He does not die the first time -- the thread turns him around
          and he retraces the route he came by, at 40% health, untouchable the whole way. */
-      if(tgt.def.retracesOnDeath && !tgt.hasRevived){
+      if(tgt.def.retracesOnDeath && !tgt.hasRevived && !sealed(tgt)){
         beginRetreat(tgt);
-      } else if(tgt.def.lastStandOnDeath && !tgt.lastStandUsed){
+      } else if(tgt.def.lastStandOnDeath && !tgt.lastStandUsed && !sealed(tgt)){
         beginLastStand(tgt);
       } else if(tryMythResurrection(tgt)){
         // Dionysus restores a myth before any death rewards are paid.
-      } else if(tgt.def.revivesOnce && !tgt.hasRevived){
+      } else if(tgt.def.revivesOnce && !tgt.hasRevived && !sealed(tgt)){
         // Ra's Bennu Bird: revives once with partial health instead of dying
         tgt.hasRevived=true; tgt.hp=tgt.maxhp*0.4;
         fx(tgt.pos,"ring","#ffb020"); fx(tgt.pos,"text","#ffb020","Reborn!");
@@ -4051,7 +4316,7 @@ function dealDamage(att,tgt){
         tgt.dead=true;
         fx(tgt.pos,"boom",tgt.side?"#c0392b":"#e8b84b");
         if(tgt.def.cat==="human")
-          S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side});
+          S.deadHumans.push({key:tgt.key,at:elapsed(),hex:[...tgt.hex],side:tgt.side,sealed:sealed(tgt)});
         if(hasPassive(tgt.side,"deathFavorNearTemple")){ // Osiris: Lord of the Dead
           const temple=getBld(tgt.side,"temple");
           if(temple && !temple.dead && Math.min(...temple.hexes.map(h=>hexDist(tgt.hex,h)))<=3){
@@ -4066,13 +4331,14 @@ function dealDamage(att,tgt){
         // kill something on its OWN side, and "killing an ENEMY unit" rewards must not fire
         // for chopping your own tree. earthMother/deathFavorNearTemple/grantInevitable all
         // read tgt.side and stay correct as written -- your unit really did die.
-        if(att.side!==tgt.side && hasPassive(att.side,"bloodFavor")){
+        if(att.side!==tgt.side && hasPassive(att.side,"bloodFavor") && !hasPassive(tgt.side,"keeperOfTheDead")){
           if(att.side) S.aiFavor=Math.min(S.FAVOR_CAP,S.aiFavor+2); else S.favor=Math.min(S.FAVOR_CAP,S.favor+2);
         }
         if(hasPassive(tgt.side,"earthMother")){
           if(tgt.side) S.aiFood=Math.min(S.FOOD_CAP,S.aiFood+2); else S.food=Math.min(S.FOOD_CAP,S.food+2);
         }
         favorOnDeath(tgt.side);
+        if(att.def.growsOnKill && att.side!==tgt.side) att.killStacks=(att.killStacks||0)+1; // Aitu
         if(att.def.spawnsOnKill && att.side!==tgt.side){ // Centzon Huitznahua: spawns a fresh copy of itself when it kills, capped so it can't runaway-snowball (never off a same-side ally-target kill)
           const alive=S.units.filter(u=>!u.dead&&u.side===att.side&&u.key===att.key).length;
           if(alive<6){
@@ -4273,6 +4539,7 @@ function hiddenFrom(e,observer){
      future concealment mechanic cannot slip through by forgetting to check. S.trueSightUntil
      is indexed by the side being barred, matching how the "nephthys" case reads it. */
   if(hasPassive(side,"trueSight")) return false; // Athena, Grey-Eyed: a permanent Third Eye
+  if(duskActive() && hasPassive(side,"hinasLight")) return false; // Hina's Light: nothing hides from you under the Dusk moon
   if(elapsed()<(S.trueSightUntil[e.side]||0)) return false;
   /* Artemis: a quarry cannot hide from ANYONE, not merely from the hunter. This is not a
      convenience -- Actaeon's End turns the quarry's OWN SIDE on it, and its allies observe
@@ -4320,7 +4587,7 @@ function scanEncounter(u){
      Note this also means a frenzy (Sekhmet's Eye Unleashed) cannot make one attack
      units; building-only is treated as absolute rather than as a preference. */
   if(u.def.targetsBuildings) return null;
-  const rng=Math.max(u.def.range,1);
+  const rng=unitRange(u);
   const frenzied=elapsed()<u.frenzyUntil; // Sekhmet's Eye Unleashed: attack the nearest unit regardless of side
   let best=null,bs=-1e9,ally=null,as=-1e9;
   for(const e of S.units){
@@ -4377,19 +4644,20 @@ function scanEncounter(u){
    literally the same computation. A preview that can disagree with what the unit then does
    would be worse than no preview at all -- it would teach the player something false. If the
    march rule changes, both move together because there is only one rule. */
-function marchRouteFrom(hex,flying,side){
+function marchRouteFrom(hex,flying,side,walker){
+  const w=walker===undefined?side:walker; // passability may depend on the unit (Tawhaki), ownership on the side
   let best=null,bestPath=null,bestLen=1e9;
   for(const b of buildings){
     if(b.dead||b.side===side) continue;
-    const p=findPath(hex,bldAdjacent(b,flying),flying);
+    const p=findPath(hex,bldAdjacent(b,flying,w),flying,w);
     if(p && p.length<bestLen){ bestLen=p.length; best=b; bestPath=p; }
   }
   return best?{bld:best,path:bestPath}:null;
 }
 function routeToTarget(u,t){
-  const goals = isBldg(t)? bldAdjacent(t,u.flying)
-    : [t.hex,...neighbors(t.hex[0],t.hex[1]).filter(n=>routeOK(n[0],n[1],u.flying))];
-  const p=findPath(u.hex,goals,u.flying);
+  const goals = isBldg(t)? bldAdjacent(t,u.flying,u)
+    : [t.hex,...neighbors(t.hex[0],t.hex[1]).filter(n=>routeOK(n[0],n[1],u.flying,u))];
+  const p=findPath(u.hex,goals,u.flying,u);
   if(p&&p.length>1){ u.path=p.slice(1); u.pathIdx=0; }
   else u.path=null;
 }
@@ -4421,6 +4689,10 @@ function moveToward(u,pt,dt){
   // as fast. Multiplier lives in the god def (gardenSpeed), never as a literal here.
   if(inBambooCover(u) && hasPassive(u.side,"gardenOfKunlun")) terr*=gardenMult(u.side,"gardenSpeed");
   if(u.def.fastInWater && terrain(u.hex[0],u.hex[1])==="W") terr=1.5; // Long Wang's Eastern Dragon: extraordinary speed specifically on water
+  if(u.def.seafaring && (terrain(u.hex[0],u.hex[1])==="W"||terrain(u.hex[0],u.hex[1])==="O")) terr=Math.max(terr,1); // P3 Waka Crew: at home in Water and Deep Ocean
+  if(terrain(u.hex[0],u.hex[1])==="F" && hasPassive(u.side,"forestFather")) terr=Math.max(terr,1); // Tane: Forest Father
+  if(elapsed()<(u.strideUntil||0) && !sealed(u)) terr=Math.max(terr,1); // Tu: War Stride ignores terrain
+  if(onMoonRoad(u)) terr=Math.max(terr,1.5); // Hina: Moon Road
   if((hasPassive(u.side,"lordOfFourSeas")||hasPassive(u.side,"floodCurrent")) &&
      (terrain(u.hex[0],u.hex[1])==="W" || neighbors(u.hex[0],u.hex[1]).some(n=>terrain(n[0],n[1])==="W"))) terr*=1.2; // Long Wang: Lord of the Four Seas / Gong Gong: Flood Current
   const step=sp*terr*dt;
@@ -4437,7 +4709,7 @@ function followPath(u,dt){
     // awareness -- resuming with a straight slide here could cut across illegal
     // terrain (e.g. a mountain) sitting between the two hexes (2026-07-23 bug
     // report). Splice in a real, routeOK-legal path back onto the route instead.
-    const back=findPath(u.hex,[nh],u.flying);
+    const back=findPath(u.hex,[nh],u.flying,u);
     const detour=back&&back.length>1?back.slice(1,-1):[];
     if(detour.length) u.path.splice(u.pathIdx,0,...detour);
     else u.pathIdx++; // no legal way back (rare) -- skip this route hex, try the next
@@ -4458,7 +4730,7 @@ function followPath(u,dt){
        silently broken the rule the step exists to establish.) */
     if(blocker && blocker.target && !blocker.target.dead
        && !(u.def.targetsBuildings && !isBldg(blocker.target))){
-      const jt=blocker.target, rng=Math.max(u.def.range,1);
+      const jt=blocker.target, rng=unitRange(u);
       if(unitDist(u,jt)<=rng){ u.target=jt; u.waitT=0; u.assistFrom=null; return; } // already in range -- just attack, no detour needed
       const goalHexes=isBldg(jt)?jt.hexes:[jt.hex];
       const toGoal=h=>Math.min(...goalHexes.map(gh=>hexDist(h,gh)));
@@ -4470,13 +4742,13 @@ function followPath(u,dt){
       // from the real path-following u.lastHex) blocks stepping straight back to the
       // hex this same assist just came from, so a tie can't turn into a ping-pong.
       const step=neighbors(u.hex[0],u.hex[1])
-        .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY
+        .filter(n=>routeOK(n[0],n[1],u.flying,u)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY
           && !(u.assistFrom && n[0]===u.assistFrom[0] && n[1]===u.assistFrom[1]))
         .sort((a,b)=>toGoal(a)-toGoal(b))[0];
       if(step && toGoal(step)<=curD){
         u.target=jt;
         const from=[u.hex[0],u.hex[1]];
-        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; u.assistFrom=from; }
+        if(moveToward(u,hexCenter(step[0],step[1]),dt)){ enterHex(u,step); u.arrived=true; u.assistFrom=from; }
         u.waitT=0;
         return;
       }
@@ -4511,7 +4783,7 @@ function followPath(u,dt){
     u.assistFrom=null;
     u.waitT+=dt;
     if(u.waitT>0.5){
-      const alt=neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],u.flying)
+      const alt=neighbors(u.hex[0],u.hex[1]).find(n=>routeOK(n[0],n[1],u.flying,u)
         && hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY && hexDist(n,nh)<=1
         && !(u.lastHex && n[0]===u.lastHex[0] && n[1]===u.lastHex[1])); // don't sidestep straight back to where we just were
       if(alt){ u.path.splice(u.pathIdx,0,alt); u.waitT=0; }
@@ -4521,7 +4793,7 @@ function followPath(u,dt){
   }
   u.waitT=0;
   u.assistFrom=null;
-  if(entering){ u.lastHex=[u.hex[0],u.hex[1]]; u.hex=[nh[0],nh[1]]; u.arrived=false; }
+  if(entering){ u.lastHex=[u.hex[0],u.hex[1]]; enterHex(u,nh); u.arrived=false; }
   if(moveToward(u,hexCenter(nh[0],nh[1]),dt)){ u.pathIdx++; u.arrived=true; }
 }
 
@@ -4574,7 +4846,7 @@ function updateUnit(u,dt){
       return; // full stillness: no movement, no ordinary attack, for the whole windup
     }
     u.snipeT-=dt;
-    const engaged = u.target && unitDist(u,u.target)<=Math.max(u.def.range,1);
+    const engaged = u.target && unitDist(u,u.target)<=unitRange(u);
     if(u.snipeT<=0 && !engaged && snipeTarget(u)){
       u.sniping=true;
       u.snipeFireAt=elapsed()+(u.def.snipeWindup||0);
@@ -4598,7 +4870,7 @@ function updateUnit(u,dt){
     const t=u.target;
     if((isBldg(t)&&t.dead)||(!isBldg(t)&&t.dead)) u.target=null;
     else if(!isBldg(t)){
-      const rr=Math.max(u.def.range,1), dd=unitDist(u,t);
+      const rr=unitRange(u), dd=unitDist(u,t);
       const blk=u.path&&u.pathIdx<u.path.length&&hexDist(t.hex,u.path[u.pathIdx])<=1;
       if(dd>rr+1 || (dd>rr && !blk && !u.free)) u.target=null; // don't chase kiters off-route
       else if(u.def.dtype==="ranged" && losBlocked(u.hex,t.hex)) u.target=null; // target ducked behind a mountain
@@ -4650,13 +4922,13 @@ function updateUnit(u,dt){
         else if(u.marchGoal!==u.lockedGoal){ u.marchGoal=u.lockedGoal; u.path=null; }
       }
       if(u.marchGoal && (u.marchGoal.dead || u.marchGoal.side===u.side)){ u.marchGoal=null; u.path=null; }
-      const rng=Math.max(u.def.range,1);
+      const rng=unitRange(u);
       const hasRoute=u.path&&u.pathIdx<u.path.length;
       if(!u.marchGoal){
         /* Pick by SHORTEST ROUTE, not straight-line: a building that is nearer as the crow
            flies can be much further to walk to around terrain, and that mismatch is what let
            "closest" flip back and forth in the first place. */
-        const march=marchRouteFrom(u.hex,u.flying,u.side); // same helper the drag ghost draws
+        const march=marchRouteFrom(u.hex,u.flying,u.side,u); // same helper the drag ghost draws
         const best=march&&march.bld, bestPath=march&&march.path;
         if(best){
           u.marchGoal=best;
@@ -4679,7 +4951,7 @@ function updateUnit(u,dt){
     }
   }
   if(u.target){
-    const t=u.target, d=unitDist(u,t), rng=Math.max(u.def.range,1);
+    const t=u.target, d=unitDist(u,t), rng=unitRange(u);
     if(d<=rng){
       u.deviateT=0; // already in contact -- there is nothing to step off-route for
       /* u.hex advances the instant a unit commits to entering the next hex (see
@@ -4741,10 +5013,10 @@ function updateUnit(u,dt){
       if(deviating) u.deviateT+=dt; else u.deviateT=0;
       if(!deviating || u.deviateT>=DEVIATE_DELAY){
         const step=neighbors(u.hex[0],u.hex[1])
-          .filter(n=>routeOK(n[0],n[1],u.flying)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY)
+          .filter(n=>routeOK(n[0],n[1],u.flying,u)&&hexLoad(n[0],n[1],u,u.flying)<HEX_CAPACITY)
           .sort((a,b)=>hexDist(a,t.hex)-hexDist(b,t.hex))[0];
         if(step && hexDist(step,t.hex)<d){
-          if(moveToward(u,hexCenter(step[0],step[1]),dt)){ u.hex=[step[0],step[1]]; u.arrived=true; u.deviateT=0; if(blk) u.sidestepped=true; }
+          if(moveToward(u,hexCenter(step[0],step[1]),dt)){ enterHex(u,step); u.arrived=true; u.deviateT=0; if(blk) u.sidestepped=true; }
           return;
         }
       }
@@ -4755,7 +5027,7 @@ function updateUnit(u,dt){
   if(u.def.heal && !u.target){
     u.healT-=dt;
     if(u.healT<=0){
-      const ally=S.units.filter(a=>!a.dead&&a.side===u.side&&a!==u&&a.hp<a.maxhp&&hexDist(u.hex,a.hex)<=1)
+      const ally=S.units.filter(a=>!a.dead&&a.side===u.side&&a!==u&&a.hp<a.maxhp&&!sealed(a)&&hexDist(u.hex,a.hex)<=1)
         .sort((a,b)=>(a.hp/a.maxhp)-(b.hp/b.maxhp))[0];
       if(ally){ ally.hp=Math.min(ally.maxhp,ally.hp+u.def.heal); u.healT=1;
         S.effects.push({kind:"heal",x:ally.pos.x,y:ally.pos.y,t:0,life:0.5,color:"#7ec46a"}); }
@@ -4780,14 +5052,18 @@ function tickGodEffects(dt){
         continue;
       }
     }
-    if(hasPassive(u.side,"lyre") && u.hp>0 && u.hp<u.maxhp){ // Apollo: the healer's other half
+    if(u.def.mendsStructures){ // Manaia: mends the most damaged of its own structures within 1 hex
+      const b=buildings.filter(b=>b.side===u.side&&!b.dead&&b.hp<b.maxhp&&b.hexes.some(h=>hexDist(u.hex,h)<=1)).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+      if(b) b.hp=Math.min(b.maxhp,b.hp+u.def.mendsStructures*dt);
+    }
+    if(hasPassive(u.side,"lyre") && u.hp>0 && u.hp<u.maxhp && !sealed(u)){ // Apollo: the healer's other half
       // near ANY standing structure: Greece has no temple since 2026-11-13
       if(buildings.some(b=>b.side===u.side&&!b.dead&&b.hexes.some(h=>hexDist(u.hex,h)<=3)))
         u.hp=Math.min(u.maxhp,u.hp+2*greekPairingMultiplier(u.side,"lyre")*dt);
     }
     /* Isis (2026-11-12, Willem): regeneration extends from heroes to EVERY unit, at the same
        1% of max HP per second. The key keeps its old name so the Unity export still matches. */
-    if(hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp){
+    if(hasPassive(u.side,"heroRegen") && u.hp>0 && u.hp<u.maxhp && !sealed(u)){
       u.hp=Math.min(u.maxhp,u.hp+u.maxhp*0.01*dt);
     }
     if(u.def.generatesFavor){
@@ -4835,7 +5111,7 @@ function tickGodEffects(dt){
       if(u.summonT>=u.def.summonsEvery){
         u.summonT=0;
         const spot=neighbors(u.hex[0],u.hex[1])
-          .find(h=>routeOK(h[0],h[1],false)&&hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
+          .find(h=>routeOK(h[0],h[1],false,u)&&hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
         if(spot && unitDef(u.def.summonKey,u.side)){
           const sh=makeUnit(u.side,u.def.summonKey,spot,null);
           sh.free=true; S.units.push(sh); fx(sh.pos,"ring","#8a6dbd");
@@ -4845,7 +5121,7 @@ function tickGodEffects(dt){
     /* Perseus: Gorgon's Head. The first time an enemy comes into his reach he raises it --
        that enemy and everything in the line beyond it turns to stone. Once per life. */
     if(u.def.gorgonStun && !u.gorgonUsed && u.target && !isBldg(u.target)
-       && unitDist(u,u.target)<=Math.max(u.def.range,1)){
+       && unitDist(u,u.target)<=unitRange(u)){
       u.gorgonUsed=true;
       const dx=u.target.hex[0]-u.hex[0], dy=u.target.hex[1]-u.hex[1];
       let n=0;
@@ -4869,7 +5145,7 @@ function tickGodEffects(dt){
          ambush -- which is the sheet's trade, and the only thing keeping this honest. */
       if(!u.stalkHung){ u.stalkHung=true; u.invisible=true; }
       const bld=u.invisible && buildings.filter(b=>b.side!==u.side&&!b.dead
-                  && Math.min(...b.hexes.map(h=>hexDist(u.hex,h)))<=Math.max(u.def.range,1))
+                  && Math.min(...b.hexes.map(h=>hexDist(u.hex,h)))<=unitRange(u))
                 .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(u.hex,h)))-Math.min(...b.hexes.map(h=>hexDist(u.hex,h))))[0];
       if(bld){
         u.stalkSpent=true; u.invisible=false;
@@ -4896,7 +5172,7 @@ function tickGodEffects(dt){
     if(u.def.splitsAtRouteEnd && !u.split && u.free){
       u.split=true;
       const spot=neighbors(u.hex[0],u.hex[1])
-        .find(h=>routeOK(h[0],h[1],u.flying)&&hexLoad(h[0],h[1],undefined,u.flying)<HEX_CAPACITY);
+        .find(h=>routeOK(h[0],h[1],u.flying,u)&&hexLoad(h[0],h[1],undefined,u.flying)<HEX_CAPACITY);
       if(spot){
         const frac=u.def.splitsAtRouteEnd;
         const tw=makeUnit(u.side,u.key,spot,null);
@@ -4943,11 +5219,13 @@ function tickFloods(dt){
   let terrainChanged=false;
   for(let i=S.floodedHexes.length-1;i>=0;i--){
     const f=S.floodedHexes[i];
-    if(f.dmgPerSec){ // Zhu Rong's Primordial Fire: damage any unit standing on the hazard hex
+    if(f.dmgPerSec){ // Zhu Rong's Primordial Fire / Pele's lava / the Lava-born's trail: damage any unit standing on the hazard hex
       for(const u of S.units){
         if(u.dead||u.hex[0]!==f.c||u.hex[1]!==f.r) continue;
+        if(f.owner!==undefined && u.side===f.owner) continue; // owner-scoped hazards (lava) burn only the enemy
+        if(f.lava && u.def.lavaImmune) continue; // Hi'iaka walked through her sister's fire
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
-        u.hp-=f.dmgPerSec*dt;
+        u.hp-=godPowerDmg(u,f.dmgPerSec*dt);
         if(u.hp<=0 && !u.dead){
           killUnit(u);
         }
@@ -4992,10 +5270,204 @@ function castBanner(casterSide,g,playerColor){
    to casterSide/enemySide so either side can cast either pantheon's powers.
    Returns false when the power had no valid target (caller decides whether that
    still costs the resource — see castPlayerPower vs aiCastPower). */
+/* ---------- P4 shared helpers (Polynesia, 2026-11-19) ---------- */
+/* Hine-nui-te-po's Gate of Night: a sealed unit cannot be healed, resurrected or buffed. Read at
+   every heal, every buff READ (so no buff source can slip past) and every death-defying path. */
+const sealed = u => !!u && elapsed()<(u.sealedUntil||0);
+/* ONE door for god-power damage to units, so a per-unit resistance applies to every pantheon's
+   powers alike (Tawhaki's powerResist is the first). Returns the damage to subtract. */
+function godPowerDmg(u,amt){
+  if(elapsed()<(u.invulnUntil||0)) return 0;
+  return amt*(u.def.powerResist!==undefined?u.def.powerResist:1);
+}
+/* Displacement (Undertow, Pushed the Sky, Storm Wind, He'e). A unit moves one hex only into a hex
+   it could legally stand in that has room on its layer -- never stacked, never into rock. A shove
+   is not a step: it does not go through enterHex and pays no voyage favour. */
+function shoveUnit(u,dest){
+  if(!dest||!routeOK(dest[0],dest[1],u.flying,u)) return false;
+  if(hexLoad(dest[0],dest[1],u,u.flying)>=HEX_CAPACITY) return false;
+  u.hex=[dest[0],dest[1]];
+  const p=hexCenter(dest[0],dest[1]); u.pos.x=p.x; u.pos.y=p.y;
+  u.target=null;
+  return true;
+}
+/* The neighbour that strictly closes (toward) or opens (away) the distance to `goal`; null if none. */
+function shoveStep(u,goal,away){
+  const cur=hexDist(u.hex,goal);
+  const opts=neighbors(u.hex[0],u.hex[1])
+    .filter(h=>routeOK(h[0],h[1],u.flying,u) && hexLoad(h[0],h[1],u,u.flying)<HEX_CAPACITY)
+    .map(h=>({h,d:hexDist(h,goal)}))
+    .filter(o=>away? o.d>cur : o.d<cur)
+    .sort((a,b)=>away? b.d-a.d : a.d-b.d);
+  return opts.length? opts[0].h : null;
+}
+/* A side's volcano: the V tile on its own half (Pele's Eruption needs one). */
+function volcanoOf(side){
+  const r0=side?0:PLAYER_ROW0, r1=side?AI_ROWS:ROWS;
+  for(let r=r0;r<r1;r++) for(let c=0;c<COLS;c++) if(TMAP[r]&&TMAP[r][c]==="V") return [c,r];
+  return null;
+}
+/* Is this hex covered by a live Moon Road of `side`? (Hina: 1.5x speed for that side's units.) */
+function onMoonRoad(u){
+  return S.floodedHexes.some(f=>f.road===u.side&&f.c===u.hex[0]&&f.r===u.hex[1]);
+}
+/* A power that cannot be cast at all is refused BEFORE payment. Data-driven: a god def carries
+   `requires`; only "volcano" exists (Pele). Every other power keeps the old rule -- a validated cast
+   whose effect finds nothing is still paid. Returns a refusal message, or null. */
+function powerPrecheck(side,g){
+  if(g.requires==="volcano" && !volcanoOf(side)) return "No volcano to wake — paint one in setup.";
+  return null;
+}
+const unitRange = u => Math.max(u.def.range,1) + (u.def.duskRange&&duskActive()? u.def.duskRange : 0); // Moon Hound: farther under the Dusk moon
 function applyGodPower(casterSide,g,hex,pickedGod){
   const key=g.key, enemySide=casterSide?0:1;
   const pt=hexCenter(hex[0],hex[1]);
   switch(key){
+    /* ================= POLYNESIA (P4, 2026-11-19) =================
+       Grammar: every power moves something or changes the sea. Pele -- fire and land -- is the
+       one earned exception. Terrain overlays ride floodedHexes so they revert on their own. */
+    case "tangaroa": { // Rising Tide: water within 3 becomes deep ocean for 8s
+      let k=0;
+      for(const [c,r] of hexesInRadius(hex,3)){
+        if(terrain(c,r)!=="W"||bldAt(c,r)) continue;
+        if(S.units.some(u=>!u.dead&&!u.flying&&u.side===enemySide&&u.hex[0]===c&&u.hex[1]===r)) continue; // their units are stopped at its edge, not trapped in it
+        S.floodedHexes.push({c,r,orig:"W",to:"O",expiresAt:elapsed()+8}); TMAP[r][c]="O"; k++;
+      }
+      if(!k) return false;
+      renderBG(); fx(pt,"ring","#1d3f6e"); castBanner(casterSide,g,"#1d3f6e");
+      return true;
+    }
+    case "kanaloa": { // Undertow: drag enemies within 2 one hex toward your nearest deep ocean
+      const ocean=[]; for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(TMAP[r][c]==="O") ocean.push([c,r]);
+      const home=[4, casterSide?0:ROWS-1]; // no ocean anywhere: the current runs toward your own shore
+      let k=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)||hexDist(u.hex,hex)>2) continue;
+        const goal=ocean.length? ocean.slice().sort((a,b)=>hexDist(u.hex,a)-hexDist(u.hex,b))[0] : home;
+        if(shoveUnit(u,shoveStep(u,goal,false))){ k++; fx(u.pos,"ring","#2f7391"); }
+      }
+      if(!k) return false;
+      fx(pt,"boom","#2f7391"); castBanner(casterSide,g,"#2f7391");
+      return true;
+    }
+    case "tane": { // Pushed the Sky: every unit within 2, both sides, shoved one hex away
+      const near=S.units.filter(u=>!u.dead&&hexDist(u.hex,hex)<=2)
+        .sort((a,b)=>hexDist(b.hex,hex)-hexDist(a.hex,hex)); // outer ring first, so the inner ring has room to move
+      let k=0;
+      for(const u of near){
+        const goal = hexDist(u.hex,hex)===0 ? [hex[0], hex[1]+(casterSide?-1:1)] : hex; // dead centre: pushed back toward the caster's own half
+        const dest = hexDist(u.hex,hex)===0 ? shoveStep(u,goal,false) : shoveStep(u,goal,true);
+        if(shoveUnit(u,dest)){ k++; fx(u.pos,"ring","#6a9a4b"); }
+      }
+      if(!k) return false;
+      fx(pt,"boom","#6a9a4b"); castBanner(casterSide,g,"#6a9a4b");
+      return true;
+    }
+    case "tu": { // War Stride: your units within 2 move at double speed for 5s, terrain ignored
+      let k=0;
+      for(const u of S.units){
+        if(u.dead||u.side!==casterSide||hexDist(u.hex,hex)>2) continue;
+        u.buffUntil=elapsed()+5; u.buffSpd=2; u.strideUntil=elapsed()+5; k++;
+        fx(u.pos,"ring","#c0392b");
+      }
+      if(!k) return false;
+      castBanner(casterSide,g,"#c0392b");
+      return true;
+    }
+    case "rongo": { // Harvest Calm: enemies within 2 lose their route and stop 3s; yours heal 15%
+      let k=0;
+      for(const u of S.units){
+        if(u.dead||hexDist(u.hex,hex)>2) continue;
+        if(u.side===casterSide){
+          if(sealed(u)||u.hp>=u.maxhp) continue;
+          u.hp=Math.min(u.maxhp,u.hp+u.maxhp*0.15); k++; fx(u.pos,"text","#7ec46a","+"+Math.round(u.maxhp*0.15));
+        } else if(!enemyIgnores(u,casterSide)){
+          u.path=null; u.pathIdx=0; u.free=true; u.target=null; u.rootUntil=elapsed()+3; k++;
+          fx(u.pos,"ring","#c9a24b");
+        }
+      }
+      if(!k) return false;
+      fx(pt,"boom","#c9a24b"); castBanner(casterSide,g,"#c9a24b");
+      return true;
+    }
+    case "hina": { // Moon Road: a 5-hex line toward the enemy becomes your sea-road for 6s (1.5x)
+      const dir=casterSide?1:-1; let k=0; const roadArt=[];
+      for(let i=0;i<5;i++){
+        const c=hex[0], r=hex[1]+dir*i;
+        if(!inBounds(c,r)) break;
+        const t=terrain(c,r);
+        if(TINFO[t].block||bldAt(c,r)) continue; // the road runs over open ground and water, never rock
+        if(S.units.some(u=>!u.dead&&!u.flying&&u.side===enemySide&&u.hex[0]===c&&u.hex[1]===r)) continue;
+        S.floodedHexes.push({c,r,orig:t,to:"O",road:casterSide,expiresAt:elapsed()+6}); TMAP[r][c]="O"; k++; roadArt.push(hexCenter(c,r));
+      }
+      if(!k) return false;
+      spawnPowerFxAt(key,roadArt.reduce((s,p)=>s+p.x,0)/k,roadArt.reduce((s,p)=>s+p.y,0)/k);
+      renderBG(); fx(pt,"ring","#e8e2c4"); castBanner(casterSide,g,"#e8e2c4");
+      return true;
+    }
+    case "tawhirimatea": { // Storm Wind: every enemy blown one hex toward its own half; flyers two
+      let k=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)) continue;
+        const goal=[u.hex[0], u.side?0:ROWS-1];
+        let moved=false;
+        for(let step=0; step<(u.flying?2:1); step++){
+          const toward=[u.hex[0], u.side?u.hex[1]-1:u.hex[1]+1]; // straight back where possible
+          if(shoveUnit(u, inBounds(toward[0],toward[1])&&hexDist(toward,goal)<hexDist(u.hex,goal)?toward:null) || shoveUnit(u,shoveStep(u,goal,false))) moved=true;
+        }
+        if(moved){ k++; fx(u.pos,"ring","#9adfff"); }
+      }
+      if(!k) return false;
+      castBanner(casterSide,g,"#9adfff");
+      return true;
+    }
+    case "hinenuitepo": { // Gate of Night: seal enemies within 2 for 10s; one of your fallen rises
+      let sealedN=0;
+      for(const u of S.units){
+        if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)||hexDist(u.hex,hex)>2) continue;
+        u.sealedUntil=elapsed()+10; sealedN++; fx(u.pos,"ring","#3b2a4a");
+      }
+      let raised=0;
+      const corpse=S.deadHumans.filter(d=>d.side===casterSide&&!d.sealed&&elapsed()-d.at<60).slice(-1)[0];
+      if(corpse){
+        const bld=buildings.filter(b=>b.side===casterSide&&!b.dead)
+          .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(h,hex)))-Math.min(...b.hexes.map(h=>hexDist(h,hex))))[0];
+        const spot=bld && bldAdjacent(bld,false,casterSide).find(h=>hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
+        if(spot){
+          const u=makeUnit(casterSide,corpse.key,spot,null); u.free=true; S.units.push(u);
+          S.deadHumans=S.deadHumans.filter(d=>d!==corpse); raised=1; fx(u.pos,"ring","#7e6bb0");
+        }
+      }
+      if(!sealedN&&!raised) return false;
+      fx(pt,"boom","#3b2a4a"); castBanner(casterSide,g,"#3b2a4a");
+      return true;
+    }
+    case "pele": { // Eruption: the volcano wakes -- the one Polynesian power that burns
+      const v=volcanoOf(casterSide);
+      if(!v) return false; // powerPrecheck refuses this before payment; kept as the safety net
+      for(const u of S.units){
+        if(u.dead||u.def.lavaImmune||hexDist(u.hex,v)>2||enemyIgnores(u,casterSide)) continue;
+        const d=godPowerDmg(u,90); if(!d) continue;
+        u.hp-=d; fx(u.pos,"text","#e8552a","-"+Math.round(d));
+        if(u.hp<=0&&!u.dead) killUnit(u,"#e8552a");
+      }
+      for(const [c,r] of hexesInRadius(v,1)){
+        const t=terrain(c,r);
+        if(TINFO[t].block||bldAt(c,r)) continue;
+        S.floodedHexes.push({c,r,orig:t,to:"L",lava:true,owner:casterSide,dmgPerSec:12,expiresAt:elapsed()+8}); TMAP[r][c]="L";
+      }
+      renderBG(); const vp=hexCenter(v[0],v[1]); spawnPowerFxAt(key,vp.x,vp.y); fx(vp,"boom","#e8552a"); fx(vp,"ring","#e8552a"); castBanner(casterSide,g,"#e8552a");
+      return true;
+    }
+    case "laka": { // Hula of Arrival: your next 3 trained units arrive at the structure nearest the target
+      const bld=buildings.filter(b=>b.side===casterSide&&!b.dead)
+        .sort((a,b)=>Math.min(...a.hexes.map(h=>hexDist(h,hex)))-Math.min(...b.hexes.map(h=>hexDist(h,hex))))[0];
+      if(!bld) return false;
+      S.hula[casterSide]={bldId:bld.id,left:3};
+      const arrival=bldCenter(bld); spawnPowerFxAt(key,arrival.x,arrival.y);
+      fx(bldCenter(bld),"ring","#f2a7c0"); castBanner(casterSide,g,"#f2a7c0");
+      return true;
+    }
     case "huitzilopochtli": {
       // 2026-07-23 (Aztec redesign, mythology_game_design.xlsx): Solar War replaces the
       // old radial nuke -- buffs ALL your own units, but costs each of them a slice of
@@ -5036,12 +5508,12 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)) continue;
         if(isRa ? u.hex[0]!==hex[0] : u.hex[1]!==row) continue; // Ra: column (lane). Horus: row (rank).
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
-        u.hp-=dmg; fx(u.pos,"text",color,"-"+dmg);
+        { const pd=godPowerDmg(u,dmg); u.hp-=pd; fx(u.pos,"text",color,"-"+Math.round(pd)); }
         if(u.hp<=0){
-          if(u.def.retracesOnDeath && !u.hasRevived){ beginRetreat(u); }
-          else if(u.def.lastStandOnDeath && !u.lastStandUsed){ beginLastStand(u); }
+          if(u.def.retracesOnDeath && !u.hasRevived && !sealed(u)){ beginRetreat(u); }
+          else if(u.def.lastStandOnDeath && !u.lastStandUsed && !sealed(u)){ beginLastStand(u); }
           else if(tryMythResurrection(u)){ /* no death rewards on resurrection */ }
-          else if(u.def.revivesOnce && !u.hasRevived){
+          else if(u.def.revivesOnce && !u.hasRevived && !sealed(u)){
             u.hasRevived=true; u.hp=u.maxhp*0.4; fx(u.pos,"ring","#ffb020");
           } else killUnit(u,"#c0392b"); // Ra's Solar Flare / Horus's rank strike
         }
@@ -5126,7 +5598,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       if(!bld) return false;
       const spots=bldAdjacent(bld,false).filter(h=>hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
       const window=hasPassive(casterSide,"corpseWindow")?90:60;
-      const pool=S.deadHumans.filter(d=>d.side===casterSide&&elapsed()-d.at<window).slice(-3);
+      const pool=S.deadHumans.filter(d=>d.side===casterSide&&!d.sealed&&elapsed()-d.at<window).slice(-3);
       let n=0;
       for(const d of pool){
         const h=spots[n]||spots[0]; if(!h) break;
@@ -5202,7 +5674,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       for(const u of S.units){
         if(u.dead||enemyIgnores(u,casterSide)||hexDist(u.hex,hex)>3) continue;
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
-        u.hp-=40; fx(u.pos,"text","#2f7391","-40");
+        { const pd=godPowerDmg(u,40); u.hp-=pd; fx(u.pos,"text","#2f7391","-"+Math.round(pd)); }
         if(u.hp<=0 && !u.dead){
           killUnit(u);
         }
@@ -5326,7 +5798,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       [[t1,120],[arc,60]].forEach(([u,dmg])=>{
         if(!u) return;
         if(elapsed()<(u.invulnUntil||0)) return; // invulnerable is COMPLETE
-        u.hp-=dmg; fx(u.pos,"text","#f2e14c","-"+dmg);
+        { const pd=godPowerDmg(u,dmg); u.hp-=pd; fx(u.pos,"text","#f2e14c","-"+Math.round(pd)); }
         S.effects.push({kind:"tracer",x:pt.x,y:pt.y,x2:u.pos.x,y2:u.pos.y,color:"#f2e14c",t:0,life:0.4});
         if(u.hp<=0) killUnit(u,"#c0392b"); // Lei Gong
       });
@@ -5373,7 +5845,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       for(const u of S.units){
         if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)||hexDist(u.hex,hex)>2) continue;
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
-        u.hp-=45; u.weakenUntil=elapsed()+6; n++;
+        u.hp-=godPowerDmg(u,45); u.weakenUntil=elapsed()+6; n++;
         fx(u.pos,"text","#ffd98a","-45");
         if(u.hp<=0) killUnit(u,"#c0392b");
       }
@@ -5406,7 +5878,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
       if(!hbld) return false;
       const hspots=bldAdjacent(hbld,false).filter(h=>hexLoad(h[0],h[1],undefined,false)<HEX_CAPACITY);
       const hwindow=hasPassive(casterSide,"corpseWindow")?90:60;
-      const hpool=S.deadHumans.filter(d=>elapsed()-d.at<hwindow).slice(-3); // EITHER side
+      const hpool=S.deadHumans.filter(d=>!d.sealed&&elapsed()-d.at<hwindow).slice(-3); // EITHER side
       let hn=0;
       for(const d of hpool){
         const h=hspots[hn]||hspots[0]; if(!h) break;
@@ -5714,7 +6186,7 @@ function applyGodPower(casterSide,g,hex,pickedGod){
         if(u.dead||u.side===casterSide||enemyIgnores(u,casterSide)) continue;
         if(!zone.some(h=>h[0]===u.hex[0]&&h[1]===u.hex[1])) continue;
         if(elapsed()<(u.invulnUntil||0)) continue; // invulnerable is COMPLETE: no raw-hp path may chip past it
-        u.hp-=60; u.slowUntil=elapsed()+6; n++;
+        u.hp-=godPowerDmg(u,60); u.slowUntil=elapsed()+6; n++;
         fx(u.pos,"text","#8a5ba0","-60");
         if(u.hp<=0 && !u.dead){
           killUnit(u);
@@ -5731,6 +6203,7 @@ function castPlayerPower(key,hex,pickedGod){
   const g=activeGods.find(x=>x.key===key), st=S.playerGods[key];
   S.armedPower=null;
   if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.favor<godPowerCost(g,0)){ hint("Power unavailable."); return; }
+  const refusal=powerPrecheck(0,g); if(refusal){ hint(refusal); return; } // refused BEFORE payment
   S.favor-=godPowerCost(g,0); st.cdUntil=elapsed()+g.cd;
   if(applyGodPower(0,g,hex,pickedGod)!==false){
     spawnPowerFx(key,hex); // only when the power actually applied
@@ -6053,6 +6526,7 @@ function aiPowerTriggerOK(key,hex){
 function aiCastPower(key){
   const g=activeAiGods.find(x=>x.key===key), st=S.aiGods[key];
   if(!st.unlocked||elapsed()<st.cdUntil||elapsed()<(st.lockedUntil||0)||S.aiFavor<godPowerCost(g,1)) return false;
+  if(powerPrecheck(1,g)) return false;
   const hex=pickAiPowerHex(key);
   if(!hex) return false;
   S.aiFavor-=godPowerCost(g,1); st.cdUntil=elapsed()+g.cd;
@@ -6095,7 +6569,7 @@ let aiProfile=AI_PROFILES.balanced.china;
 function aiRallyHexes(flying,lane){
   const anchor=[lane,PLAYER_ROW0], out=[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++)
-    if(routeOK(c,r,flying)) out.push([c,r]);
+    if(routeOK(c,r,flying,1)) out.push([c,r]);
   return out.sort((a,b)=>hexDist(a,anchor)-hexDist(b,anchor)||Math.abs(a[0]-anchor[0])-Math.abs(b[0]-anchor[0]));
 }
 function ensureAiWave(){
@@ -6125,10 +6599,10 @@ function loopErasedPath(path){
   return out;
 }
 function routeAiWaveMember(u,target,lane){
-  const goals=bldAdjacent(target,u.flying), waypoint=[lane,10];
-  const first=findPath(u.hex,[waypoint],u.flying);
-  const second=first&&findPath(waypoint,goals,u.flying);
-  const full=first&&second?loopErasedPath([...first,...second.slice(1)]):findPath(u.hex,goals,u.flying);
+  const goals=bldAdjacent(target,u.flying,u), waypoint=[lane,10];
+  const first=findPath(u.hex,[waypoint],u.flying,u);
+  const second=first&&findPath(waypoint,goals,u.flying,u);
+  const full=first&&second?loopErasedPath([...first,...second.slice(1)]):findPath(u.hex,goals,u.flying,u);
   if(full&&full.length>1){u.path=full.slice(1);u.pathIdx=0;}
   else u.path=null;
 }
@@ -6289,14 +6763,14 @@ function tickAI(dt){
     src=buildings.find(b=>b.side===1&&!b.dead&&b.type==="city")||buildings.find(b=>b.side===1&&!b.dead);
   }
   if(!src) return;
-  const starts=bldAdjacent(src,aiUnitsTbl[key].flying).sort((a,b)=>b[1]-a[1]);
+  const starts=bldAdjacent(src,aiUnitsTbl[key].flying,1).sort((a,b)=>b[1]-a[1]);
   if(!starts.length) return;
   const defenders=S.units.filter(u=>!u.dead&&u.side===1&&u.duty==="defend").length;
   const duty=(invaders.length>=2 && defenders<Math.min(3,invaders.length)) ? "defend" : "attack";
   let goals;
   if(duty==="defend"){
     const v=invaders[0];
-    goals=[v.hex,...neighbors(v.hex[0],v.hex[1])].filter(h=>routeOK(h[0],h[1],aiUnitsTbl[key].flying));
+    goals=[v.hex,...neighbors(v.hex[0],v.hex[1])].filter(h=>routeOK(h[0],h[1],aiUnitsTbl[key].flying,1));
   } else {
     const wave=ensureAiWave(), rally=aiRallyHexes(aiUnitsTbl[key].flying,wave.lane);
     const reserved=wave.units.length+S.training.filter(t=>t.side===1&&t.duty==="attack").length;
@@ -6308,7 +6782,7 @@ function tickAI(dt){
     goals=slot?[slot]:[];
   }
   if(!goals||!goals.length) return;
-  const p=findPath(starts[0],goals,aiUnitsTbl[key].flying);
+  const p=findPath(starts[0],goals,aiUnitsTbl[key].flying,1);
   if(!p) return;
   pay(aiUnitsTbl[key].cost,1,aiUnitsTbl[key].cat==="human");
   queueTrain(1,key,p,src,duty);
@@ -6497,7 +6971,12 @@ sphinx:"sphinx",
   xiuhcoatl:"falcon",jaguarspirit:"lion",featheredserpent:"dragon",raintitan:"golem",
   serpopard:"lion",apis:"golem",scorpion:"demon",apep:"dragon",ammit:"mummy",plaguebearer:"archer",sheut:"priest",ushabti:"spearman",
   nezha_lotus:"priest",nezha_reborn:"hero",xelhua_pyramid:"golem", // no art yet: the nearest vector silhouette
-  tlaltecuhtli:"demon",tzitzimitl:"demon",itzcuintli:"lion",centzonhuitznahua:"celestial",ehecatotontin:"lion",colotl:"demon"};
+  tlaltecuhtli:"demon",tzitzimitl:"demon",itzcuintli:"lion",centzonhuitznahua:"celestial",ehecatotontin:"lion",colotl:"demon",
+  // Polynesia (P3): vector fallbacks until the art pass (P6)
+  toa:"spearman",tao:"spearman",maa:"archer",leiomano:"axeman",waka:"golem",tohunga:"priest",
+  maui:"hero",tawhaki:"hero",hiiaka:"hero",
+  taniwha:"dragon",hee:"demon",tipua:"golem",aitu:"demon",manaia:"falcon",moonhound:"lion",
+  windchild:"falcon",ponaturi:"demon",lavaborn:"golem",forestspirit:"priest"};
 /* Uploaded sprites, keyed by unit key (not SPRITE_KEY's shared vector-shape grouping —
    real art is distinctive per unit, unlike the abstract vector shapes several keys
    currently share). Empty by default: zero images means zero behavior change, every
@@ -7938,6 +8417,234 @@ const UNIT_ART_GEOMETRY = {
       121,
       145
     ]
+  ],
+  "toa": [
+    [
+      436,
+      308,
+      310
+    ],
+    [
+      426,
+      337,
+      310
+    ]
+  ],
+  "tao": [
+    [
+      428,
+      360,
+      300
+    ],
+    [
+      419,
+      361,
+      300
+    ]
+  ],
+  "maa": [
+    [
+      446,
+      345,
+      300
+    ],
+    [
+      443,
+      384,
+      300
+    ]
+  ],
+  "leiomano": [
+    [
+      408,
+      283,
+      300
+    ],
+    [
+      400,
+      306,
+      300
+    ]
+  ],
+  "tohunga": [
+    [
+      391,
+      281,
+      295
+    ],
+    [
+      396,
+      293,
+      295
+    ]
+  ],
+  "waka": [
+    [
+      275,
+      705,
+      110
+    ],
+    [
+      263,
+      719,
+      110
+    ]
+  ],
+  "maui": [
+    [
+      459,
+      351,
+      315
+    ],
+    [
+      456,
+      378,
+      315
+    ]
+  ],
+  "tawhaki": [
+    [
+      437,
+      402,
+      295
+    ],
+    [
+      426,
+      395,
+      295
+    ]
+  ],
+  "hiiaka": [
+    [
+      441,
+      408,
+      290
+    ],
+    [
+      443,
+      424,
+      290
+    ]
+  ],
+  "taniwha": [
+    [
+      322,
+      326,
+      0
+    ],
+    [
+      343,
+      331,
+      0
+    ]
+  ],
+  "hee": [
+    [
+      356,
+      299,
+      0
+    ],
+    [
+      366,
+      300,
+      0
+    ]
+  ],
+  "tipua": [
+    [
+      427,
+      280,
+      0
+    ],
+    [
+      399,
+      287,
+      0
+    ]
+  ],
+  "aitu": [
+    [
+      318,
+      281,
+      0
+    ],
+    [
+      321,
+      291,
+      0
+    ]
+  ],
+  "manaia": [
+    [
+      395,
+      274,
+      0
+    ],
+    [
+      392,
+      257,
+      0
+    ]
+  ],
+  "moonhound": [
+    [
+      275,
+      328,
+      0
+    ],
+    [
+      336,
+      319,
+      0
+    ]
+  ],
+  "windchild": [
+    [
+      417,
+      280,
+      0
+    ],
+    [
+      407,
+      278,
+      0
+    ]
+  ],
+  "ponaturi": [
+    [
+      354,
+      225,
+      0
+    ],
+    [
+      354,
+      238,
+      0
+    ]
+  ],
+  "lavaborn": [
+    [
+      445,
+      265,
+      0
+    ],
+    [
+      441,
+      266,
+      0
+    ]
+  ],
+  "forestspirit": [
+    [
+      380,
+      281,
+      0
+    ],
+    [
+      359,
+      276,
+      0
+    ]
   ]
 };
 IMG_SPRITES.krios = {"0":"assets/sprites/krios_back.png","1":"assets/sprites/krios_front.png"};
@@ -7965,6 +8672,27 @@ IMG_SPRITES.arena_bg_china = {0:"assets/sprites/arena_china_top_clean.png",1:"as
 IMG_SPRITES.arena_bg_aztec = {0:"assets/sprites/arena_aztec_top_clean.png",1:"assets/sprites/arena_aztec_bottom_clean.png"};
 IMG_SPRITES.arena_bg_greek = {0:"assets/sprites/arena_greek_top_clean.png",1:"assets/sprites/arena_greek_bottom_clean.png"};
 /* APPROVED SHEET ART END */
+/* POLYNESIAN UNIT ART START */
+IMG_SPRITES.toa = {"0":"assets/sprites/toa_back.png","1":"assets/sprites/toa_front.png"};
+IMG_SPRITES.tao = {"0":"assets/sprites/tao_back.png","1":"assets/sprites/tao_front.png"};
+IMG_SPRITES.maa = {"0":"assets/sprites/maa_back.png","1":"assets/sprites/maa_front.png"};
+IMG_SPRITES.leiomano = {"0":"assets/sprites/leiomano_back.png","1":"assets/sprites/leiomano_front.png"};
+IMG_SPRITES.tohunga = {"0":"assets/sprites/tohunga_back.png","1":"assets/sprites/tohunga_front.png"};
+IMG_SPRITES.waka = {"0":"assets/sprites/waka_back.png","1":"assets/sprites/waka_front.png"};
+IMG_SPRITES.maui = {"0":"assets/sprites/maui_back.png","1":"assets/sprites/maui_front.png"};
+IMG_SPRITES.tawhaki = {"0":"assets/sprites/tawhaki_back.png","1":"assets/sprites/tawhaki_front.png"};
+IMG_SPRITES.hiiaka = {"0":"assets/sprites/hiiaka_back.png","1":"assets/sprites/hiiaka_front.png"};
+IMG_SPRITES.taniwha = {"0":"assets/sprites/taniwha_back.png","1":"assets/sprites/taniwha_front.png"};
+IMG_SPRITES.hee = {"0":"assets/sprites/hee_back.png","1":"assets/sprites/hee_front.png"};
+IMG_SPRITES.tipua = {"0":"assets/sprites/tipua_back.png","1":"assets/sprites/tipua_front.png"};
+IMG_SPRITES.aitu = {"0":"assets/sprites/aitu_back.png","1":"assets/sprites/aitu_front.png"};
+IMG_SPRITES.manaia = {"0":"assets/sprites/manaia_back.png","1":"assets/sprites/manaia_front.png"};
+IMG_SPRITES.moonhound = {"0":"assets/sprites/moonhound_back.png","1":"assets/sprites/moonhound_front.png"};
+IMG_SPRITES.windchild = {"0":"assets/sprites/windchild_back.png","1":"assets/sprites/windchild_front.png"};
+IMG_SPRITES.ponaturi = {"0":"assets/sprites/ponaturi_back.png","1":"assets/sprites/ponaturi_front.png"};
+IMG_SPRITES.lavaborn = {"0":"assets/sprites/lavaborn_back.png","1":"assets/sprites/lavaborn_front.png"};
+IMG_SPRITES.forestspirit = {"0":"assets/sprites/forestspirit_back.png","1":"assets/sprites/forestspirit_front.png"};
+/* POLYNESIAN UNIT ART END */
 const IMG_CACHE = {}; // cache key -> decoded Image, lazy + cached so we never re-decode base64 every frame
 function getSpriteImage(key,side){
   const entry=IMG_SPRITES[key];
@@ -8242,6 +8970,19 @@ POWER_FX.itzpapalotl = { hexes:5, hold:0, frames:{
   telegraph:"assets/sprites/fx_itzpapalotl_telegraph.png",
   impact:   "assets/sprites/fx_itzpapalotl_impact.png",
   dissipate:"assets/sprites/fx_itzpapalotl_dissipate.png" } };
+/* POLYNESIAN POWER ART START */
+// Instant three-stage cues; persistent mechanics keep their existing terrain/status visuals.
+POWER_FX.tangaroa = {"hexes":7,"hold":0,"frames":{"telegraph":"assets/sprites/fx_tangaroa_telegraph.png","impact":"assets/sprites/fx_tangaroa_impact.png","dissipate":"assets/sprites/fx_tangaroa_dissipate.png"}};
+POWER_FX.kanaloa = {"hexes":5,"hold":0,"frames":{"telegraph":"assets/sprites/fx_kanaloa_telegraph.png","impact":"assets/sprites/fx_kanaloa_impact.png","dissipate":"assets/sprites/fx_kanaloa_dissipate.png"}};
+POWER_FX.tane = {"hexes":5,"hold":0,"frames":{"telegraph":"assets/sprites/fx_tane_telegraph.png","impact":"assets/sprites/fx_tane_impact.png","dissipate":"assets/sprites/fx_tane_dissipate.png"}};
+POWER_FX.tu = {"hexes":5,"hold":0,"frames":{"telegraph":"assets/sprites/fx_tu_telegraph.png","impact":"assets/sprites/fx_tu_impact.png","dissipate":"assets/sprites/fx_tu_dissipate.png"}};
+POWER_FX.rongo = {"hexes":5,"hold":0,"frames":{"telegraph":"assets/sprites/fx_rongo_telegraph.png","impact":"assets/sprites/fx_rongo_impact.png","dissipate":"assets/sprites/fx_rongo_dissipate.png"}};
+POWER_FX.hina = {"hexes":3,"hold":0,"anchor":"self","frames":{"telegraph":"assets/sprites/fx_hina_telegraph.png","impact":"assets/sprites/fx_hina_impact.png","dissipate":"assets/sprites/fx_hina_dissipate.png"}};
+POWER_FX.tawhirimatea = {"hexes":9,"hold":0,"anchor":"board","frames":{"telegraph":"assets/sprites/fx_tawhirimatea_telegraph.png","impact":"assets/sprites/fx_tawhirimatea_impact.png","dissipate":"assets/sprites/fx_tawhirimatea_dissipate.png"}};
+POWER_FX.hinenuitepo = {"hexes":5,"hold":0,"frames":{"telegraph":"assets/sprites/fx_hinenuitepo_telegraph.png","impact":"assets/sprites/fx_hinenuitepo_impact.png","dissipate":"assets/sprites/fx_hinenuitepo_dissipate.png"}};
+POWER_FX.pele = {"hexes":5,"hold":0,"anchor":"self","frames":{"telegraph":"assets/sprites/fx_pele_telegraph.png","impact":"assets/sprites/fx_pele_impact.png","dissipate":"assets/sprites/fx_pele_dissipate.png"}};
+POWER_FX.laka = {"hexes":2,"hold":0,"anchor":"self","frames":{"telegraph":"assets/sprites/fx_laka_telegraph.png","impact":"assets/sprites/fx_laka_impact.png","dissipate":"assets/sprites/fx_laka_dissipate.png"}};
+/* POLYNESIAN POWER ART END */
 const FX_TELEGRAPH=0.2, FX_IMPACT=0.35, FX_DISSIPATE=0.3; // seconds; matches the sheet's frame brief
 const FX_MAX=12; // hard cap on live power effects, mirroring the "text" effect cap
 function getFxImage(src){
@@ -8436,7 +9177,7 @@ function spearmanFrameKey(u){
   if(u.dead && now<(u.animDeathUntil||0)) return "spear_death";
   if(now<(u.animAttackUntil||0)) return "spear_attack_impact";
   const t=u.target;
-  const inRange=t&&!t.dead&&unitDist(u,t)<=Math.max(u.def.range,1);
+  const inRange=t&&!t.dead&&unitDist(u,t)<=unitRange(u);
   if(inRange && u.atkT>0 && u.atkT<=SPEAR_WINDUP_DURATION && now>=(u.stunUntil||0))
     return "spear_attack_windup";
   return "spear";
@@ -8900,6 +9641,17 @@ function waterArtKey(faction){
   return faction==="egypt"?"terrain_egypt_nile":faction==="aztec"?"terrain_aztec_texcoco":"terrain_shared_water";
 }
 function drawSpecialTile(g,T,cx,cy,r){
+  /* P2: Deep Ocean, Volcano and Lava are drawn as flat vector plates until art lands (A1). */
+  if(T==="O"||T==="V"||T==="L"){
+    const t=TINFO[T];
+    g.fillStyle=t.fill; hexPoly(g,cx,cy,HEX*0.98); g.fill();
+    if(T==="O"){ g.strokeStyle="rgba(150,200,255,.35)"; g.lineWidth=1;
+      for(const dy of [-0.22,0.02,0.26]){ g.beginPath(); g.moveTo(cx-HEX*.42,cy+HEX*dy); g.quadraticCurveTo(cx-HEX*.14,cy+HEX*(dy-.14),cx,cy+HEX*dy); g.quadraticCurveTo(cx+HEX*.14,cy+HEX*(dy+.14),cx+HEX*.42,cy+HEX*dy); g.stroke(); } }
+    else if(T==="V"){ g.fillStyle="#6b4a3a"; g.beginPath(); g.moveTo(cx-HEX*.55,cy+HEX*.45); g.lineTo(cx,cy-HEX*.5); g.lineTo(cx+HEX*.55,cy+HEX*.45); g.closePath(); g.fill();
+      g.fillStyle="#e8552a"; g.beginPath(); g.ellipse(cx,cy-HEX*.42,HEX*.16,HEX*.07,0,0,7); g.fill(); }
+    else { g.fillStyle="rgba(255,220,120,.55)"; for(const [dx,dy] of [[-.3,-.1],[.2,.15],[-.05,.3]]){ g.beginPath(); g.ellipse(cx+HEX*dx,cy+HEX*dy,HEX*.12,HEX*.07,0,0,7); g.fill(); } }
+    return;
+  }
   const key = T==="F"?(factionForRow(r)==="china"?"terrain_chinese_bamboo":"terrain_shared_forest") : T==="M"?"terrain_shared_mountain" : T==="W"?waterArtKey(factionForRow(r)) : null;
   if(!key) return;
   const img=getSpriteImage(key);
@@ -9127,7 +9879,7 @@ function draw(){
       const endHex=d.path[d.path.length-1], key=endHex.join(",");
       if(d.ghostKey!==key){
         d.ghostKey=key;
-        const g=marchRouteFrom(endHex,d.def.flying,0);
+        const g=marchRouteFrom(endHex,d.def.flying,0,{side:0,def:d.def});
         d.ghost=g?g.path:null;
         d.ghostBld=g?g.bld:null; // locked onto the unit at release -- see pointerup/queueTrain
       }
@@ -9347,6 +10099,7 @@ function renderFactionPicker(){
   $("factionbtn-china").classList.toggle("selected", S.playerFaction==="china");
   $("factionbtn-aztec").classList.toggle("selected", S.playerFaction==="aztec");
   $("factionbtn-greek").classList.toggle("selected", S.playerFaction==="greek");
+  $("factionbtn-polynesian").classList.toggle("selected", S.playerFaction==="polynesian");
   renderDeckSlots();
 }
 function renderDeckSlots(){
@@ -9358,8 +10111,9 @@ function renderDeckSlots(){
     if(!preset){$("decksummary-"+slot).textContent="";continue;}
     const f=FACTIONS[preset.faction], names=keys=>keys.map(k=>f.units[k].name).join(", ");
     const godNames=preset.gods.map(k=>{const g=godDef(k);return g?g.name:k;}).join(", ");
-    const counts={F:0,M:0,W:0};preset.terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
-    $("decksummary-"+slot).textContent=`Gods: ${godNames}\nHeroes: ${names(preset.heroes)}\nUnits: ${names(preset.loadout)}\nTerrain: ${counts.F} Forest · ${counts.M} Mountain · ${counts.W} Water`;
+    const counts={};for(const k of Object.keys(terrainBudgetFor(preset.faction))) counts[k]=0;preset.terrain.flat().forEach(ch=>{if(ch in counts)counts[ch]++;});
+    const terrainText=Object.keys(counts).map(k=>`${counts[k]} ${TINFO[k].name}`).join(" · ");
+    $("decksummary-"+slot).textContent=`Gods: ${godNames}\nHeroes: ${names(preset.heroes)}\nUnits: ${names(preset.loadout)}\nTerrain: ${terrainText}`;
   }
 }
 /* Setup is a six-step wizard, each its own full page (the deck chooser precedes the
@@ -9462,6 +10216,7 @@ function startMatch(keepTerrain){
   S.hunt=[null,null];
   S.swallowed=[];
   S.forge=[0,0];
+  S.hula=[null,null];
   S.blightUntil=[0,0];
   S.veilUntil=0;
   S.bldDmg=[0,0];
@@ -9492,7 +10247,7 @@ function startMatch(keepTerrain){
     playerHalf.terrain=freshPlayerHalfTerrain();
     pickAiLayout(); // 8.7: MUST precede freshAiHalfTerrain() -- the generator validates against live side-1 building hexes
     aiHalfTerrain=freshAiHalfTerrain();
-    S.painted={F:0,M:0,W:0}; S.paintMap={};
+    S.painted=paintedZero(); S.paintMap={};
   }
   $("endscreen").style.display="none";
   S.setupStep="faction";
