@@ -1,6 +1,6 @@
 {
-  "releaseVersion": 63,
-  "cacheName": "godsbound-v63",
+  "releaseVersion": 64,
+  "cacheName": "godsbound-v64",
   "files": {
     "assets/icons/apple-touch-icon.png": "c98fa62bb19792809eaf3dcf3b54458d3392bddb41f97c1145f1c7fe4d3d3ce0",
     "assets/icons/icon-192.png": "7f6fab5c0f1ebfc95f66576507d0753b8e57d25b784867a43d876967f5e25e27",
@@ -31,6 +31,8 @@
     "assets/sprites/arena_egypt_top_clean.png": "2757728192c05143e7926658fba053e590a1ec91ac6aa972d26c75761c70d740",
     "assets/sprites/arena_greek_bottom_clean.png": "c1672356bdf1edbedd07099119c141909c0f48645333fdf7fbfa89a4e72b2fdc",
     "assets/sprites/arena_greek_top_clean.png": "cbe73c7f74eb2e292401774272a022b294ca0ab28c8d815256294642880d7dc4",
+    "assets/sprites/arena_polynesian_bottom_clean.png": "42f7d8437b1c354eb5b90cf2509da8671a2fe99cf603f76bb01f41c1eb5d9131",
+    "assets/sprites/arena_polynesian_top_clean.png": "4afe01f30cc8596ef28d4c6829a146f26408b3db3cbc39745475495583e0264a",
     "assets/sprites/ariadne_back.png": "b70b7439bead8420851e685a0e956d30a242062ca4bec1a822bd89c0306adb76",
     "assets/sprites/ariadne_echo_back.png": "55739550c6b497a0c661dc470c7c0cc316679d0246d630557102bac054f60a8f",
     "assets/sprites/ariadne_echo_front.png": "0c9d5a0da8af24167d69fde0d6aaac01a17ad0a5d2f0dee77324c3b5b9bb0f31",
@@ -439,6 +441,11 @@
     "assets/sprites/structure_greek_corinth_front.png": "b466b601a314c013653a2b77f423774d4341c958bd4aad3e356433cedfbb98a2",
     "assets/sprites/structure_greek_sparta_back.png": "fbe056f7804aff83d9c1fe6fae130aac805c5abcc814e270b1c171954a1aa87a",
     "assets/sprites/structure_greek_sparta_front.png": "e696c9274852a5515b7410ffd01c9fc4bae60e06fa5e579d1cdb8ccea93c960e",
+    "assets/sprites/structure_polynesian_canoe_workshop_front.png": "ae0b6107bf78194c2c5dc4a66284ebf0e9e70fe75d61d25692c51d48dbb1edff",
+    "assets/sprites/structure_polynesian_community_village_front.png": "fd32a17b7ce2e2bb457bad0de16e5ded8eb498b990b575272099cf2417c96006",
+    "assets/sprites/structure_polynesian_fishing_village_front.png": "05148191981b9f9e40acaee06bf138de5b602099e8e756162e161fb60c0e2d73",
+    "assets/sprites/structure_polynesian_fortified_village_front.png": "5c54412156dcdcfccfe7d488baa64a70cc7cce2a945c4757c70cacd4d1280242",
+    "assets/sprites/structure_polynesian_garden_village_front.png": "53a840f39a541ec1daa30856c2d7471bcef40d27c0dca95981b5d4c9dbb5b965",
     "assets/sprites/talos_back.png": "82977d5d9fcde864e47a8a134c1221cd89a91197a073224f172f67f98af8acd1",
     "assets/sprites/talos_front.png": "6e97c07ccf8911b5c52fc3738c98d38e879c1690733f7376b39a09c3dc6cfde8",
     "assets/sprites/taniwha_back.png": "db255eb58a4a3d7288ab14db60648fb6a590e864cb7e89f955c4999cc6ad79c5",
@@ -452,6 +459,8 @@
     "assets/sprites/terrain_aztec_texcoco.png": "fa5cac1a35151d117c6c47aed7d60988f4eacc85be65e4ba6bd3ff7bc33a4153",
     "assets/sprites/terrain_chinese_bamboo.png": "bf6729ae8c21aa07cedbada91a862659c3f3b430f637345693c7007e7ce74e68",
     "assets/sprites/terrain_egypt_nile.png": "9069774bcc486032923f42308400a71398e1003a144953e5346681a24c5b502d",
+    "assets/sprites/terrain_polynesian_deep_ocean.png": "1650b9e48bcb5f9fdf7634956f8366ab8828c21cb41e897187ac3395b34961cc",
+    "assets/sprites/terrain_polynesian_volcano.png": "e8468c113b23f0f81c75b6fb8f33ae0509b58834d299a565be38dd4fe1b58171",
     "assets/sprites/terrain_shared_forest.png": "bd5cd03c89a6a4f5bcc69116cb88c808731412387c69e45d3f54ad079082b5fa",
     "assets/sprites/terrain_shared_mountain.png": "d548298c122669b30af44eb9ceb8418d08fa9548ef1804035e1f9109c4c8c883",
     "assets/sprites/terrain_shared_water.png": "d8a4d8acd8e9c415fed77a1dfb9cc52e583c6bc0a7871dafb223e9b07225a2d7",
@@ -493,9 +502,9 @@
     "assets/sprites/xiaotianquan_front.png": "0cd1d53dec78fa305d00e37b32554aa7129c616b897eeb1623760368bb242616",
     "assets/sprites/xiuhcoatl_back.png": "e9c0915d2f813795c1ec1d4dacf0ea08b3139556373e788b5e9bf378c21c8c7d",
     "assets/sprites/xiuhcoatl_front.png": "6a5c8c42b73307431527e5a9e6cca2ef2d2bb2293303efd1071a73fad77c7b6e",
-    "index.html": "a3c129f7895fd9a9772796eee6501f4eae8a83ab402370269dad252c7b36273d",
+    "index.html": "aa2f6cd4d280ada770613083b561e01238dbc2290b03660a3f30710cb2560806",
     "manifest.json": "1c170991d75279c316ff6144d28a737808463086bf0c110220951c5e2701f4d9",
-    "release-manifest.json": "e1a232110b3342b1816dce3ad109fc7430069d47e3edba59d3729305e9da7b58",
-    "service-worker.js": "a58b4e9829828dbd81cbdb4d15c654d521522abe8bb4587fbac1ff00ea98998e"
+    "release-manifest.json": "46d20cbffcd673dd6e4e61e6e19da8f5e933c94c9cffd8b072367131a76f8c1e",
+    "service-worker.js": "343d1c5f0de261c711bb7cd1a77810de7abb9fe6bff8458d0973f018d512dab5"
   }
 }

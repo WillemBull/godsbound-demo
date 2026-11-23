@@ -115,7 +115,6 @@
   .paintbtn,.factionbtn{font-size:15px;padding:5px 9px;border-radius:8px;border:1px solid #6b5426;background:#241a12;color:#d8c8a8;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
   #terrainpalette .paintbtn{width:100%;min-height:46px;padding:3px 6px;text-align:left;gap:7px;}
   .terrainhex{width:46px;min-width:46px;height:40px;object-fit:cover;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);pointer-events:none;}
-  .terrainhex-vec{display:inline-block;} /* P2: Deep Ocean / Volcano thumbnails are flat colour until art lands */
   .terraincopy{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px;pointer-events:none;}
   .terrainname{display:flex;align-items:center;justify-content:space-between;color:#f0dca7;font-size:11px;line-height:1;letter-spacing:.4px;text-transform:uppercase;}
   .terraindesc{color:#bcc3d1;font-size:9px;line-height:1.15;font-weight:500;}
@@ -131,10 +130,12 @@
   .modebtn .modesub{display:block;font-size:10px;font-weight:600;color:#aaa18e;margin-top:3px;letter-spacing:.3px;}
   .modebtn:disabled{opacity:.35;cursor:not-allowed;}
   #stepdecks,#stepfestivaldeck{width:min(94%,520px);margin:auto;text-align:center;}
+  #stepdecks{flex-direction:column;min-height:0;max-height:100%;}
   #festivaldeckcard{padding:16px;border:1px solid #6b5426;border-radius:10px;background:#241a12;text-align:left;}
   #festivaldeckcard .decksummary{font-size:12px;line-height:1.6;}
-  #deckslots{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;margin:14px auto 12px;}
-  #deckslots .deckslot{width:100%;padding:12px;border:1px solid #6b5426;border-radius:10px;background:#241a12;color:#d8c8a8;text-align:left;}
+  #deckslots{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;margin:14px 0 12px;padding:2px 3px;}
+  #deckslots .deckslot{flex:none;width:100%;padding:12px;border:1px solid #6b5426;border-radius:10px;background:#241a12;color:#d8c8a8;text-align:left;}
+  #deckslots .decksummary:empty{display:none;}
   #deckslots .deckslot.selected{border-color:var(--egypt-gold);box-shadow:0 0 6px rgba(232,184,75,.45);}
   .deckname{font-weight:800;letter-spacing:.8px;margin-bottom:5px;color:#f0dca7;}
   .decksummary{min-height:13px;white-space:pre-line;font-size:9px;line-height:1.45;color:#aaa18e;margin-bottom:9px;}
@@ -452,6 +453,9 @@
           <div id="deckslots">
             <div class="deckslot" id="deckslot-0"><div class="deckname" id="deckname-0">DECK A</div><div class="decksummary" id="decksummary-0"></div><div class="deckactions"><button id="deckselect-0" onclick="playDeckSlot(0)">SELECT</button><button id="deckedit-0" onclick="editDeckSlot(0)">EDIT</button></div></div>
             <div class="deckslot" id="deckslot-1"><div class="deckname" id="deckname-1">DECK B</div><div class="decksummary" id="decksummary-1"></div><div class="deckactions"><button id="deckselect-1" onclick="playDeckSlot(1)">SELECT</button><button id="deckedit-1" onclick="editDeckSlot(1)">EDIT</button></div></div>
+            <div class="deckslot" id="deckslot-2"><div class="deckname" id="deckname-2">DECK C</div><div class="decksummary" id="decksummary-2"></div><div class="deckactions"><button id="deckselect-2" onclick="playDeckSlot(2)">SELECT</button><button id="deckedit-2" onclick="editDeckSlot(2)">EDIT</button></div></div>
+            <div class="deckslot" id="deckslot-3"><div class="deckname" id="deckname-3">DECK D</div><div class="decksummary" id="decksummary-3"></div><div class="deckactions"><button id="deckselect-3" onclick="playDeckSlot(3)">SELECT</button><button id="deckedit-3" onclick="editDeckSlot(3)">EDIT</button></div></div>
+            <div class="deckslot" id="deckslot-4"><div class="deckname" id="deckname-4">DECK E</div><div class="decksummary" id="decksummary-4"></div><div class="deckactions"><button id="deckselect-4" onclick="playDeckSlot(4)">SELECT</button><button id="deckedit-4" onclick="editDeckSlot(4)">EDIT</button></div></div>
           </div>
           <div id="deckslotnote">Saved on this device</div>
           <div class="setupnav"><button class="setupback" onclick="goToHomeStep()">&larr; Home</button></div>
@@ -505,8 +509,8 @@
           <div id="terrainpalette">
             <button class="paintbtn" id="paintbtn-F" data-paint="F"><img class="terrainhex" id="paintbtn-F-img" src="assets/sprites/terrain_shared_forest.png" alt="Forest hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-F-name">Forest</span> <span class="pcount" id="paintbtn-F-count"></span></span><span class="terraindesc" id="paintbtn-F-desc">Slows movement by 25%. Units inside take 25% less ranged damage.</span></span></button>
             <button class="paintbtn" id="paintbtn-M" data-paint="M"><img class="terrainhex" src="assets/sprites/terrain_shared_mountain.png" alt="Mountain hex"><span class="terraincopy"><span class="terrainname">Mountain <span class="pcount" id="paintbtn-M-count"></span></span><span class="terraindesc">Impassable to ground units and blocks ranged line of sight.</span></span></button>
-            <button class="paintbtn" id="paintbtn-O" data-paint="O" style="display:none"><span class="terrainhex terrainhex-vec" style="background:#1d3f6e"></span><span class="terraincopy"><span class="terrainname">Deep Ocean <span class="pcount" id="paintbtn-O-count"></span></span><span class="terraindesc">Only your pantheon crosses it (at 70% speed); every other ground unit is stopped at its edge. Fighting in it is ordinary.</span></span></button>
-            <button class="paintbtn" id="paintbtn-V" data-paint="V" style="display:none"><span class="terrainhex terrainhex-vec" style="background:#3a2f2c"></span><span class="terraincopy"><span class="terrainname">Volcano <span class="pcount" id="paintbtn-V-count"></span></span><span class="terraindesc">Impassable to everyone and inert on its own. Only a god can wake it.</span></span></button>
+            <button class="paintbtn" id="paintbtn-O" data-paint="O" style="display:none"><img class="terrainhex" src="assets/sprites/terrain_polynesian_deep_ocean.png" alt=""><span class="terraincopy"><span class="terrainname">Deep Ocean <span class="pcount" id="paintbtn-O-count"></span></span><span class="terraindesc">Only your pantheon crosses it (at 70% speed); every other ground unit is stopped at its edge. Fighting in it is ordinary.</span></span></button>
+            <button class="paintbtn" id="paintbtn-V" data-paint="V" style="display:none"><img class="terrainhex" src="assets/sprites/terrain_polynesian_volcano.png" alt=""><span class="terraincopy"><span class="terrainname">Volcano <span class="pcount" id="paintbtn-V-count"></span></span><span class="terraindesc">Impassable to everyone and inert on its own. Only a god can wake it.</span></span></button>
             <button class="paintbtn" id="paintbtn-W" data-paint="W"><img id="paintbtn-W-img" class="terrainhex" src="assets/sprites/terrain_shared_water.png" alt="Water hex"><span class="terraincopy"><span class="terrainname"><span id="paintbtn-W-name">Water</span> <span class="pcount" id="paintbtn-W-count"></span></span><span class="terraindesc" id="paintbtn-W-desc">Slows movement by 50%. Units inside take 25% more damage.</span></span></button>
           </div>
           <div id="stepterrainbtns">
@@ -946,7 +950,7 @@ const GR_UNITS = {
 
 /* ---------------- GODS ---------------- */
 /* POLYNESIA (P3, 2026-11-16 spec, approved). The voyagers: the only pantheon the sea belongs to.
-   Playable from P4 (faction picker); no AI until P5; `artPending` until P6 (vector fallbacks).
+   Playable from P4 (faction picker); no AI until P5.
    Every name, story and depiction here waits on the Hawaiian- and Maori-tradition consultants (P6).
    Six humans, every one a distinct (delivery, target, rhythm) triple -- test_polynesia asserts it.
    Departure from the spec: the spec gave the Ma'a slinger and the Leiomano raider the SAME triple
@@ -1430,11 +1434,10 @@ const FACTIONS = {
            aiTitle:"BASILEUS AI", defaultLoadout:["hoplite","toxotes","peltast","krios"], defaultHeroes:["heracles","atalanta"],
            defaultGodPick:["artemis","hades","dionysus","hephaestus"] },
   /* POLYNESIA (P3/P4, 2026-11-19). Playable since P4 (on the faction picker); no aiTitle until P5, so
-     the opponent draw never picks it. `artPending` until P6: its units draw vector fallbacks and the
-     approved-art invariants skip it. The economy is the VOYAGE:
+     the opponent draw never picks it. The economy is the VOYAGE:
      favour for every hex a unit steps into (x2 in deep ocean, x1.5 on the enemy half), paid from
      enterHex(). The terrain block is what makes Deep Ocean theirs (P2). */
-  polynesian: { units:PO_UNITS, allGods:PO_GODS, name:"Polynesians", label:"🌊 Polynesian", artPending:true,
+  polynesian: { units:PO_UNITS, allGods:PO_GODS, name:"Polynesians", label:"🌊 Polynesian",
            economy:{ favorBase:2.0, favorPerStep:0.6, oceanStepMult:2, enemyHalfStepMult:1.5 },
            terrain:{ crossesOcean:true, budget:{F:5,O:6,W:5,V:1} },
            defaultLoadout:["toa","tao","maa","waka"], defaultHeroes:["maui","hiiaka"],
@@ -1573,14 +1576,13 @@ const STRUCTURE_LAYOUTS={
     {id:"sparta", type:"city",name:"Sparta", emoji:"🏛",shape:"pair",at:[4,4]},
     {id:"corinth",type:"city",name:"Corinth",emoji:"🏛",shape:"pair",at:[1,4]}
   ],
-  /* Polynesia (P3): four villages on four islands -- the most spread-out layout in the game (8
-     hexes). Names are TYPES, never real places: a pa is a fortified village, a marae the sacred
-     meeting ground. 1680 / 8 hexes = 210 per hex, 420 per structure. */
+  /* Five separate villages, one hex and 336 HP each. The community village keeps the temple role. */
   polynesian:[
-    {id:"pa1",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[1,4]},
-    {id:"pa2",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[7,4]},
-    {id:"pa3",  type:"city",  name:"Pā",    emoji:"🛖",shape:"pair",at:[4,2]},
-    {id:"marae",type:"temple",name:"Marae", emoji:"🗿",shape:"pair",at:[4,5]}
+    {id:"fishing_village",type:"city",name:"Fishing Village",emoji:"🛖",shape:"one",at:[1,4]},
+    {id:"canoe_workshop",type:"city",name:"Canoe Workshop",emoji:"🛖",shape:"one",at:[7,4]},
+    {id:"fortified_village",type:"city",name:"Fortified Village",emoji:"🛖",shape:"one",at:[4,2]},
+    {id:"community_village",type:"temple",name:"Community Village",emoji:"🛖",shape:"one",at:[4,5]},
+    {id:"garden_village",type:"city",name:"Garden Village",emoji:"🛖",shape:"one",at:[7,1]}
   ]
 };
 /* A def's shape for a side: `aiShape` (if any) on side 1. A built structure stores its resolved
@@ -1603,6 +1605,7 @@ function layoutFor(faction){ return STRUCTURE_LAYOUTS[faction]||STRUCTURE_LAYOUT
 function structureDef(faction,id){ return layoutFor(faction).find(d=>d.id===id)||null; }
 function layoutHexCount(faction){ return layoutFor(faction).reduce((n,d)=>n+shapeOf(d).length,0); }
 function structureHp(faction,def){ return Math.round(STRUCTURE_TOTAL_HP*shapeOf(def).length/layoutHexCount(faction)); }
+function structureTerrainOK(tile){ return tile!=="W"&&!TINFO[tile]?.block; }
 function mkStructure(side,faction,def,hexes){
   return mkBld(side,def.type,def.name,def.emoji,hexes,structureHp(faction,def),
     {id:def.id,faction,shape:(side&&def.aiShape)||def.shape,parts:def.parts||null});
@@ -1614,11 +1617,11 @@ function hexesFitShape(def,hexes,side){
   return want.every((h,i)=>Array.isArray(hexes[i])&&h[0]===hexes[i][0]&&h[1]===hexes[i][1]);
 }
 /* Places a faction's whole layout on a half (rows 0..o.rows-1): each structure goes to the
-   legal anchor nearest its preferred one -- in bounds, off mountain/water, no overlap, and
+   legal anchor nearest its preferred one -- in bounds, on buildable land, no overlap, and
    with o.gap a clear hex between structures. Returns [{def,hexes}] or null. */
 function autoLayout(faction,o){
   const out=[], taken=new Set();
-  const ok=hexes=>hexes.every(([c,r])=>c>=0&&c<COLS&&r>=0&&r<o.rows&&!"MW".includes(o.terrainAt(c,r)||"P")&&!taken.has(c+","+r))
+  const ok=hexes=>hexes.every(([c,r])=>c>=0&&c<COLS&&r>=0&&r<o.rows&&structureTerrainOK(o.terrainAt(c,r))&&!taken.has(c+","+r))
     && (!o.gap || hexes.every(h=>out.every(p=>p.hexes.every(q=>hexDist(h,q)>=2))));
   for(const def of layoutFor(faction)){
     const pref=(o.prefs&&o.prefs[def.id])||def.at, cands=[];
@@ -1953,7 +1956,7 @@ function canPlaceBuilding(b, hexes){
   else if(hexDist(hexes[0],hexes[1])!==1) return false;
   for(const h of hexes){
     const t=terrain(h[0],h[1]);
-    if(t==="M"||t==="W") return false;
+    if(!structureTerrainOK(t)) return false;
     const occ=bldAt(h[0],h[1]);
     if(occ && occ!==b) return false;
   }
@@ -2004,11 +2007,15 @@ let activeAiGods = FACTIONS[S.aiFaction].allGods.filter(g=>S.aiGodPick.includes(
 // since the key SET changes whenever a faction changes, not just unlocked/cdUntil values.
 
 /* ---------------- LOCAL DECK PRESETS ----------------
-   Two device-local slots retain the complete player setup. Storage is deliberately
+   Five device-local slots retain the complete player setup. Storage is deliberately
    guarded: file:// privacy modes and locked-down browsers may reject localStorage,
-   in which case the same two-slot flow still works for the current page session. */
+   in which case the slots still work for the current page session. */
 const DECK_SAVE_KEY="godsbound.deckPresets.v1";
-let deckPresets=[null,null];
+const DECK_SLOT_LABELS=["A","B","C","D","E"];
+let deckPresets=DECK_SLOT_LABELS.map(()=>null);
+function validDeckSlot(slot){
+  return Number.isInteger(slot)&&slot>=0&&slot<DECK_SLOT_LABELS.length;
+}
 function deckStorage(){
   try{ return typeof localStorage!=="undefined" ? localStorage : null; }
   catch(_){ return null; }
@@ -2025,9 +2032,8 @@ function defaultDeckPreset(faction="egypt"){
   };
 }
 /* A preset's structures for `faction`: exactly its layout's ids, each in its own shape, on the
-   player's half, off mountain/water, no overlap. Anything else -- including every deck saved
-   before 2026-11-13 (City/Temple/Fortress pairs) -- gets the faction's default layout instead
-   of losing the whole deck. */
+   player's half, on buildable land, no overlap. Rebuild incompatible layouts on the saved terrain
+   so an older deck still loads, keeping Polynesian village anchors where possible. */
 function normalizePresetStructures(faction,raw,terrain){
   const defs=layoutFor(faction);
   const valid=Array.isArray(raw)&&raw.length===defs.length&&(()=>{
@@ -2037,12 +2043,21 @@ function normalizePresetStructures(faction,raw,terrain){
       const hexes=s.hexes.map(h=>Array.isArray(h)?[Number(h[0]),Number(h[1])]:[NaN,NaN]);
       if(hexes.some(h=>!Number.isInteger(h[0])||!Number.isInteger(h[1])||h[0]<0||h[0]>=COLS||h[1]<0||h[1]>=PLAYER_ROWS)) return false;
       if(!hexesFitShape(d,hexes)) return false;
-      for(const h of hexes){ const k=h[0]+","+h[1]; if(occupied.has(k)||["M","W"].includes(terrain[h[1]][h[0]])) return false; occupied.add(k); }
+      for(const h of hexes){ const k=h[0]+","+h[1]; if(occupied.has(k)||!structureTerrainOK(terrain[h[1]][h[0]])) return false; occupied.add(k); }
     }
     return true;
   })();
   if(valid) return defs.map(d=>({id:d.id,hexes:raw.find(x=>x&&x.id===d.id).hexes.map(h=>[Number(h[0]),Number(h[1])])}));
-  const lay=autoLayout(faction,{rows:PLAYER_ROWS,terrainAt:(c,r)=>terrain[r][c]});
+  const prefs={};
+  if(faction==="polynesian"&&Array.isArray(raw)){
+    const previousIds={fishing_village:"pa1",canoe_workshop:"pa2",fortified_village:"pa3",community_village:"marae"};
+    for(const [id,oldId] of Object.entries(previousIds)){
+      const anchor=raw.find(b=>b?.id===oldId)?.hexes?.[0];
+      if(Array.isArray(anchor)&&anchor.length===2&&anchor.every(Number.isInteger)&&
+         anchor[0]>=0&&anchor[0]<COLS&&anchor[1]>=0&&anchor[1]<PLAYER_ROWS) prefs[id]=anchor;
+    }
+  }
+  const lay=autoLayout(faction,{rows:PLAYER_ROWS,terrainAt:(c,r)=>terrain[r][c],prefs});
   return lay ? lay.map(p=>({id:p.def.id,hexes:p.hexes})) : null;
 }
 function validPick(list,count,allowed){
@@ -2122,18 +2137,18 @@ function initDeckPresets(){
   let saved=null;const storage=deckStorage();
   try{saved=storage&&JSON.parse(storage.getItem(DECK_SAVE_KEY));}catch(_){}
   const slots=saved&&Array.isArray(saved.slots)?saved.slots:[];
-  deckPresets=[normalizeDeckPreset(slots[0]),normalizeDeckPreset(slots[1])];
-  applyDeckPreset(saved&&(saved.activeSlot===1)?1:0,true);
+  deckPresets=DECK_SLOT_LABELS.map((_,slot)=>normalizeDeckPreset(slots[slot]));
+  applyDeckPreset(saved&&validDeckSlot(saved.activeSlot)?saved.activeSlot:0,true);
 }
 function editDeckSlot(slot){
-  if(slot!==0&&slot!==1)return;
+  if(!validDeckSlot(slot))return;
   endDrill(true); endCampaign(true); endFestival(true); // see onBattleTap
   if(S.deckEditing)saveActiveDeck();
   applyDeckPreset(slot,true);startMatch(true);S.phase="setup";S.setupStep="faction";S.selectionFaction=S.playerFaction;S.deckEditing=true;
   $("menuscreen").style.display="flex";renderDeckSlots();
 }
 function playDeckSlot(slot){
-  if(slot!==0&&slot!==1)return;
+  if(!validDeckSlot(slot))return;
   endDrill(true); endCampaign(true); endFestival(true); // see onBattleTap
   if(S.deckEditing)saveActiveDeck();
   if(!applyDeckPreset(slot)){hint("Build this deck before playing it.");return;}
@@ -2141,7 +2156,7 @@ function playDeckSlot(slot){
   $("menuscreen").style.display="none";renderDeckSlots();
 }
 function selectDeckSlot(slot){
-  if(slot!==0&&slot!==1)return;
+  if(!validDeckSlot(slot))return;
   if(S.deckEditing)saveActiveDeck();
   if(!applyDeckPreset(slot)){hint("Build this deck before selecting it.");return;}
   S.deckEditing=false;
@@ -8672,6 +8687,9 @@ IMG_SPRITES.arena_bg_china = {0:"assets/sprites/arena_china_top_clean.png",1:"as
 IMG_SPRITES.arena_bg_aztec = {0:"assets/sprites/arena_aztec_top_clean.png",1:"assets/sprites/arena_aztec_bottom_clean.png"};
 IMG_SPRITES.arena_bg_greek = {0:"assets/sprites/arena_greek_top_clean.png",1:"assets/sprites/arena_greek_bottom_clean.png"};
 /* APPROVED SHEET ART END */
+IMG_SPRITES.arena_bg_polynesian = {0:"assets/sprites/arena_polynesian_top_clean.png",1:"assets/sprites/arena_polynesian_bottom_clean.png"};
+IMG_SPRITES.terrain_polynesian_deep_ocean = "assets/sprites/terrain_polynesian_deep_ocean.png";
+IMG_SPRITES.terrain_polynesian_volcano = "assets/sprites/terrain_polynesian_volcano.png";
 /* POLYNESIAN UNIT ART START */
 IMG_SPRITES.toa = {"0":"assets/sprites/toa_back.png","1":"assets/sprites/toa_front.png"};
 IMG_SPRITES.tao = {"0":"assets/sprites/tao_back.png","1":"assets/sprites/tao_front.png"};
@@ -9286,7 +9304,7 @@ function cnRoof(g,x,y,w,h){
 function azTier(g,cx,baseY,w,h){ // one trapezoid step of an Aztec stepped pyramid (teocalli)
   g.beginPath(); g.moveTo(cx-w,baseY); g.lineTo(cx-w*0.72,baseY-h); g.lineTo(cx+w*0.72,baseY-h); g.lineTo(cx+w,baseY); g.closePath(); g.fill();
 }
-/* STRUCTURE ART (2026-11-14). Nine approved masters use the actual projected footprint
+/* STRUCTURE ART. Approved masters use the actual projected footprint
    bounds. Old type-based PARTS remain only as loading/missing-art and rubble fallbacks. */
 // Approved structure masters. Fronts remain in use for BOTH armies, as requested;
 // paired rear views are archived alongside them for future orientation support.
@@ -9299,7 +9317,12 @@ const STRUCTURE_ART={
   aztec_tenochtitlan:{file:"aztec_twin_cities",baseTop:0},
   greek_athens:{file:"greek_athens",baseTop:0},
   greek_sparta:{file:"greek_sparta",baseTop:0},
-  greek_corinth:{file:"greek_corinth",baseTop:0}
+  greek_corinth:{file:"greek_corinth",baseTop:0},
+  polynesian_fishing_village:{file:"polynesian_fishing_village",baseTop:0},
+  polynesian_canoe_workshop:{file:"polynesian_canoe_workshop",baseTop:0},
+  polynesian_fortified_village:{file:"polynesian_fortified_village",baseTop:0},
+  polynesian_community_village:{file:"polynesian_community_village",baseTop:0},
+  polynesian_garden_village:{file:"polynesian_garden_village",baseTop:0}
 };
 for(const [id,art] of Object.entries(STRUCTURE_ART)){
   const file="assets/sprites/structure_"+art.file+"_front.png";
@@ -9558,7 +9581,7 @@ function arenaBgPlacement(faction,x,y,w,h,side=0){
   if(imgAspect>boxAspect){ dh=h; dw=dh*imgAspect; } else { dw=w; dh=dw/imgAspect; }
   return {img, dx:x+w/2-dw/2, dy:y+h/2-dh/2, dw, dh};
 }
-const ARENA_BG_FALLBACK = faction => faction==="egypt" ? "#c7a15c" : "#6f8a41";
+const ARENA_BG_FALLBACK = faction => faction==="egypt" ? "#c7a15c" : faction==="polynesian" ? "#dac18b" : "#6f8a41";
 function drawArenaBgRect(g,faction,x,y,w,h,side=0){
   const pl=arenaBgPlacement(faction,x,y,w,h,side);
   g.save();
@@ -9641,20 +9664,10 @@ function waterArtKey(faction){
   return faction==="egypt"?"terrain_egypt_nile":faction==="aztec"?"terrain_aztec_texcoco":"terrain_shared_water";
 }
 function drawSpecialTile(g,T,cx,cy,r){
-  /* P2: Deep Ocean, Volcano and Lava are drawn as flat vector plates until art lands (A1). */
-  if(T==="O"||T==="V"||T==="L"){
-    const t=TINFO[T];
-    g.fillStyle=t.fill; hexPoly(g,cx,cy,HEX*0.98); g.fill();
-    if(T==="O"){ g.strokeStyle="rgba(150,200,255,.35)"; g.lineWidth=1;
-      for(const dy of [-0.22,0.02,0.26]){ g.beginPath(); g.moveTo(cx-HEX*.42,cy+HEX*dy); g.quadraticCurveTo(cx-HEX*.14,cy+HEX*(dy-.14),cx,cy+HEX*dy); g.quadraticCurveTo(cx+HEX*.14,cy+HEX*(dy+.14),cx+HEX*.42,cy+HEX*dy); g.stroke(); } }
-    else if(T==="V"){ g.fillStyle="#6b4a3a"; g.beginPath(); g.moveTo(cx-HEX*.55,cy+HEX*.45); g.lineTo(cx,cy-HEX*.5); g.lineTo(cx+HEX*.55,cy+HEX*.45); g.closePath(); g.fill();
-      g.fillStyle="#e8552a"; g.beginPath(); g.ellipse(cx,cy-HEX*.42,HEX*.16,HEX*.07,0,0,7); g.fill(); }
-    else { g.fillStyle="rgba(255,220,120,.55)"; for(const [dx,dy] of [[-.3,-.1],[.2,.15],[-.05,.3]]){ g.beginPath(); g.ellipse(cx+HEX*dx,cy+HEX*dy,HEX*.12,HEX*.07,0,0,7); g.fill(); } }
-    return;
-  }
-  const key = T==="F"?(factionForRow(r)==="china"?"terrain_chinese_bamboo":"terrain_shared_forest") : T==="M"?"terrain_shared_mountain" : T==="W"?waterArtKey(factionForRow(r)) : null;
-  if(!key) return;
-  const img=getSpriteImage(key);
+  const key = T==="F"?(factionForRow(r)==="china"?"terrain_chinese_bamboo":"terrain_shared_forest")
+    : T==="M"?"terrain_shared_mountain" : T==="W"?waterArtKey(factionForRow(r))
+    : T==="O"?"terrain_polynesian_deep_ocean" : T==="V"?"terrain_polynesian_volcano" : null;
+  const img=key&&getSpriteImage(key);
   if(img && img.complete && img.naturalWidth>0){
     const src=chromaKeyed(img,key);
     /* 2026-07-29 direct request: "make the terrain tiles fill their hex."
@@ -9682,7 +9695,15 @@ function drawSpecialTile(g,T,cx,cy,r){
     g.drawImage(src,cx-dw*ax,cy-dh*ay,dw,dh);
     return;
   }
-  if(T==="F"){
+  if(T==="O"||T==="V"||T==="L"){
+    const t=TINFO[T];
+    g.fillStyle=t.fill; hexPoly(g,cx,cy,HEX*0.98); g.fill();
+    if(T==="O"){ g.strokeStyle="rgba(150,200,255,.35)"; g.lineWidth=1;
+      for(const dy of [-0.22,0.02,0.26]){ g.beginPath(); g.moveTo(cx-HEX*.42,cy+HEX*dy); g.quadraticCurveTo(cx-HEX*.14,cy+HEX*(dy-.14),cx,cy+HEX*dy); g.quadraticCurveTo(cx+HEX*.14,cy+HEX*(dy+.14),cx+HEX*.42,cy+HEX*dy); g.stroke(); } }
+    else if(T==="V"){ g.fillStyle="#6b4a3a"; g.beginPath(); g.moveTo(cx-HEX*.55,cy+HEX*.45); g.lineTo(cx,cy-HEX*.5); g.lineTo(cx+HEX*.55,cy+HEX*.45); g.closePath(); g.fill();
+      g.fillStyle="#e8552a"; g.beginPath(); g.ellipse(cx,cy-HEX*.42,HEX*.16,HEX*.07,0,0,7); g.fill(); }
+    else { g.fillStyle="rgba(255,220,120,.55)"; for(const [dx,dy] of [[-.3,-.1],[.2,.15],[-.05,.3]]){ g.beginPath(); g.ellipse(cx+HEX*dx,cy+HEX*dy,HEX*.12,HEX*.07,0,0,7); g.fill(); } }
+  } else if(T==="F"){
     vTree(g,cx-HEX*0.3,cy+HEX*0.18,HEX*0.5);
     vTree(g,cx+HEX*0.26,cy+HEX*0.32,HEX*0.62);
     vTree(g,cx-0.02*HEX,cy+HEX*0.52,HEX*0.44);
@@ -10103,11 +10124,11 @@ function renderFactionPicker(){
   renderDeckSlots();
 }
 function renderDeckSlots(){
-  for(const slot of [0,1]){
+  for(const [slot,label] of DECK_SLOT_LABELS.entries()){
     const preset=normalizeDeckPreset(deckPresets[slot]);
     $("deckslot-"+slot).classList.toggle("selected",S.deckEditing&&S.deckSlot===slot);
     $("deckselect-"+slot).disabled=!preset;
-    $("deckname-"+slot).textContent=preset?`DECK ${slot?"B":"A"} — ${FACTIONS[preset.faction].name}`:`DECK ${slot?"B":"A"}`;
+    $("deckname-"+slot).textContent=preset?`DECK ${label} — ${FACTIONS[preset.faction].name}`:`DECK ${label}`;
     if(!preset){$("decksummary-"+slot).textContent="";continue;}
     const f=FACTIONS[preset.faction], names=keys=>keys.map(k=>f.units[k].name).join(", ");
     const godNames=preset.gods.map(k=>{const g=godDef(k);return g?g.name:k;}).join(", ");
@@ -10146,7 +10167,7 @@ function renderSetupStep(){
   $("factionback").textContent=festival?"← Festival deck":"← Decks";
   $("btnbattle").textContent=festival?"Save festival deck":"Finish";
   $("steplegends").style.display = S.setupStep==="legends"? "block":"none";
-  $("stepdecks").style.display = onDecks? "block":"none";
+  $("stepdecks").style.display = onDecks? "flex":"none";
   $("stepfaction").style.display = onFaction? "block":"none";
   $("stepgods").style.display = S.setupStep==="gods"? "flex":"none";
   $("stepheroes").style.display = S.setupStep==="heroes"? "flex":"none";
